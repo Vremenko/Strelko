@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strelko widget</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1a22;
+      --text: #e8f0f5;
+      --muted: #8fa3b0;
+      --accent: #05a5ce;
+      --bolt: #fbb006;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 12px 14px;
+    }
+    .wrap { display: flex; gap: 12px; align-items: center; }
+    .icon { font-size: 1.75rem; line-height: 1; }
+    .title { font-size: 0.8rem; color: var(--muted); margin: 0 0 2px; }
+    .place { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
+    .stats { font-size: 0.85rem; margin: 0; }
+    .stats strong { color: var(--bolt); }
+    .foot {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .foot a { color: var(--accent); text-decoration: none; }
+    .err { color: #f87171; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div id="root"><p class="title">Nalagam …</p></div>
+  <script>
+    const key = new URLSearchParams(location.search).get("key");
+    const apiBase = "/api/v1";
+    const root = document.getElementById("root");
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+      );
+    }
+
+    async function load() {
+      if (!key) {
+        root.innerHTML = '<p class="err">Manjka ključ widgeta.</p>';
+        return;
+      }
+      try {
+        const res = await fetch(`${apiBase}/strelko/widget/public/${encodeURIComponent(key)}`);
+        if (!res.ok) throw new Error("Widget ni na voljo.");
+        const d = await res.json();
+        const label = d.label || "Vaša lokacija";
+        const nearest = d.nearest_km != null ? ` · najbližje ~${d.nearest_km} km` : "";
+        root.innerHTML = `
+          <div class="wrap">
+            <div class="icon" aria-hidden="true">⚡</div>
+            <div>
+              <p class="title">Strelko · zadnjih ${d.period_days} dni</p>
+              <p class="place">${esc(label)}</p>
+              <p class="stats"><strong>${d.total_strikes}</strong> udarov · ${d.days_with_strikes} dni s strelami${nearest}</p>
+            </div>
+          </div>
+          <p class="foot">Vir: DHMZ · <a href="https://strelko.meteoinfo.si" target="_blank" rel="noopener">strelko.meteoinfo.si</a></p>`;
+      } catch (e) {
+        root.innerHTML = `<p class="err">${esc(e.message || "Napaka")}</p>`;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

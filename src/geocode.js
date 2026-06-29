@@ -1,23 +1,44 @@
-const NOMINATIM = "https://nominatim.openstreetmap.org/search";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+
+function compactDisplayName(displayName) {
+  const parts = String(displayName)
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (!parts.length) return displayName;
+  const filtered = parts.filter((p) => !/^\d{4}$/.test(p));
+  if (filtered.length >= 2 && filtered[filtered.length - 1] === "Slovenija") {
+    return filtered.join(", ");
+  }
+  return filtered.slice(0, 3).join(", ");
+}
+
+/** Krajši prikaz: ulica/kraj + hišna št. (prvi del pred vejico). */
+export function formatPlaceShort(label) {
+  if (!label) return "";
+  return String(label).split(",")[0].trim();
+}
 
 export async function geocodeAddress(query) {
   const params = new URLSearchParams({
     q: query,
-    format: "json",
     limit: "5",
-    countrycodes: "si",
-    addressdetails: "1",
   });
-  const res = await fetch(`${NOMINATIM}?${params}`, {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error("Geokodiranje ni uspelo.");
-  const data = await res.json();
-  if (!data.length) throw new Error("Lokacija ni bila najdena. Poskusite z drugim naslovom.");
-  return data.map((r) => ({
-    label: r.display_name,
-    lat: parseFloat(r.lat),
-    lon: parseFloat(r.lon),
+  const res = await fetch(`${API_BASE}/geocode/search?${params}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof data.detail === "string" ? data.detail : "Geokodiranje ni uspelo."
+    );
+  }
+  const items = data.results || [];
+  if (!items.length) {
+    throw new Error("Lokacija ni bila najdena. Poskusite z drugim naslovom.");
+  }
+  return items.map((r) => ({
+    label: r.label || r.name,
+    lat: r.lat,
+    lon: r.lon,
   }));
 }
 
@@ -26,11 +47,15 @@ export async function reverseGeocode(lat, lon) {
     lat: String(lat),
     lon: String(lon),
     format: "json",
+    addressdetails: "1",
   });
-  const res = await fetch(`${NOMINATIM}/reverse?${params}`, {
+  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`, {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) return null;
   const data = await res.json();
-  return data.display_name || null;
+  if (data?.address) {
+    return compactDisplayName(data.display_name || "");
+  }
+  return compactDisplayName(data.display_name || "") || null;
 }
