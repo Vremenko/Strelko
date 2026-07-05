@@ -18,11 +18,24 @@ Vse zgodovinsko / neuporabljeno je **izven** projekta.
 
 | Datoteka | SHA-256 |
 |----------|---------|
-| `dist/assets/index-DijleoXU.js` | `a2c49fd9a1dd9324d583ae8c2ee8efddfa6c8aae0a0646b43d63da9466e8fb47` |
-| `dist/assets/index-b2ecBo4-.css` | `b9190d909f150788479eeeb10b07ec1cbcc12520c611c26b4b78561a92efcbc4` |
-| `dist/index.html` | `1bb45324e793a1bc1ec2768110731709b8c1ec19c93e5ec11f8b35f8447786fb` |
+| `dist/assets/index-DijleoXU.js` | `0e3cb5a2e79edd627b114a3537b65159bb747c8665740da15379fad54608bdac` |
+| `dist/assets/index-b2ecBo4-.css` | `3f406123d75c46068679e88636f659111301214dc249c3b9fdc32d141390969b` |
+| `dist/index.html` | `a806cf31d61df3a3f40440edb559e0fce69adaa0433b8690fa237edfd8f4c101` |
 
-Cache bust: `?v=202607050850`
+Cache bust: `?v=202607051750`
+
+## Zemljevid strel (zavarovalnica) — obnova gest
+
+Samo SPA, brez embed sync:
+
+```bash
+cd /home/maximus/projects/Strelko
+python3 scripts/patch-strike-map-gestures-restore.py
+python3 scripts/patch-strike-map-zoom-hint-pan.py
+python3 scripts/patch-strike-popup-style.py
+node --check dist/assets/index-DijleoXU.js
+bash scripts/deploy-strelko-spa.sh
+```
 
 **Ne obnavljaj** iz `_archive-phases-0-5/phase-0-baseline/dist/` — zastarel (npr. brez popravka zemljevida).
 

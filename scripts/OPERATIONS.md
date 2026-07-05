@@ -5,7 +5,18 @@ Produkcija = `dist/` (`index-DijleoXU.js`). **Ne** `npm run build` za deploy.
 ## Deploy
 
 ```bash
-bash scripts/deploy-strelko.sh
+bash scripts/deploy-strelko.sh          # SPA + embed sync
+bash scripts/deploy-strelko-spa.sh      # samo SPA (brez strele2 embedov)
+```
+
+### Zemljevid strel na zavarovalnici (samo SPA)
+
+```bash
+python3 scripts/patch-strike-map-gestures-restore.py
+python3 scripts/patch-strike-map-zoom-hint-pan.py
+python3 scripts/patch-strike-popup-style.py
+node --check dist/assets/index-DijleoXU.js
+bash scripts/deploy-strelko-spa.sh
 ```
 
 ## Aktivni patchi (po potrebi)
