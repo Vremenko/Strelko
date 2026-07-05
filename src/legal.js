@@ -13,7 +13,7 @@ export const COMPANY = {
   matična: "7514760000",
   davčna: "SI61712949",
   court: "Okrožno sodišče Maribor",
-  updated: "17. 06. 2026",
+  updated: "3. julij 2026",
 };
 
 export const LEGAL_PAGES = {
@@ -30,15 +30,15 @@ export const LEGAL_PAGES = {
           <ul>
             <li>Matična številka: ${COMPANY.matična}</li>
             <li>Davčna številka: ${COMPANY.davčna}</li>
-            <li>Identifikacijska številka za DDV: podjetje ni davčni zavezanec</li>
+            <li>Identifikacijska številka za DDV: ${COMPANY.davčna}</li>
             <li>Registrski organ: ${COMPANY.court}</li>
           </ul>`,
       },
       {
         title: "Storitev Strelko",
         body: `
-          <p>Strelko je spletna storitev za informativni pregled udarov strel v bližini izbrane lokacije,
-          opozorila ob vremenskih opozorilih (MeteoAlarm) in pomoč pri pripravi podatkov za zavarovalnico.
+          <p>Strelko je spletna storitev za informativni pregled udarov strel v bližini izbrane lokacije
+          in pomoč pri pripravi podatkov za zavarovalnico.
           Storitev je na voljo na naslovu <strong>strelko.meteoinfo.si</strong>.</p>`,
       },
       {
@@ -70,7 +70,6 @@ export const LEGAL_PAGES = {
           <ul>
             <li>javni brezplačen predogled prisotnosti udarov strel v izbranem radiju,</li>
             <li>podroben pregled udarov (zemljevid, časi, razdalje) z uporabo kreditov,</li>
-            <li>SMS in/ali e-poštna opozorila ob MeteoAlarm opozorilih (paketi Premium in Poslovni),</li>
             <li>izvoz PDF poročila (paket Poslovni).</li>
           </ul>
           <p>Vsi prikazani podatki so <strong>izključno informativne narave</strong>. Strelko ne nadomešča
@@ -90,11 +89,11 @@ export const LEGAL_PAGES = {
         title: "4. Plačljivi paketi in krediti",
         body: `
           <p>Naročnine in enkratni nakupi kreditov potekajo prek plačilnega ponudnika <strong>Stripe</strong>.
-          Cene so prikazane v evrih (EUR) in vključujejo davke, kjer je to zakonsko zahtevano.</p>
+          Cene so prikazane v evrih (EUR) in vključujejo 22&nbsp;% DDV, kjer je to zakonsko predpisano.</p>
           <ul>
             <li>Mesečna naročnina se samodejno podaljša, dokler jo uporabnik ne prekliče v portalu za naročnino.</li>
-            <li>Ne porabljeni krediti se ne prenašajo v naslednji mesec, razen če je drugače izrecno navedeno ob nakupu.</li>
-            <li>Ob registraciji lahko uporabnik prejme en brezplačen dobrodošel kredit za preizkus storitve.</li>
+            <li>Neporabljeni krediti se ne prenašajo v naslednji mesec, razen če je drugače izrecno navedeno ob nakupu.</li>
+            <li>Ob registraciji lahko uporabnik prejme en brezplačen dobrodošilni kredit za preizkus storitve.</li>
           </ul>
           <p>Podrobnosti o pravicah potrošnikov (odstop od pogodbe, reklamacije) so na strani
           <a href="/pravice-potrosnikov" data-legal="consumer">Pravice potrošnikov</a>.</p>`,
@@ -106,7 +105,7 @@ export const LEGAL_PAGES = {
           <ul>
             <li>avtomatizirano množično poizvedovanje brez predhodnega pisnega soglasja,</li>
             <li>poskuse nepooblaščenega dostopa do sistemov,</li>
-            <li>objavo ali širjenje zavajajočih trditve, da gre za uradno potrdilo zavarovalnice ali državnega organa,</li>
+            <li>objavo ali širjenje zavajajočih trditev, da gre za uradno potrdilo zavarovalnice ali državnega organa,</li>
             <li>kakršno koli nezakonito dejavnost.</li>
           </ul>`,
       },
@@ -121,7 +120,7 @@ export const LEGAL_PAGES = {
         title: "7. Omejitev odgovornosti",
         body: `
           <p>Storitev je na voljo po načelu „kot je“. ${COMPANY.shortName} ne jamči za neprekinjeno
-          delovanje, popolno točnost podatkov tretjih virov (DHMZ, ARSO / MeteoAlarm) ali izid postopkov
+          delovanje, popolno točnost podatkov tretjih virov (DHMZ, ARSO) ali izid postopkov
           pri zavarovalnici. V največji meri, ki jo dovoljuje zakon, upravljavec ne odgovarja za posredno
           ali neposredno škodo zaradi uporabe ali nezmožnosti uporabe storitve.</p>`,
       },
@@ -136,13 +135,13 @@ export const LEGAL_PAGES = {
         title: "9. Spremembe in prenehanje",
         body: `
           <p>Upravljavec lahko storitev ali te pogoje posodobi. Posodobljena različica začne veljati z objavo
-          na tej strani. Uporabnik lahko kadar koli preneha uporabljati storitev in izbriše račun s prošnjo na
+          na tej strani. Uporabnik lahko kadar koli preneha uporabljati storitev in izbriše račun z zahtevo na
           <a href="mailto:${COMPANY.email}">${COMPANY.email}</a>.</p>`,
       },
       {
         title: "10. Veljavno pravo",
         body: `
-          <p>Za te pogoje velja pravo Republike Slovenije. Pristojno je stvarno pristojno sodišče v Sloveniji,
+          <p>Za te pogoje velja pravo Republike Slovenije. Za morebitne spore je pristojno stvarno pristojno sodišče v Republiki Sloveniji,
           razen če zakonodaja o varstvu potrošnikov ne določa drugače.</p>`,
       },
     ],
@@ -171,7 +170,6 @@ export const LEGAL_PAGES = {
           <ul>
             <li><strong>Račun:</strong> e-poštni naslov, geslo (shranjeno v zgoščeni obliki), status potrditve e-pošte.</li>
             <li><strong>Iskanje:</strong> koordinate in oznaka lokacije, ki jo vnesete ali izberete pri iskanju.</li>
-            <li><strong>Opozorila:</strong> mobilna telefonska številka, shranjena lokacija za opozorila, radij, nastavitve SMS/e-pošte.</li>
             <li><strong>Naročnina:</strong> podatki o paketu, stanju kreditov, ID seje plačila pri Stripe (ne shranjujemo številk plačilnih kartic).</li>
             <li><strong>Tehnični podatki:</strong> IP naslov, čas dostopa, user-agent ob prijavi in varnostnih dogodkih.</li>
             <li><strong>Lokalna shramba brskalnika:</strong> žeton za prijavo (localStorage) – glejte tudi <a href="/piskotki" data-legal="cookies">Politiko piškotkov</a>.</li>
@@ -181,7 +179,7 @@ export const LEGAL_PAGES = {
         title: "3. Nameni in pravne podlage",
         body: `
           <ul>
-            <li><strong>Izvedba pogodbe</strong> – registracija, prijava, izvajanje iskanj, naročnine, opozorila.</li>
+            <li><strong>Izvedba pogodbe</strong> – registracija, prijava, izvajanje iskanj in naročnin.</li>
             <li><strong>Zakoniti interes</strong> – varnost sistema, preprečevanje zlorab, tehnični dnevniki.</li>
             <li><strong>Privolitev</strong> – kjer jo zahteva zakon (npr. neobvezna e-poštna obvestila, če jih vklopite).</li>
             <li><strong>Zakonske obveznosti</strong> – računovodstvo in davčna dokumentacija plačil.</li>
@@ -194,8 +192,7 @@ export const LEGAL_PAGES = {
           <ul>
             <li><strong>Stripe</strong> – obdelava plačil in naročnin,</li>
             <li><strong>ponudnik gostovanja / strežnikov</strong> – tehnično delovanje API-ja in baze,</li>
-            <li><strong>ponudnik SMS storitve</strong> – pošiljanje MeteoAlarm opozoril (če jih vklopite),</li>
-            <li><strong>ponudnik e-pošte</strong> – transakcijska sporočila (potrditev računa, opozorila).</li>
+            <li><strong>ponudnik e-pošte</strong> – transakcijska sporočila (potrditev računa).</li>
           </ul>
           <p>Podatkov ne prodajamo tretjim osebam za trženjske namene.</p>`,
       },
@@ -252,7 +249,7 @@ export const LEGAL_PAGES = {
               </tr>
               <tr>
                 <td><code>strelko_cookie_consent</code> (localStorage)</td>
-                <td>Shranitev vaše izbire glede obvestila o piškotkih</td>
+                <td>Shranitev vaše izbire v zvezi z obvestilom o piškotkih</td>
                 <td>12 mesecev</td>
               </tr>
             </tbody>
@@ -262,8 +259,8 @@ export const LEGAL_PAGES = {
       {
         title: "3. Upravljanje",
         body: `
-          <p>Prijavni žeton lahko izbrišete z odjavo ali brisanjem podatkov spletne strani v nastavitvah brskalnika.
-          Brez nujnih piškotkov / localStorage prijava ne bo delovala.</p>`,
+          <p>Ob prvem obisku lahko nujne piškotke oziroma localStorage sprejmete ali zavrnete. Če jih zavrnete, lahko stran še vedno brskate, vendar prijava in shranjevanje seje ne bosta delovala.</p>
+          <p>Prijavni žeton lahko izbrišete z odjavo ali brisanjem podatkov spletne strani v nastavitvah brskalnika. Izbiro glede piškotkov lahko spremenite tako, da v brskalniku izbrišete vrednost <code>strelko_cookie_consent</code> in stran znova naložite.</p>`,
       },
     ],
   },
@@ -275,12 +272,14 @@ export const LEGAL_PAGES = {
         title: "1. Identiteta trgovca",
         body: `
           <p>${COMPANY.legalName}, ${COMPANY.address}, ${COMPANY.postal}.<br />
+          Davčna številka: ${COMPANY.davčna}<br />
+          Identifikacijska številka za DDV: ${COMPANY.davčna}<br />
           E-pošta: <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>`,
       },
       {
         title: "2. Cene in plačilo",
         body: `
-          <p>Cene paketov so jasno prikazane pred nakupom v modalu za izbiro paketa.
+          <p>Cene paketov so jasno prikazane pred nakupom v modalu za izbiro paketa, z razčlenitvijo DDV (22&nbsp;%).
           Plačilo poteka varno prek Stripe. Račun za plačilo prejmete v skladu z davčnimi predpisi.</p>`,
       },
       {

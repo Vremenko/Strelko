@@ -1,24 +1,11 @@
-# Strelko – statični SPA build + nginx
-FROM node:22-alpine AS build
-
-WORKDIR /app
-
-COPY package.json ./
-RUN npm install
-
-COPY index.html vite.config.js ./
-COPY public ./public
-COPY src ./src
-
-# Relativni API prek nginx proxy v docker-compose (isti origin)
-ARG VITE_API_BASE_URL=/api/v1
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-
-RUN npm run build
-
+# Strelko – statični SPA (produkcijski dist) + nginx
+#
+# Pomembno: dejanska produkcija je v dist/ (index-DijleoXU.js …).
+# src/main.js je za razvoj; ne zaganjajte `npm run build` za deploy, če dist
+# ni usklajen z src — sicer se povrne stara različica aplikacije.
 FROM nginx:1.27-alpine
 
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY dist /usr/share/nginx/html
 
 # Konfiguracija se mounta iz StormAPI/docker/strelko-nginx.conf
 RUN rm -f /etc/nginx/conf.d/default.conf
