@@ -30,6 +30,11 @@ docker cp "$HTML" "$CONTAINER:/usr/share/nginx/html/index.html"
 
 if docker ps --format '{{.Names}}' | grep -qx "$OBCINE_CONTAINER"; then
   STRELE2_PUBLIC="${STRELE2_PUBLIC:-$(dirname "$ROOT")/strele2/web/public}"
+  WIDGET_HTML="$STRELE2_PUBLIC/obcina-widget.html"
+  if [[ ! -s "$WIDGET_HTML" && -f "$STRELE2_PUBLIC/obcina-embed.html" ]]; then
+    cp "$STRELE2_PUBLIC/obcina-embed.html" "$WIDGET_HTML"
+    echo "Restored empty obcina-widget.html from obcina-embed.html"
+  fi
   for f in "$STRELE2_PUBLIC/embed.html" "$STRELE2_PUBLIC/map-embed.html" "$STRELE2_PUBLIC/obcina-widget.html"; do
     if [[ -f "$f" ]]; then
       docker cp "$f" "$OBCINE_CONTAINER:/app/web/public/$(basename "$f")"
