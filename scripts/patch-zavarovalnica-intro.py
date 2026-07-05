@@ -50,7 +50,7 @@ ZAVAROVALNICA_PAGE = r"""function strelkoZavarovalnicaPage(){var i;const t=oe.lo
           <h3 class="search-card-title">Preverite udare strel v bližini</h3>
           <p class="search-card-intro">Vnesite naslov, izberite radij in obdobje pregleda. Po kliku na gumb se bodo prikazali udari strel v okolici izbrane lokacije.</p>
           <div class="location-field">
-            <input id="location-input" class="search-input" type="text" placeholder="npr. Škrabčev trg 2, Ribnica" autocomplete="off" value="${fi(oe.locationQuery||((i=oe.selected)==null?void 0:i.label)||"")}" ${oe.loading?"disabled":""} />
+            <input id="location-input" class="search-input" type="text" placeholder="npr. Ženjak 4, Benedikt" autocomplete="off" value="${fi(oe.locationQuery||((i=oe.selected)==null?void 0:i.label)||"")}" ${oe.loading?"disabled":""} />
             <ul class="suggestions hidden" id="suggestions"></ul>
           </div>
           ${G3()}

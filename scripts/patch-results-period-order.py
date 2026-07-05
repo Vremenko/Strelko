@@ -15,6 +15,16 @@ OLD = (
     '      <p style="color:var(--muted);font-size:0.85rem">${u}</p>'
 )
 
+OLD_NEAR = (
+    '      <h3 class="results-panel-title">⚡ Pregled strel – ${fi(t.location_label||"vaša lokacija")}</h3>\n'
+    '      <div class="stats-grid">\n'
+    '        <div class="stat-box"><div class="num">${slNum(t.total_strikes)}</div><div class="lbl">Skupaj udarov</div></div>\n'
+    '        <div class="stat-box"><div class="num">${slNum(t.daily.length)}</div><div class="lbl">Dni z udari</div></div>\n'
+    '        <div class="stat-box"><div class="num">${nearestKm!=null?a0(nearestKm):"—"}</div><div class="lbl">Najbližji udar</div></div>\n'
+    '      </div>\n'
+    '      <p style="color:var(--muted);font-size:0.85rem">${u}</p>'
+)
+
 NEW = (
     '      <h3 class="results-panel-title">⚡ Pregled strel – ${fi(t.location_label||"vaša lokacija")}</h3>\n'
     '      <p class="results-period">${u}</p>\n'
@@ -33,8 +43,12 @@ def main() -> None:
     if OLD in js:
         js = js.replace(OLD, NEW, 1)
         JS.write_text(js, encoding="utf-8")
-        print("Patched _B() period order in JS")
-    elif NEW.split("\n")[1] in js:
+        print("Patched _B() period order in JS (from credits stat)")
+    elif OLD_NEAR in js:
+        js = js.replace(OLD_NEAR, NEW, 1)
+        JS.write_text(js, encoding="utf-8")
+        print("Patched _B() period order in JS (from nearest stat)")
+    elif 'class="results-period"' in js:
         print("JS already patched")
     else:
         raise SystemExit("Could not find _B() template to patch")

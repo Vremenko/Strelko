@@ -7,7 +7,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CSS = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "dist/assets/index-b2ecBo4-.css"
+_args = [a for a in sys.argv[1:] if not a.startswith("-")]
+if _args and _args[0].endswith(".css"):
+    CSS = Path(_args[0])
+elif len(_args) >= 2 and _args[1].endswith(".css"):
+    CSS = Path(_args[1])
+else:
+    CSS = ROOT / "dist/assets/index-b2ecBo4-.css"
 
 MARKER = "/* —— statistika embed: outer frame only (not embed interior) —— */"
 
