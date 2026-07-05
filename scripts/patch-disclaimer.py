@@ -3,11 +3,23 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from patch_css_block import strip_css_block
+
+_NEXT_BLOCK = re.compile(r"\n/\* —— ")
+
+
+def strip_css_block(css: str, marker: str) -> str:
+    if marker not in css:
+        return css
+    before, _, after = css.partition(marker)
+    m = _NEXT_BLOCK.search(after)
+    if m:
+        return before.rstrip() + "\n" + after[m.start() + 1 :]
+    return before.rstrip() + "\n"
 
 JS_PATH = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("dist/assets/index-DijleoXU.js")
 CSS_PATH = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("dist/assets/index-b2ecBo4-.css")
@@ -19,10 +31,17 @@ DISCLAIMER_OLD = r"""function DB(){return`
       Za uradne postopke se obrnite na pristojne institucije in zavarovalnico.
     </aside>`}"""
 
-DISCLAIMER_NEW = r"""function DB(){return`
+DISCLAIMER_PREV = r"""function DB(){return`
     <aside class="disclaimer" role="note" aria-label="Opozorilo">
       <strong>Opozorilo:</strong> Prikazani podatki so informativne narave in so namenjeni kot pomoč pri pripravi dokumentacije ter komunikaciji z zavarovalnico.
       Ne predstavljajo uradnega dokazila in se lahko razlikujejo od uradnih evidenc oziroma podatkov, ki jih uporabljajo pristojne institucije.
+      Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve zavarovalnic ali morebitna odstopanja v podatkih.
+      Za uradne postopke se obrnite na svojo zavarovalnico oziroma druge pristojne institucije.
+    </aside>`}"""
+
+DISCLAIMER_NEW = r"""function DB(){return`
+    <aside class="disclaimer" role="note" aria-label="Opozorilo">
+      <strong>Opozorilo:</strong> Podatki so informativne narave in se lahko razlikujejo od uradnih evidenc.
       Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve zavarovalnic ali morebitna odstopanja v podatkih.
       Za uradne postopke se obrnite na svojo zavarovalnico oziroma druge pristojne institucije.
     </aside>`}"""
@@ -47,6 +66,9 @@ CSS_APPEND = """
 def patch_js(js: str) -> str:
     if DISCLAIMER_NEW in js:
         print("JS disclaimer already patched")
+    elif DISCLAIMER_PREV in js:
+        js = js.replace(DISCLAIMER_PREV, DISCLAIMER_NEW, 1)
+        print("Patched DB() disclaimer (from prev)")
     elif DISCLAIMER_OLD in js:
         js = js.replace(DISCLAIMER_OLD, DISCLAIMER_NEW, 1)
         print("Patched DB() disclaimer")
