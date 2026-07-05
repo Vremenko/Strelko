@@ -35,6 +35,12 @@ if docker ps --format '{{.Names}}' | grep -qx "$OBCINE_CONTAINER"; then
       docker cp "$f" "$OBCINE_CONTAINER:/app/web/public/$(basename "$f")"
     fi
   done
+  STRELE2_WEB="${STRELE2_WEB:-$(dirname "$ROOT")/strele2/web}"
+  for f in "$STRELE2_WEB/charts-shared.css" "$STRELE2_WEB/brand.css"; do
+    if [[ -f "$f" ]]; then
+      docker cp "$f" "$OBCINE_CONTAINER:/app/web/$(basename "$f")"
+    fi
+  done
   echo "Updated embed files on $OBCINE_CONTAINER (from $STRELE2_PUBLIC)"
 fi
 
