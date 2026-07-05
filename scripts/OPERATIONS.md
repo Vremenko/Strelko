@@ -40,14 +40,14 @@ bash scripts/deploy-strelko.sh
 - `scripts/patch-google-signin.py`
 - `scripts/patch-search-results-view.py`
 
-## Backup (izven projekta — faza 6)
+## Backup (izven projekta)
 
-```
-/home/maximus/backups/strelko-archive-20260705/
-```
+| Lokacija | Vsebina |
+|----------|---------|
+| `~/backups/strelko-archive-20260705/` | `dist-good-20260705`, `src-legacy`, `_archive-phases-0-5` |
+| `~/backups/strelko-NEUPORABLJENO-20260705/` | Zastareli patch poskusi, podvojeni dist, `embed.html.recovered` |
 
-Vse zgodovinsko (stari patchi, `src-legacy`, `vite-legacy`, `dist-good-20260705`).
-**Ni** v `Strelko/` — da se ob popravkih ne ponovno uporabi.
+Operativno v repu: samo skripte v `scripts/` (brez `patch-mobile-v*`, `patch-native-scroll-v*`, …).
 
 Pred dokončnim brisanjem backupa — preveri stran in potrdi.
 
