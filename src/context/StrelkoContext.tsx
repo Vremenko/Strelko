@@ -212,6 +212,18 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loadUserWidget = useCallback(async () => {
+    if (!getToken()) {
+      setUserWidget(null);
+      return;
+    }
+    try {
+      setUserWidget(await api.widget());
+    } catch {
+      setUserWidget(null);
+    }
+  }, []);
+
   useEffect(() => {
     void loadPlans();
     void refreshUser();
@@ -556,17 +568,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         }
       },
       resetWidget: () => setWidgetState(initialWidget()),
-      loadUserWidget: async () => {
-        if (!getToken()) {
-          setUserWidget(null);
-          return;
-        }
-        try {
-          setUserWidget(await api.widget());
-        } catch {
-          setUserWidget(null);
-        }
-      },
+      loadUserWidget,
       openWidgetSetup: async () => {
         if (!user) {
           setModals((m) => ({ ...m, auth: "login" }));
@@ -621,6 +623,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       cookieAccepted,
       refreshUser,
       loadPlans,
+      loadUserWidget,
       afterAuth,
       navigate,
       location.pathname,
