@@ -279,30 +279,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   }, [loadPlans, refreshUser]);
 
   useEffect(() => {
-    const onBeforeUnload = () => {
-      console.warn("[strelko] beforeunload — stran se osvežuje ali zapira");
-    };
-    const onPageShow = (event: PageTransitionEvent) => {
-      console.warn("[strelko] pageshow", { persisted: event.persisted });
-      const stored = readSearchResultFromStorage();
-      if (stored) {
-        console.warn("[strelko] restore searchResult after pageshow");
-        applySearchResult(stored);
-      }
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    window.addEventListener("pageshow", onPageShow);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      window.removeEventListener("pageshow", onPageShow);
-    };
-  }, [applySearchResult]);
-
-  useEffect(() => {
     if (searchResult) return;
     const stored = readSearchResultFromStorage();
     if (!stored) return;
-    console.warn("[strelko] rehydrate searchResult from sessionStorage");
     applySearchResult(stored);
   }, [searchResult, applySearchResult]);
 
@@ -385,10 +364,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         );
         return;
       }
-      console.warn("[strelko] setSearchResult", {
-        total_strikes: res.total_strikes,
-        label: res.location_label,
-      });
       applySearchResult(res);
       setPreview(null);
       setPreviewScreen(null);
@@ -460,7 +435,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       runPreview: async () => {
         if (runPreviewInFlightRef.current) {
-          console.warn("[strelko] runPreview skipped (in flight)");
           return;
         }
         const q = locationQuery.trim();
@@ -604,7 +578,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCookieAccepted(true);
       },
       clearSearch: () => {
-        console.warn("[strelko] clearSearch", new Error().stack);
         writeSearchResultToStorage(null);
         setPreview(null);
         setPreviewScreen(null);
