@@ -400,17 +400,17 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             label: place.label,
             days: SEARCH_PERIOD_DAYS,
           })) as PreviewResult;
-          setPreview(res);
-          if (res.requires_login && getToken()) {
+          if (getToken()) {
             if (!user) {
               await refreshUser();
             }
             await runFullSearchInner(place);
             return;
           }
-          if (!user && res.has_nearby_strikes) {
+          setPreview(res);
+          if (!getToken() && res.has_nearby_strikes) {
             setPreviewScreen("teaser");
-          } else if (!user && !res.has_nearby_strikes) {
+          } else if (!getToken() && !res.has_nearby_strikes) {
             setPreviewScreen("no-strikes");
           }
         } catch (e) {
