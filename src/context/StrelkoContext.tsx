@@ -283,6 +283,63 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loadWidgetObcine = useCallback(async () => {
+    try {
+      const res = await fetch("/widget/api/obcine-map?days=365");
+      if (!res.ok) return;
+      const data = (await res.json()) as { ob_id?: number; ob_mid?: number; obcina: string }[];
+      setWidgetState((w) => {
+        if (w.publicWidgetObcine.length) return w;
+        return {
+          ...w,
+          publicWidgetObcine: data
+            .map((row) => ({ ob_mid: row.ob_id ?? row.ob_mid!, name: row.obcina }))
+            .filter((r) => r.ob_mid && r.name)
+            .sort((a, b) => a.name.localeCompare(b.name, "sl")),
+        };
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const loadWidgetObMid = useCallback(async (mid: number) => {
+    const obMid = Number(mid) || DEFAULT_OB_MID;
+    setWidgetState((w) => ({
+      ...w,
+      publicWidgetObMid: obMid,
+      publicWidgetObMids: [obMid],
+      publicWidgetLat: null,
+      publicWidgetLon: null,
+      publicWidgetLabel: "",
+    }));
+    try {
+      const res = await fetch(`/widget/api/obcina-widget?ob_mid=${obMid}`);
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        bounds?: [number, number][];
+        obcina?: string;
+      };
+      if (data.bounds && data.bounds.length >= 2) {
+        setWidgetState((w) => {
+          if (w.publicWidgetObMid !== obMid) return w;
+          return {
+            ...w,
+            publicWidgetLat: (data.bounds![0][0] + data.bounds![1][0]) / 2,
+            publicWidgetLon: (data.bounds![0][1] + data.bounds![1][1]) / 2,
+            publicWidgetLabel: data.obcina || "",
+          };
+        });
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const resetWidget = useCallback(() => {
+    setWidgetState(initialWidget());
+  }, []);
+
   useEffect(() => {
     void loadPlans();
     void refreshUser();
@@ -592,54 +649,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       clearSearch: clearSearchState,
       setStatTab: setStatistikaTab,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
-      loadWidgetObcine: async () => {
-        if (widget.publicWidgetObcine.length) return;
-        try {
-          const res = await fetch("/widget/api/obcine-map?days=365");
-          if (res.ok) {
-            const data = (await res.json()) as { ob_id?: number; ob_mid?: number; obcina: string }[];
-            setWidgetState((w) => ({
-              ...w,
-              publicWidgetObcine: data
-                .map((row) => ({ ob_mid: row.ob_id ?? row.ob_mid!, name: row.obcina }))
-                .filter((r) => r.ob_mid && r.name)
-                .sort((a, b) => a.name.localeCompare(b.name, "sl")),
-            }));
-          }
-        } catch {
-          /* ignore */
-        }
-      },
-      loadWidgetObMid: async (mid) => {
-        const obMid = Number(mid) || DEFAULT_OB_MID;
-        setWidgetState((w) => {
-          if (w.publicWidgetObMid === obMid && w.publicWidgetLat != null) return w;
-          return {
-            ...w,
-            publicWidgetObMid: obMid,
-            publicWidgetObMids: [obMid],
-          };
-        });
-        try {
-          const res = await fetch(`/widget/api/obcina-widget?ob_mid=${obMid}`);
-          if (!res.ok) return;
-          const data = (await res.json()) as {
-            bounds?: [number, number][];
-            obcina?: string;
-          };
-          if (data.bounds && data.bounds.length >= 2) {
-            setWidgetState((w) => ({
-              ...w,
-              publicWidgetLat: (data.bounds![0][0] + data.bounds![1][0]) / 2,
-              publicWidgetLon: (data.bounds![0][1] + data.bounds![1][1]) / 2,
-              publicWidgetLabel: data.obcina || "",
-            }));
-          }
-        } catch {
-          /* ignore */
-        }
-      },
-      resetWidget: () => setWidgetState(initialWidget()),
+      loadWidgetObcine,
+      loadWidgetObMid,
+      resetWidget,
       loadUserWidget,
       openWidgetSetup: async () => {
         if (!user) {
@@ -696,6 +708,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       refreshUser,
       loadPlans,
       loadUserWidget,
+      loadWidgetObcine,
+      loadWidgetObMid,
+      resetWidget,
       afterAuth,
       navigate,
       location.pathname,

@@ -1069,8 +1069,8 @@ body.site-nav-open {
 
 /* —— widget občine page —— */
 .widget-obcine-page {
-  max-width: 920px;
-  margin: 0 auto 2.5rem;
+  max-width: 100%;
+  margin: 0 0 2.5rem;
   padding: 2.5rem 0 0;
 }
 
