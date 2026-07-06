@@ -81,4 +81,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ session_id: sessionId }),
     }),
+  loginGoogle: (credential) =>
+    request("/auth/oauth/google", {
+      method: "POST",
+      body: JSON.stringify({ id_token: credential, client_app: "strelko" }),
+    }),
 };

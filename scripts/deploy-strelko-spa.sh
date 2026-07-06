@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
-# Deploy samo Strelko SPA (dist/) — NE dotika strele2 embed datotek za grafe.
+# Deploy Strelko SPA (dist/) v tekoči nginx container.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONTAINER="${STRELKO_CONTAINER:-stormapi-strelko-1}"
 VERSION="${STRELKO_CACHE_VERSION:-$(date +%Y%m%d%H%M)}"
 HTML="$ROOT/dist/index.html"
+ASSETS="$ROOT/dist/assets"
 
 if [[ ! -f "$HTML" ]]; then
-  echo "Missing $HTML" >&2
+  echo "Missing $HTML — run: npm run build" >&2
+  exit 1
+fi
+
+if [[ ! -d "$ASSETS" ]]; then
+  echo "Missing $ASSETS" >&2
   exit 1
 fi
 
@@ -23,8 +29,13 @@ PY
 
 echo "Cache bust ?v=$VERSION in dist/index.html"
 
-docker cp "$ROOT/dist/assets/index-DijleoXU.js" "$CONTAINER:/usr/share/nginx/html/assets/"
-docker cp "$ROOT/dist/assets/index-b2ecBo4-.css" "$CONTAINER:/usr/share/nginx/html/assets/"
+docker cp "$ASSETS/." "$CONTAINER:/usr/share/nginx/html/assets/"
 docker cp "$HTML" "$CONTAINER:/usr/share/nginx/html/index.html"
+if [[ -f "$ROOT/dist/favicon.svg" ]]; then
+  docker cp "$ROOT/dist/favicon.svg" "$CONTAINER:/usr/share/nginx/html/favicon.svg"
+fi
+if [[ -d "$ROOT/dist/widget" ]]; then
+  docker cp "$ROOT/dist/widget/." "$CONTAINER:/usr/share/nginx/html/widget/"
+fi
 
-echo "Deployed SPA only to $CONTAINER (brez embed sync)"
+echo "Deployed SPA to $CONTAINER"

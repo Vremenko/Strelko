@@ -1,24 +1,29 @@
-# Referenca — ni produkcijski vir
+# Strelko frontend (React + TypeScript)
 
-**Deploy = `dist/`** (`index-DijleoXU.js`), ne ta mapa.
-
-## Kaj je še tukaj
-
-| Datoteka | Namen |
-|----------|--------|
-| `api.js` | API kontrakt (auth, checkout, credits) |
-| `legal.js` | Pravna besedila (referenca) |
-
-Stari Vite vir (`main.js`, `map.js`, `styles.css`, …) je v:
-
-```
-/home/maximus/backups/strelko-archive-20260705/src-legacy/
-```
-
-## Ne delaj
+## Razvoj
 
 ```bash
-npm run build   # prepisuje dist/ — prepovedano za deploy
+npm install
+npm run dev      # http://localhost:5174
+npm run build    # tsc + vite → dist/
 ```
 
-Glej `RECOVERY.md` in `scripts/OPERATIONS.md`.
+## Struktura
+
+```
+src/
+  main.tsx              # entry
+  App.tsx               # react-router routes
+  AppLayout.tsx         # header, footer, modali
+  context/StrelkoContext.tsx   # stanje + API akcije
+  api/client.ts         # StormAPI
+  types/index.ts        # TypeScript tipi
+  pages/                # Landing, Statistika, Widget, …
+  components/           # UI komponente
+  lib/                  # pomožne funkcije (geocode, archive-embed, legal, …)
+  styles.css            # obstoječi slogi
+  pages-extra.css
+src-legacy/             # stari vanilla JS (referenca)
+```
+
+Stari vanilla vir je v `src-legacy/`. Patch skripte: `scripts/legacy-patches/`.

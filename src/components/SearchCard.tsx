@@ -1,0 +1,141 @@
+import { useRef, useState } from "react";
+import { useStrelko } from "../context/StrelkoContext";
+import type { GeocodeResult } from "../types";
+import { formatPlaceName } from "../lib/utils";
+import { SearchScanBolt } from "./icons";
+import { SearchOptions } from "./SearchOptions";
+
+interface SearchCardProps {
+  busy?: boolean;
+  label?: string;
+  placeholder?: string;
+  buttonText?: string;
+  showOverlay?: boolean;
+  showOptions?: boolean;
+}
+
+export function SearchCard({
+  busy: _busy = false,
+  label = "Vnesite naslov ali kraj (Slovenija in okolica)",
+  placeholder = "npr. Celje, Slovenska 1",
+  buttonText = "Preveri",
+  showOverlay = true,
+  showOptions = false,
+}: SearchCardProps) {
+  const {
+    locationQuery,
+    setLocationQuery,
+    selected,
+    selectPlace,
+    suggestions,
+    fetchSuggestions,
+    loading,
+    preview,
+    previewScreen,
+    runPreview,
+    openAuth,
+    clearSearch,
+  } = useStrelko();
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const onInput = (value: string) => {
+    setLocationQuery(value);
+    if (selected && selected.label !== value.trim()) selectPlace(null);
+    clearTimeout(debounce.current);
+    debounce.current = setTimeout(() => void fetchSuggestions(value), 400);
+    setShowSuggestions(true);
+  };
+
+  const pickSuggestion = (s: GeocodeResult) => {
+    selectPlace(s);
+    setLocationQuery(s.label);
+    setShowSuggestions(false);
+  };
+
+  const overlayActive = (loading || (preview && showOverlay)) && !previewScreen;
+
+  return (
+    <div className={`search-card${overlayActive ? " search-card--busy" : ""}`}>
+      {showOverlay && overlayActive && (
+        <div
+          className={`search-overlay${preview && !loading ? " search-overlay--result is-active" : " is-active"}`}
+          role={loading ? "status" : "region"}
+          aria-live="polite"
+        >
+          {loading ? (
+            <div className="search-scanning">
+              <SearchScanBolt />
+              <p className="search-scan-title">Iskanje strel</p>
+              <p className="search-scan-dots">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </p>
+            </div>
+          ) : preview ? (
+            <div className={`search-overlay-result alert-card ${preview.has_nearby_strikes ? "warn" : "ok"}`}>
+              <h3>
+                {preview.has_nearby_strikes
+                  ? "⚡ Strele zaznane v bližini"
+                  : "✓ Brez udarov v radiju"}
+              </h3>
+              <p className="search-overlay-msg">{preview.message_sl}</p>
+              <div className="search-overlay-actions">
+                {preview.requires_login && (
+                  <button type="button" className="btn btn-primary" onClick={() => openAuth("login")}>
+                    Prijavite se za podrobnosti
+                  </button>
+                )}
+                <button type="button" className="btn btn-ghost" onClick={clearSearch}>
+                  Zahtevajte novo lokacijo
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+      <div className="search-card-body">
+        <label htmlFor="location-input">{label}</label>
+        <div className="location-field">
+          <input
+            id="location-input"
+            className="search-input"
+            type="text"
+            placeholder={placeholder}
+            autoComplete="off"
+            value={locationQuery}
+            disabled={loading}
+            onChange={(e) => onInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), void runPreview())}
+            onFocus={() => suggestions.length && setShowSuggestions(true)}
+          />
+          <ul className={`suggestions${showSuggestions && suggestions.length ? "" : " hidden"}`}>
+            {suggestions.map((s: GeocodeResult) => (
+              <li key={`${s.lat}-${s.lon}`}>
+                <button type="button" onClick={() => pickSuggestion(s)}>
+                  {s.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        {selected && (
+          <p className="selected-place" id="selected-place">
+            {formatPlaceName(selected.label)}
+          </p>
+        )}
+        {showOptions && <SearchOptions />}
+        <button
+          type="button"
+          className="btn btn-primary btn-search-full"
+          id="btn-search"
+          disabled={loading}
+          onClick={() => void runPreview()}
+        >
+          {buttonText}
+        </button>
+      </div>
+    </div>
+  );
+}

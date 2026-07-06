@@ -1,0 +1,68 @@
+import { SearchCard } from "../components/SearchCard";
+import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
+import { ResultsView } from "../components/ResultsView";
+import { useStrelko } from "../context/StrelkoContext";
+
+export function ZavarovalnicaPage() {
+  const { searchResult, previewScreen, loading } = useStrelko();
+
+  if (searchResult) {
+    return <ResultsView zavarovalnica />;
+  }
+
+  if (previewScreen === "teaser") {
+    return <PreviewTeaser />;
+  }
+
+  if (previewScreen === "no-strikes") {
+    return <PreviewNoStrikes />;
+  }
+
+  return (
+    <section className="zavarovalnica-page">
+      <header className="zavarovalnica-hero">
+        <h2>
+          Vam je <em>strela</em> poškodovala klimatsko napravo, televizijo ali drugo elektroniko?
+        </h2>
+      </header>
+      <div className="zavarovalnica-intro">
+        <p className="zavarovalnica-lead">
+          Strelko preveri udare strel v bližini vašega naslova in pripravi pregleden izpis, ki vam
+          lahko pomaga pri komunikaciji z zavarovalnico.
+        </p>
+        <p className="zavarovalnica-lead">
+          Na podlagi razpoložljivih podatkov prikažemo, ali so bili v izbranem obdobju v okolici
+          vašega naslova zaznani udari strel.
+        </p>
+      </div>
+      <div className="zavarovalnica-grid">
+        <div className="zavarovalnica-block zavarovalnica-block--how">
+          <h3 className="zavarovalnica-subtitle">Kako deluje</h3>
+          <ol className="zavarovalnica-steps">
+            <li>Vnesete naslov, kjer je nastala škoda, ter izberete obdobje pregleda.</li>
+            <li>Strelko preveri zaznane udare strel v izbranem radiju okoli naslova.</li>
+            <li>Rezultate prikaže na zemljevidu in v tabeli.</li>
+            <li>Pregled lahko shranite kot PDF in ga uporabite kot prilogo pri prijavi škode.</li>
+          </ol>
+        </div>
+        <div className="zavarovalnica-block zavarovalnica-block--benefits">
+          <h3 className="zavarovalnica-subtitle">Kaj vključuje pregled</h3>
+          <ul className="zavarovalnica-list">
+            <li>pregled zaznanih udarov strel v bližini izbranega naslova,</li>
+            <li>zemljevid z lokacijami udarov in označeno lokacijo naslova,</li>
+            <li>čas in oddaljenost posameznih udarov strel,</li>
+            <li>povzetek rezultatov za izbrano obdobje,</li>
+            <li>možnost izvoza oziroma shranjevanja pregleda v PDF obliki.</li>
+          </ul>
+        </div>
+      </div>
+      <SearchCard
+        busy={loading}
+        label="Preverite udare strel v bližini"
+        placeholder="npr. Ženjak 4, Benedikt"
+        buttonText="Prikaži rezultate"
+        showOptions
+      />
+    </section>
+  );
+}
