@@ -261,6 +261,7 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  justify-content: flex-start;
 }
 
 .stat-tab {
@@ -283,6 +284,26 @@
 
 .stat-panel--hidden {
   display: none !important;
+}
+
+/* —— leva poravnava (kartice + statistika) —— */
+.features .feature {
+  text-align: left;
+}
+
+.archive-charts-head,
+.archive-charts-lead,
+.archive-charts-page .archive-charts-head h2 {
+  text-align: left;
+}
+
+.archive-charts-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.widget-obcine-head {
+  text-align: left;
 }
 
 .archive-charts-embed-wrap--overlay-host {
@@ -1046,13 +1067,216 @@ body.site-nav-open {
   }
 }
 
-.widget-copy-btn {
-  margin-bottom: 0;
+/* —— widget občine page —— */
+.widget-obcine-page {
+  max-width: 920px;
+  margin: 0 auto 2.5rem;
+  padding: 2.5rem 0 0;
+}
+
+.widget-obcine-page .widget-obcine-head {
+  text-align: left;
+  margin-bottom: 1.35rem;
+}
+
+.widget-obcine-page .widget-obcine-head h2 {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.2rem, 3.5vw, 1.85rem);
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.widget-obcine-page .widget-obcine-lead {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 42rem;
+}
+
+.widget-obcine-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.widget-obcine-page .search-card--inline {
+  max-width: none;
+  margin: 0;
+  text-align: left;
+}
+
+.widget-obcine-settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.25rem;
+}
+
+.widget-obcine-field {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.widget-obcine-field--action {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.1rem;
+}
+
+.widget-obcine-page .search-card-body label,
+.widget-obcine-page .search-options {
+  text-align: left;
+}
+
+.widget-mode-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0;
+}
+
+.widget-mode-btn {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.widget-mode-btn + .widget-mode-btn {
+  border-left: 1px solid var(--border);
+}
+
+.widget-mode-btn--active {
+  background: rgba(5, 165, 206, 0.16);
+  color: var(--blue);
+}
+
+.widget-mode-btn:hover:not(.widget-mode-btn--active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.widget-obcine-preview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.widget-obcine-preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin: 0 0 1rem;
 }
 
 .widget-obcine-size-hint {
   margin: 0;
   flex: 1 1 12rem;
+}
+
+.widget-preview-frame {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.65rem;
+  margin: 0 0 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.widget-obcine-iframe {
+  border: none;
+  border-radius: 14px;
+  display: block;
+  margin: 0 auto;
+  background: #333333;
+  width: 100%;
+}
+
+.widget-obcine-iframe--compact {
+  max-width: 450px;
+  height: 420px;
+}
+
+.widget-obcine-iframe--full {
+  max-width: 960px;
+  height: 640px;
+}
+
+.widget-obcine-embed-code {
+  width: 100%;
+  min-height: 5.5rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  resize: vertical;
+  margin-bottom: 0.45rem;
+}
+
+.widget-copy-btn {
+  margin-bottom: 0;
+}
+
+.widget-field-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+@media (max-width: 899px) {
+  .widget-obcine-page {
+    max-width: 100%;
+    padding-top: 1.5rem;
+  }
+
+  .widget-preview-frame {
+    padding: 0.5rem;
+  }
+
+  .widget-obcine-iframe--full,
+  .widget-obcine-iframe--compact {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .widget-obcine-iframe--full {
+    min-height: 420px;
+  }
+
+  .widget-obcine-field {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: min(100%, 11rem);
+  }
+
+  .widget-obcine-field--action {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    padding-bottom: 0;
+  }
+
+  .widget-obcine-preview-toolbar {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 479px) {
+  .widget-obcine-field {
+    flex: 1 1 100%;
+  }
 }
 
 /* —— search date picker fix —— */
