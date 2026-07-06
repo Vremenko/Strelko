@@ -336,7 +336,13 @@
   color: var(--text);
   min-height: 32px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f2f2f2' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
 
 .stat-days-hit {
@@ -350,6 +356,7 @@
   cursor: pointer;
   background: transparent;
   min-height: 36px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .archive-map-wrap,
@@ -360,6 +367,58 @@
   border-radius: 0 !important;
   padding: 0 !important;
   box-shadow: none !important;
+}
+
+/* —— chart scroll pass-through (legacy restore-css-before-widget) —— */
+#archive-embed,
+#archive-embed-full {
+  pointer-events: none;
+  touch-action: pan-y;
+}
+
+.archive-charts-embed-wrap,
+.archive-charts-embed-wrap--full {
+  touch-action: pan-y;
+}
+
+.archive-map-wrap {
+  min-height: 0 !important;
+}
+
+.archive-map-iframe {
+  min-height: 0 !important;
+  height: auto;
+}
+
+@media (max-width: 899px) {
+  .archive-map-wrap {
+    min-height: 0 !important;
+    background: transparent;
+  }
+
+  .archive-map-iframe {
+    min-height: 320px !important;
+    width: 100% !important;
+    display: block !important;
+    background: #1a1a1a !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .chart-wrap,
+  .hourly-chart-wrap,
+  .hourly-chart-wrap canvas,
+  .chart-wrap canvas {
+    touch-action: pan-y;
+  }
+
+  .hourly-chart-wrap canvas,
+  .chart-wrap canvas {
+    pointer-events: none;
+  }
 }
 
 /* Google auth */
