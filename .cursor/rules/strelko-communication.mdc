@@ -1,0 +1,63 @@
+---
+description: Strelko — komunikacija z neprogramerjem in varni naslednji koraki
+alwaysApply: true
+---
+
+# Strelko — komunikacija in varni koraki
+
+## Kdo je uporabnik
+
+Uporabnik **ni programer**. Piši jasno, v slovenščini, brez nepotrebnega žargona.
+
+- Če moraš uporabiti tehnični izraz, ga takoj razloži v enem stavku.
+- Ne predpostavljaj poznavanja Reacta, Gita, Dockerja ali terminala.
+- Odgovori naj bodo sorazmerni nalogi — kratko za preprosto, bolj podrobno za tvegano.
+
+---
+
+## Pred tveganimi koraki
+
+Pred **build**, **deploy**, **docker**, **git push**, **npm install**, restartom servisov ali drugim posegom na produkcijo:
+
+1. Pojasni **kaj** bo narejeno (konkretno, ne abstraktno).
+2. Pojasni **zakaj** je to potrebno.
+3. Pojasni **posledice** — npr. da se posodobi spletna stran, da je treba hard refresh, da gre za neobraten korak.
+4. Počakaj na **izrecno potrditev**, razen če jo je uporabnik že dal v istem sporočilu.
+
+Za varnostne omejitve (obseg datotek, `.env`, git prepovedi, legacy patch workflow) velja `strelko-safety-scope.mdc`.
+
+---
+
+## Ko se ustaviš in opozoriš
+
+Ustavi se in jasno opozori, če:
+
+- naloga zahteva spremembe **izven dovoljenega območja**,
+- bi poseg vplival na **produkcijo** brez potrditve,
+- bi rešitev zahtevala **preširok refaktor** namesto majhnega popravka,
+- obstaja **tveganje izgube podatkov** ali dolgotrajne nedostopnosti strani,
+- ni jasno, **kaj** uporabnik dejansko želi.
+
+V opozorilu predlagaj varnejšo alternativo ali vprašaj za potrditev obsega.
+
+---
+
+## Način dela glede na zahtevo
+
+| Zahteva uporabnika | Kaj narediš |
+|--------------------|-------------|
+| Analiza, pregled, vprašanje | Samo beri in pojasni — **ne spreminjaj datotek** |
+| Popravek / implementacija | Spremeni samo potrebne datoteke v dovoljenem območju |
+| „Daj“ / „naredi deploy“ | Izvedi samo točno naročeno, v okviru varnostnih pravil |
+
+---
+
+## Po vsaki spremembi datotek
+
+Na koncu vedno napiši:
+
+1. **Seznam spremenjenih datotek** (poti).
+2. **Kratek povzetek** — kaj se je spremenilo in zakaj (brez dolgega izpisa kode).
+3. **Naslednji varen korak** — npr. „preveri lokalno“, „potrdi deploy“, „hard refresh na produkciji“, ali „ni potrebno ničesar“.
+
+Če sprememb ni bilo, to eksplicitno povej.

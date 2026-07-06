@@ -1,0 +1,56 @@
+---
+description: Strelko — React/TypeScript/Vite konvencije in regression guard
+alwaysApply: true
+---
+
+# Strelko — React/TypeScript/Vite konvencije
+
+## Osnovno načelo
+
+Vir resnice je **`src/`**. Spremembe naj bodo **majhne, ciljne in reverzibilne** — reši točno naročeni problem, ne „ob strani“ popravljaj sorodne stvari.
+
+Ne uvajaj **večjih refaktorjev**, preurejanja map, sprememb arhitekture ali masovnih preimenovanj brez **izrecne potrditve** uporabnika.
+
+Če naloga zahteva dotik več kot nekaj datotek ali širok refaktor, se ustavi in opozori (glej tudi `strelko-communication.mdc`).
+
+---
+
+## React in TypeScript
+
+- Uporabljaj **funkcionalne komponente** in obstoječe vzorce projekta (`StrelkoContext`, hooks, routing).
+- **Ne kliči React hookov** pogojno, v callbackih, navadnih funkcijah ali `async` funkcijah — samo na vrhu komponente ali znotraj custom hookov.
+- **`useCallback` / `useMemo`**: stabiliziraj funkcije, ki so v odvisnostih `useEffect` ali jih prejema otroška komponenta, če bi sicer povzročile zanke ali nepotrebne ponovne renderje.
+- API odgovore **validiraj pred uporabo** — posebej preveri, ali je polje res **array**, preden kličeš `.map`, `.length`, `.filter` itd.
+- **`dangerouslySetInnerHTML`**: ne uporabljaj brez izrecne potrditve uporabnika.
+- Pri **widgetih in embedih** raje uporabi **sandboxed iframe** kot surov HTML ali script injection v DOM.
+
+Sledi obstoječim konvencijam v datoteki, ki jo urejaš — ne uvajaj novega sloga brez razloga.
+
+---
+
+## Vite in build
+
+- Ne ročno popravljaj **`dist/`** — rezultat pride iz `npm run build`.
+- Ne uporabljaj **`scripts/legacy-patches/`** ali **`patch-*.py`** workflowa za nove popravke.
+
+Build in deploy sta urejena v `strelko-safety-scope.mdc`.
+
+---
+
+## Regression guard — ne uvajaj regresij
+
+Spodnji popravki so **znani in stabilni**. Ob spremembah v povezanih datotekah preveri, da jih ne podreš:
+
+| Območje | Pravilo |
+|---------|---------|
+| **ResultsView** | Ne predpostavljaj, da je `r.daily` vedno array — varno preveri pred iteracijo |
+| **StrikeMap** | Napaka v zemljevidu ne sme podreti celotnega `ResultsView` — ohrani error boundary / izolacijo |
+| **loadUserWidget** | Mora ostati **stabilen `useCallback`**, da ne nastane zanka `/widget` requestov |
+| **Auth + iskanje** | Search flow ne sme temeljiti samo na **stale `user` stanju** po hard refreshu |
+| **sessionStorage** | `searchResult` persistence mora biti **počiščena ob logoutu** |
+| **Homepage** | Ne sme prikazovati **zavarovalniških rezultatov** (`ResultsView` samo na `/pomoc-pri-zavarovalnici`) |
+| **sessionStorage restore** | Obnova iskanja naj ostane **omejena na `/pomoc-pri-zavarovalnici`** |
+| **Widget predogled** | Ne vračaj raw widget preview z **`dangerouslySetInnerHTML`** — uporabi iframe (`WidgetObcinePage`, embed poti) |
+| **Widget občine — izbira** | `loadWidgetObcine` / `loadWidgetObMid` morata biti stabilni callbacki; init effect ne sme ob vsaki spremembi stanja resetirati privzete občine |
+
+Če sprememba dotika katero koli od zgornjih točk, v povzetku na koncu eksplicitno napiši, zakaj regresija ne nastane.
