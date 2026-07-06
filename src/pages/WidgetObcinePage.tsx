@@ -29,13 +29,7 @@ function useMobilePreview(): boolean {
 }
 
 export function WidgetObcinePage() {
-  const {
-    widget,
-    setWidget,
-    loadWidgetObcine,
-    loadWidgetObMid,
-    resetWidget,
-  } = useStrelko();
+  const { widget, setWidget, loadWidgetObcine, loadWidgetObMid } = useStrelko();
   const mobile = useMobilePreview();
 
   useEffect(() => {
@@ -119,19 +113,6 @@ export function WidgetObcinePage() {
                   <option value="dark">Temna (privzeto)</option>
                   <option value="light">Svetla</option>
                 </select>
-              </div>
-              <div className="widget-obcine-field widget-obcine-field--action">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  id="public-widget-defaults"
-                  onClick={() => {
-                    resetWidget();
-                    void loadWidgetObMid(DEFAULT_OB_MID);
-                  }}
-                >
-                  Privzete nastavitve
-                </button>
               </div>
             </div>
           </div>

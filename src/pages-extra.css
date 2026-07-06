@@ -1324,6 +1324,15 @@ body.site-nav-open {
   text-align: left;
 }
 
+.widget-obcine-settings-bar.search-card {
+  min-height: 0;
+  padding: 1rem 1.25rem;
+}
+
+.widget-obcine-settings-bar .search-card-body {
+  padding: 0;
+}
+
 .widget-obcine-settings-row {
   display: flex;
   flex-wrap: wrap;
@@ -1334,13 +1343,6 @@ body.site-nav-open {
 .widget-obcine-field {
   flex: 1 1 10rem;
   min-width: 0;
-}
-
-.widget-obcine-field--action {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: 0.1rem;
 }
 
 .widget-obcine-page .search-card-body label,
@@ -1478,10 +1480,8 @@ body.site-nav-open {
     min-width: min(100%, 11rem);
   }
 
-  .widget-obcine-field--action {
-    flex: 1 1 100%;
-    justify-content: flex-start;
-    padding-bottom: 0;
+  .widget-obcine-settings-bar.search-card {
+    padding: 0.85rem 1rem;
   }
 
   .widget-obcine-preview-toolbar {
