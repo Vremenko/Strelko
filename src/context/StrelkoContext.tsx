@@ -285,15 +285,19 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     if (preview?.requires_login) await runFullSearchInner();
   }, [preview, refreshUser]);
 
-  async function runFullSearchInner() {
-    if (!selected) return;
+  async function runFullSearchInner(place?: GeocodeResult) {
+    const target = place ?? selected;
+    if (!target) {
+      console.warn("runFullSearchInner: manjkajoča lokacija (selected/places)");
+      return;
+    }
     setLoading(true);
     try {
       const body = {
-        lat: selected.lat,
-        lon: selected.lon,
+        lat: target.lat,
+        lon: target.lon,
         radius_km: searchRadiusKm,
-        label: selected.label,
+        label: target.label,
         date_from: searchDateFrom,
         date_to: searchDateTo,
       };
@@ -397,8 +401,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             days: SEARCH_PERIOD_DAYS,
           })) as PreviewResult;
           setPreview(res);
-          if (res.requires_login && user) {
-            await runFullSearchInner();
+          if (res.requires_login && getToken()) {
+            if (!user) {
+              await refreshUser();
+            }
+            await runFullSearchInner(place);
             return;
           }
           if (!user && res.has_nearby_strikes) {
