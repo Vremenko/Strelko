@@ -1,41 +1,8 @@
 // @ts-nocheck
-/** Arhiv strel — embed URL-ji, lazy iframe, interakcija z grafi. */
+/** Arhiv strel — lazy iframe mount in interakcija z grafi. */
 
-export function hasArchiveFullAccess() {
-  return true;
-}
-
-export function archiveEmbedUrl(loggedIn, scope = "full") {
-  const params = new URLSearchParams({
-    days: "30",
-    controls: "1",
-    stats: "1",
-    credit: "0",
-    api: "/arhiv",
-    theme: "dark",
-    refresh_sec: "600",
-  });
-  if (scope === "preview") {
-    params.set("chart", "daily");
-    params.set("compact", "1");
-    params.set("title", "0");
-    params.set("stats", "0");
-  } else {
-    params.set("chart", "all");
-    params.set("obcine", "1");
-    if (!hasArchiveFullAccess()) params.set("locked", "1");
-  }
-  return `/arhiv/public/embed?${params}`;
-}
-
-export function archiveMapEmbedUrl(days = 30) {
-  return `/arhiv/public/map-embed.html?${new URLSearchParams({
-    api: "/arhiv",
-    days: String(days),
-    refresh_sec: "600",
-    v: "5",
-  })}`;
-}
+import { archiveEmbedUrl, archiveMapEmbedUrl } from "./archive-embed";
+import { hasArchiveFullAccess } from "./season";
 
 function mountIframe(wrap, iframeId, createIframe) {
   if (!wrap || wrap.dataset.loaded === "1") return;
@@ -64,14 +31,14 @@ function mountIframe(wrap, iframeId, createIframe) {
   obs.observe(wrap);
 }
 
-export function mountArchiveChartEmbed(wrapId, iframeId, loggedIn, scope) {
+export function mountArchiveChartEmbed(wrapId, iframeId, _loggedIn, scope) {
   const wrap = document.getElementById(wrapId);
   if (!wrap) return;
   const height = scope === "preview" ? "200" : "900";
   mountIframe(wrap, iframeId, () => {
     const iframe = document.createElement("iframe");
     iframe.className = "archive-charts-embed";
-    iframe.src = wrap.dataset.embedSrc || archiveEmbedUrl(loggedIn, scope);
+    iframe.src = wrap.dataset.embedSrc || archiveEmbedUrl(scope, hasArchiveFullAccess());
     iframe.title =
       scope === "preview"
         ? "Dnevni graf strel — Slovenija"
@@ -105,10 +72,10 @@ export function mountArchiveMapEmbed(wrapId, iframeId) {
   });
 }
 
-export function syncArchiveEmbedSrc(wrapId, iframeId, loggedIn, scope) {
+export function syncArchiveEmbedSrc(wrapId, iframeId, _loggedIn, scope) {
   const wrap = document.getElementById(wrapId);
   if (!wrap) return;
-  const src = archiveEmbedUrl(loggedIn, scope);
+  const src = archiveEmbedUrl(scope, hasArchiveFullAccess());
   wrap.dataset.embedSrc = src;
   const iframe = document.getElementById(iframeId);
   if (!iframe) return;

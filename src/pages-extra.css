@@ -537,3 +537,12 @@ body.site-nav-open {
   }
 }
 
+.widget-copy-btn {
+  margin-bottom: 0;
+}
+
+.widget-obcine-size-hint {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+

@@ -1,24 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStrelko } from "../context/StrelkoContext";
+import {
+  copyWidgetEmbedCode,
+  ensureWidgetResizeListener,
+  newWidgetEmbedFrameId,
+  widgetEmbedConfigKey,
+  widgetEmbedHtml,
+  widgetPreviewIframeStyle,
+  widgetPreviewPath,
+  widgetSizeHintText,
+} from "../lib/widget-obcine";
 
 const DEFAULT_OB_MID = 11027849;
 
-function buildWidgetPreviewPath(
-  widget: ReturnType<typeof useStrelko>["widget"],
-  size: "compact" | "full"
-): string {
-  const params = new URLSearchParams();
-  const mid = widget.publicWidgetObMid || DEFAULT_OB_MID;
-  params.set("ob_mid", String(mid));
-  if (widget.publicWidgetLat != null && widget.publicWidgetLon != null) {
-    params.set("lat", String(widget.publicWidgetLat));
-    params.set("lon", String(widget.publicWidgetLon));
-    if (widget.publicWidgetLabel) params.set("label", widget.publicWidgetLabel.slice(0, 80));
-  }
-  params.set("theme", widget.publicWidgetTheme);
-  params.set("size", size === "full" ? "full" : "compact");
-  params.set("api", `${location.origin}/widget/api`);
-  return `/widget/obcina.html?${params}`;
+function useMobilePreview(): boolean {
+  const [mobile, setMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width:899px)").matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width:899px)");
+    const onChange = () => setMobile(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return mobile;
 }
 
 export function WidgetObcinePage() {
@@ -29,23 +36,46 @@ export function WidgetObcinePage() {
     loadWidgetObMid,
     resetWidget,
   } = useStrelko();
+  const mobile = useMobilePreview();
 
   useEffect(() => {
     void loadWidgetObcine();
     void loadWidgetObMid(DEFAULT_OB_MID);
   }, [loadWidgetObcine, loadWidgetObMid]);
 
+  useEffect(() => {
+    ensureWidgetResizeListener();
+  }, []);
+
   const size = widget.publicWidgetPreviewSize;
   const isFull = size === "full";
   const selected = widget.publicWidgetObMid || DEFAULT_OB_MID;
-  const previewSrc = buildWidgetPreviewPath(widget, size);
+  const ready = !!widget.publicWidgetObMid;
+  const previewSrc = ready ? widgetPreviewPath(widget, size) : "about:blank";
+  const embedConfigKey = widgetEmbedConfigKey(widget, size);
+  const frameIdRef = useRef({ key: "", id: newWidgetEmbedFrameId(size) });
+
+  if (frameIdRef.current.key !== embedConfigKey) {
+    frameIdRef.current = {
+      key: embedConfigKey,
+      id: newWidgetEmbedFrameId(size),
+    };
+  }
+
+  const embedCode = useMemo(
+    () => (ready ? widgetEmbedHtml(widget, size, frameIdRef.current.id) : "Izberite občino …"),
+    [ready, embedConfigKey, size, widget]
+  );
+
+  const iframeStyle = widgetPreviewIframeStyle(isFull, mobile);
 
   return (
     <section className="widget-obcine-page">
       <div className="widget-obcine-head">
         <h2>Widget udarov strel za spletne strani</h2>
         <p className="widget-obcine-lead">
-          Brezplačen informativni widget za vdelavo na vašo spletno stran.
+          Brezplačen informativni widget za vdelavo na vašo spletno stran. Prikazuje udare strel v
+          izbrani občini — zadnjih 24 ur, čas zadnje strele in skupno število v zadnjih 30 dneh.
         </p>
       </div>
       <div className="widget-obcine-panel">
@@ -76,7 +106,7 @@ export function WidgetObcinePage() {
               </div>
               <div className="widget-obcine-field">
                 <label className="widget-code-label" htmlFor="public-widget-theme">
-                  Tema
+                  Tema widgeta
                 </label>
                 <select
                   id="public-widget-theme"
@@ -86,7 +116,7 @@ export function WidgetObcinePage() {
                     setWidget({ publicWidgetTheme: e.target.value as "dark" | "light" })
                   }
                 >
-                  <option value="dark">Temna</option>
+                  <option value="dark">Temna (privzeto)</option>
                   <option value="light">Svetla</option>
                 </select>
               </div>
@@ -94,6 +124,7 @@ export function WidgetObcinePage() {
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
+                  id="public-widget-defaults"
                   onClick={() => {
                     resetWidget();
                     void loadWidgetObMid(DEFAULT_OB_MID);
@@ -107,24 +138,34 @@ export function WidgetObcinePage() {
         </div>
         <div className="widget-obcine-preview-card">
           <div className="widget-obcine-preview-toolbar">
-            <div className="widget-mode-toggle" role="tablist">
+            <div className="widget-mode-toggle" role="tablist" aria-label="Velikost widgeta">
               <button
                 type="button"
+                id="public-widget-mode-compact"
                 className={`widget-mode-btn${!isFull ? " widget-mode-btn--active" : ""}`}
+                role="tab"
+                aria-selected={!isFull}
                 onClick={() => setWidget({ publicWidgetPreviewSize: "compact" })}
               >
                 Osnovni
               </button>
               <button
                 type="button"
+                id="public-widget-mode-full"
                 className={`widget-mode-btn${isFull ? " widget-mode-btn--active" : ""}`}
+                role="tab"
+                aria-selected={isFull}
                 onClick={() => setWidget({ publicWidgetPreviewSize: "full" })}
               >
                 Razširjeni
               </button>
             </div>
+            <p id="public-widget-size-hint" className="widget-field-hint widget-obcine-size-hint">
+              {widgetSizeHintText(isFull)}
+            </p>
           </div>
           <div
+            id="public-widget-preview-frame"
             className={`widget-preview-frame${isFull ? " widget-preview-frame--full" : " widget-preview-frame--compact"}`}
           >
             <iframe
@@ -133,6 +174,7 @@ export function WidgetObcinePage() {
               className={`widget-obcine-iframe${isFull ? " widget-obcine-iframe--full" : " widget-obcine-iframe--compact"}`}
               src={previewSrc}
               title="Predogled widgeta"
+              style={iframeStyle}
             />
           </div>
           <label className="widget-code-label" htmlFor="public-widget-embed-code">
@@ -143,8 +185,16 @@ export function WidgetObcinePage() {
             className="widget-embed-code widget-obcine-embed-code"
             readOnly
             rows={4}
-            value={`<iframe src="${location.origin}${previewSrc}" ...></iframe>`}
+            value={embedCode}
           />
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm widget-copy-btn"
+            id="public-widget-copy"
+            onClick={() => void copyWidgetEmbedCode(embedCode)}
+          >
+            Kopiraj kodo
+          </button>
         </div>
       </div>
     </section>

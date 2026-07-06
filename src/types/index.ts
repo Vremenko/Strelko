@@ -32,6 +32,12 @@ export interface Credits {
   payments_enabled?: boolean;
 }
 
+export interface PlansMeta {
+  season_label_sl?: string;
+  archive_free_now?: boolean;
+  in_lightning_season?: boolean;
+}
+
 export interface Plan {
   id: string;
   name_sl: string;
@@ -144,7 +150,12 @@ export interface ModalState {
   auth: AuthMode | null;
   credits: boolean;
   alerts: boolean;
-  checkoutSuccess: { creditsAdded: number; balance: number; planName?: string } | null;
+  checkoutSuccess: {
+    creditsAdded: number;
+    balance: number;
+    planName?: string;
+    planId?: string;
+  } | null;
   creditsOptions: {
     insufficientCredits?: boolean;
     checkoutError?: string;

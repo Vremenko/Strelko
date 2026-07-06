@@ -11,7 +11,7 @@ import { useStrelko } from "../context/StrelkoContext";
 import type { StatTab } from "../types";
 
 export function StatistikaPage() {
-  const { statistikaTab, setStatTab, user } = useStrelko();
+  const { statistikaTab, setStatTab, credits, plansMeta } = useStrelko();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ export function StatistikaPage() {
     navigate(tab === "grafi" ? "/statistika" : `/statistika#${tab}`, { replace: true });
   };
 
-  const fullAccess = hasArchiveFullAccess();
+  const fullAccess = hasArchiveFullAccess(credits, plansMeta);
 
   return (
     <>
@@ -43,7 +43,6 @@ export function StatistikaPage() {
           wrapId="archive-embed-full-wrap"
           iframeId="archive-embed-full"
           scope="full"
-          loggedIn={!!user}
           visible={statistikaTab === "grafi"}
         />
         <ArchiveMapEmbed visible={statistikaTab === "zemljevid"} />

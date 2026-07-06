@@ -57,7 +57,14 @@ export const api = {
     }
     return res.blob();
   },
-  plans: () => request<{ plans: import("../types").Plan[]; payments_enabled?: boolean }>("/strelko/plans"),
+  plans: () =>
+    request<{
+      plans: import("../types").Plan[];
+      payments_enabled?: boolean;
+      season_label_sl?: string;
+      archive_free_now?: boolean;
+      in_lightning_season?: boolean;
+    }>("/strelko/plans"),
   credits: () => request<import("../types").Credits>("/strelko/credits"),
   alerts: () => request<import("../types").AlertsSettings>("/strelko/alerts"),
   updateAlerts: (body: object) =>
@@ -86,7 +93,12 @@ export const api = {
   billingPortal: () =>
     request<{ portal_url: string }>("/strelko/billing-portal", { method: "POST", body: "{}" }),
   verifyCheckout: (sessionId: string) =>
-    request<{ credits_added: number; credits_balance: number }>("/strelko/checkout/verify", {
+    request<{
+      credits_added: number;
+      credits_balance: number;
+      plan_id?: string;
+      plan_name_sl?: string;
+    }>("/strelko/checkout/verify", {
       method: "POST",
       body: JSON.stringify({ session_id: sessionId }),
     }),

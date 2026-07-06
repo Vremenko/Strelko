@@ -1,3 +1,5 @@
+import type { Credits, PlansMeta } from "../types";
+
 export function isLightningSeason(d = new Date()): boolean {
   const m = d.getMonth() + 1;
   const day = d.getDate();
@@ -22,6 +24,12 @@ export const STRELKO_OPEN_ACCESS =
   import.meta.env.VITE_STRELKO_OPEN_ACCESS === "1" ||
   import.meta.env.VITE_STRELKO_OPEN_ACCESS === "true";
 
-export function hasArchiveFullAccess(): boolean {
-  return true;
+export function hasArchiveFullAccess(
+  credits?: Credits | null,
+  plansMeta?: PlansMeta | null
+): boolean {
+  if (STRELKO_OPEN_ACCESS) return true;
+  if (plansMeta?.archive_free_now || isArchiveFreeForAll()) return true;
+  if (credits?.archive_full_access) return true;
+  return false;
 }

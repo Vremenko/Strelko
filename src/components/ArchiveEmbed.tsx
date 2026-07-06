@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { useStrelko } from "../context/StrelkoContext";
 import { archiveEmbedUrl, archiveMapEmbedUrl } from "../lib/archive-embed";
 import { initArchiveDaysOverlay, initArchiveEmbedTap } from "../lib/archive-embed-interaction";
+import { hasArchiveFullAccess } from "../lib/season";
 import type { StatTab } from "../types";
 
 interface ArchiveChartEmbedProps {
   wrapId: string;
   iframeId: string;
   scope: "preview" | "full";
-  loggedIn: boolean;
   visible?: boolean;
 }
 
@@ -50,10 +51,11 @@ export function ArchiveChartEmbed({
   wrapId,
   iframeId,
   scope,
-  loggedIn,
   visible = true,
 }: ArchiveChartEmbedProps) {
-  const src = archiveEmbedUrl(loggedIn, scope);
+  const { credits, plansMeta } = useStrelko();
+  const fullAccess = hasArchiveFullAccess(credits, plansMeta);
+  const src = archiveEmbedUrl(scope, fullAccess);
   const height = scope === "preview" ? "200" : "900";
   const title =
     scope === "preview" ? "Dnevni graf strel — Slovenija" : "Arhiv strel — Slovenija";
@@ -69,6 +71,7 @@ export function ArchiveChartEmbed({
     >
       {show ? (
         <iframe
+          key={src}
           id={iframeId}
           className="archive-charts-embed"
           src={src}
@@ -159,7 +162,7 @@ export function StatistikaTabs({
   );
 }
 
-export function LandingArchivePreview({ loggedIn }: { loggedIn: boolean }) {
+export function LandingArchivePreview() {
   return (
     <section className="archive-charts-preview" id="statistika-strel">
       <h3 className="archive-charts-title">Statistika strel v Sloveniji</h3>
@@ -167,7 +170,6 @@ export function LandingArchivePreview({ loggedIn }: { loggedIn: boolean }) {
         wrapId="archive-embed-wrap"
         iframeId="archive-embed"
         scope="preview"
-        loggedIn={loggedIn}
       />
       <div className="archive-charts-actions">
         <a href="/statistika" className="btn btn-primary archive-charts-more">

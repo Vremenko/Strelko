@@ -11,6 +11,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { geocodeAddress } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
+import { defaultSelectedPlanId } from "../lib/plans-modal";
 import {
   DEFAULT_SEARCH_RADIUS_KM,
   SEARCH_PERIOD_DAYS,
@@ -24,6 +25,7 @@ import type {
   GeocodeResult,
   ModalState,
   Plan,
+  PlansMeta,
   PreviewResult,
   PreviewScreen,
   SearchResult,
@@ -39,6 +41,7 @@ interface StrelkoState {
   credits: Credits | null;
   alerts: AlertsSettings | null;
   plans: Plan[];
+  plansMeta: PlansMeta;
   paymentsEnabled: boolean;
   selectedPlan: string;
   selected: GeocodeResult | null;
@@ -124,8 +127,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [credits, setCredits] = useState<Credits | null>(null);
   const [alerts, setAlerts] = useState<AlertsSettings | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansMeta, setPlansMeta] = useState<PlansMeta>({});
   const [paymentsEnabled, setPaymentsEnabled] = useState(false);
-  const [selectedPlan, setSelectedPlanState] = useState("premium");
+  const [selectedPlan, setSelectedPlanState] = useState("podpornik");
   const [selected, setSelected] = useState<GeocodeResult | null>(null);
   const [locationQuery, setLocationQueryState] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
@@ -175,8 +179,18 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const loadPlans = useCallback(async () => {
     try {
       const res = await api.plans();
-      setPlans(res.plans || []);
+      const loadedPlans = res.plans || [];
+      setPlans(loadedPlans);
+      setPlansMeta({
+        season_label_sl: res.season_label_sl,
+        archive_free_now: res.archive_free_now,
+        in_lightning_season: res.in_lightning_season,
+      });
       setPaymentsEnabled(!!res.payments_enabled);
+      setSelectedPlanState((prev) => {
+        if (loadedPlans.some((p) => p.id === prev)) return prev;
+        return defaultSelectedPlanId(loadedPlans);
+      });
     } catch {
       setPlans([]);
     }
@@ -215,7 +229,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           checkoutSuccess: {
             creditsAdded: res.credits_added,
             balance: res.credits_balance,
-            planName: credits?.plan_name_sl,
+            planName: res.plan_name_sl ?? credits?.plan_name_sl,
+            planId: res.plan_id,
           },
           creditsOptions: {},
         });
@@ -265,7 +280,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       const err = e as ApiError;
       if (err.status === 402) {
-        setSelectedPlanState("premium");
+        setSelectedPlanState(defaultSelectedPlanId(plans));
         setModals((m) => ({
           ...m,
           credits: true,
@@ -288,6 +303,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       credits,
       alerts,
       plans,
+      plansMeta,
       paymentsEnabled,
       selectedPlan,
       selected,
@@ -365,11 +381,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setSearchDateTo(range.to);
       },
       openPremiumUpsell: () => {
-        setSelectedPlanState("premium");
+        setSelectedPlanState(defaultSelectedPlanId(plans));
         setModals((m) => ({ ...m, credits: true, creditsOptions: {} }));
       },
       openMeteoAlarmUpsell: () => {
-        setSelectedPlanState("premium");
+        setSelectedPlanState(defaultSelectedPlanId(plans));
         if (alerts?.sms_eligible) {
           setModals((m) => ({ ...m, alerts: true }));
         } else {
@@ -518,6 +534,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       credits,
       alerts,
       plans,
+      plansMeta,
       paymentsEnabled,
       selectedPlan,
       selected,

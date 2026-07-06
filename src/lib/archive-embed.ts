@@ -1,6 +1,7 @@
-import { hasArchiveFullAccess } from "./season";
-
-export function archiveEmbedUrl(_loggedIn: boolean, scope: "preview" | "full" = "full"): string {
+export function archiveEmbedUrl(
+  scope: "preview" | "full" = "full",
+  archiveFullAccess = true
+): string {
   const params = new URLSearchParams({
     days: "30",
     controls: "1",
@@ -18,7 +19,7 @@ export function archiveEmbedUrl(_loggedIn: boolean, scope: "preview" | "full" = 
   } else {
     params.set("chart", "all");
     params.set("obcine", "1");
-    if (!hasArchiveFullAccess()) params.set("locked", "1");
+    if (!archiveFullAccess) params.set("locked", "1");
   }
   return `/arhiv/public/embed?${params}`;
 }
@@ -31,5 +32,3 @@ export function archiveMapEmbedUrl(days = 30): string {
     v: "5",
   })}`;
 }
-
-export { initArchiveEmbedTap, initArchiveDaysOverlay } from "./archive-embed-interaction";

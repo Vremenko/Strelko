@@ -8,7 +8,7 @@ import { ResultsView } from "../components/ResultsView";
 import { useStrelko } from "../context/StrelkoContext";
 
 export function LandingPage() {
-  const { searchResult, previewScreen, loading, user } = useStrelko();
+  const { searchResult, previewScreen, loading } = useStrelko();
 
   if (searchResult) {
     return (
@@ -67,7 +67,7 @@ export function LandingPage() {
           <p>Statistika udarov strel po Sloveniji — dnevni in urni pregled.</p>
         </Link>
       </section>
-      <LandingArchivePreview loggedIn={!!user} />
+      <LandingArchivePreview />
     </>
   );
 }
