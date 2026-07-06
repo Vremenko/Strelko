@@ -25,7 +25,6 @@ export function Header() {
     openAuth,
     logout,
     openCredits,
-    openAlerts,
     openBillingPortal,
   } = useStrelko();
   const navigate = useNavigate();
@@ -115,9 +114,6 @@ export function Header() {
                   <button type="button" className="btn btn-ghost" onClick={() => openCredits()}>
                     Paketi
                   </button>
-                  <button type="button" className="btn btn-ghost" onClick={() => openAlerts()}>
-                    Opozorila
-                  </button>
                   {credits?.billing_portal_available && (
                     <button
                       type="button"
@@ -199,16 +195,6 @@ export function Header() {
                   }}
                 >
                   Paketi
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-block"
-                  onClick={() => {
-                    closeDrawer();
-                    openAlerts();
-                  }}
-                >
-                  Opozorila
                 </button>
                 {credits?.billing_portal_available && (
                   <button

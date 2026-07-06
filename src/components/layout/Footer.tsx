@@ -35,10 +35,10 @@ export function Footer() {
 export function Disclaimer() {
   return (
     <aside className="disclaimer" role="note" aria-label="Opozorilo">
-      <strong>Opozorilo:</strong> Podatki so informativne narave in se lahko razlikujejo od uradnih
-      evidenc. Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve zavarovalnic ali morebitna
-      odstopanja v podatkih. Za uradne postopke se obrnite na svojo zavarovalnico oziroma druge
-      pristojne institucije.
+      <strong>Opozorilo:</strong> Prikazani podatki so izključno informativne narave in se lahko
+      razlikujejo od uradnih evidenc. Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve
+      zavarovalnic ali točnost podatkov v posameznem primeru. Za uradne postopke se obrnite na
+      pristojne institucije in zavarovalnico.
     </aside>
   );
 }
