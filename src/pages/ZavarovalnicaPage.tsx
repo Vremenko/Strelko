@@ -58,7 +58,7 @@ export function ZavarovalnicaPage() {
             <li>Vnesete naslov, kjer je nastala škoda, ter izberete obdobje pregleda.</li>
             <li>Strelko preveri zaznane udare strel v izbranem radiju okoli naslova.</li>
             <li>Rezultate prikaže na zemljevidu in v tabeli.</li>
-            <li>Pregled lahko shranite kot PDF in ga uporabite kot prilogo pri prijavi škode.</li>
+            <li>Pregled lahko shranite kot PDF in ga uporabite kot prilogo pri prijavi škode zavarovalnici.</li>
           </ol>
         </div>
         <div className="zavarovalnica-block zavarovalnica-block--benefits">
