@@ -175,11 +175,21 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>(null);
   const [searchResult, setSearchResultState] = useState<SearchResult | null>(() =>
-    readSearchResultFromStorage()
+    window.location.pathname === "/pomoc-pri-zavarovalnici"
+      ? readSearchResultFromStorage()
+      : null
   );
   const applySearchResult = useCallback((res: SearchResult | null) => {
     writeSearchResultToStorage(res);
     setSearchResultState(res);
+  }, []);
+  const clearSearchState = useCallback(() => {
+    writeSearchResultToStorage(null);
+    setPreview(null);
+    setPreviewScreen(null);
+    setSearchResultState(null);
+    setSelected(null);
+    setLocationQueryState("");
   }, []);
   const [searchRadiusKm, setSearchRadiusKm] = useState(DEFAULT_SEARCH_RADIUS_KM);
   const [searchDateFrom, setSearchDateFrom] = useState(defaultRange.from);
@@ -279,11 +289,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   }, [loadPlans, refreshUser]);
 
   useEffect(() => {
+    if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
     if (searchResult) return;
     const stored = readSearchResultFromStorage();
     if (!stored) return;
     applySearchResult(stored);
-  }, [searchResult, applySearchResult]);
+  }, [searchResult, applySearchResult, location.pathname]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -551,6 +562,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setToken(null);
         setUser(null);
         setCredits(null);
+        clearSearchState();
       },
       openCredits: (opts = {}) =>
         setModals((m) => ({ ...m, credits: true, creditsOptions: opts })),
@@ -577,14 +589,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("strelko_cookie_consent", "1");
         setCookieAccepted(true);
       },
-      clearSearch: () => {
-        writeSearchResultToStorage(null);
-        setPreview(null);
-        setPreviewScreen(null);
-        setSearchResultState(null);
-        setSelected(null);
-        setLocationQueryState("");
-      },
+      clearSearch: clearSearchState,
       setStatTab: setStatistikaTab,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
       loadWidgetObcine: async () => {
@@ -694,6 +699,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       afterAuth,
       navigate,
       location.pathname,
+      clearSearchState,
       alerts,
     ]
   );

@@ -1,33 +1,12 @@
 import { Link } from "react-router-dom";
 import { HeroHouseIllustration } from "../components/HeroHouseIllustration";
 import { LandingArchivePreview, ArchiveEmbedHost } from "../components/ArchiveEmbed";
-import { CreditsBar } from "../components/CreditsBar";
-import { ErrorBoundary } from "../components/ErrorBoundary";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { IconInsurance, IconMap, IconShield } from "../components/icons";
-import { ResultsView } from "../components/ResultsView";
 import { useStrelko } from "../context/StrelkoContext";
 
 export function LandingPage() {
-  const { searchResult, previewScreen } = useStrelko();
-
-  if (searchResult) {
-    return (
-      <>
-        <ArchiveEmbedHost />
-        <CreditsBar />
-        <ErrorBoundary
-          fallback={
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-              Pregleda rezultatov trenutno ni mogoče prikazati. Poskusite znova iskanje.
-            </p>
-          }
-        >
-          <ResultsView />
-        </ErrorBoundary>
-      </>
-    );
-  }
+  const { previewScreen } = useStrelko();
 
   if (previewScreen === "teaser") {
     return (
