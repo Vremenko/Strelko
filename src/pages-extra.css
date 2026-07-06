@@ -149,12 +149,42 @@
 .zavarovalnica-page {
   max-width: 100%;
   margin: 0 0 2rem;
-  padding: 0;
+  padding-top: 2.5rem;
 }
 
 .zavarovalnica-hero {
   text-align: left;
   margin-bottom: 1.35rem;
+}
+
+.zavarovalnica-page .zavarovalnica-hero {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.zavarovalnica-page .zavarovalnica-hero h2 {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.2rem, 3.5vw, 1.85rem);
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--text);
+  text-align: left;
+}
+
+.zavarovalnica-page .zavarovalnica-hero h2 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.zavarovalnica-page .zavarovalnica-lead {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.zavarovalnica-page .zavarovalnica-lead:last-child {
+  margin-bottom: 0;
 }
 
 .zavarovalnica-intro {
@@ -168,6 +198,22 @@
   gap: 1.25rem 1.75rem;
   margin-bottom: 1.25rem;
   text-align: left;
+}
+
+.zavarovalnica-block {
+  text-align: left;
+  margin-bottom: 0;
+}
+
+.zavarovalnica-grid .zavarovalnica-block {
+  margin-bottom: 0;
+}
+
+.zavarovalnica-block--how,
+.zavarovalnica-block--benefits {
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 .zavarovalnica-subtitle {
@@ -217,6 +263,7 @@
   margin: 0 0 0.5rem;
   font-size: 1.05rem;
   font-weight: 700;
+  color: var(--text);
 }
 
 .zavarovalnica-page .search-card-intro {
