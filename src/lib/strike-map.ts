@@ -26,8 +26,15 @@ const STRIKE_ICON = L.divIcon({
   iconAnchor: [9, 9],
 });
 
+const STRIKE_POPUP_CLASS = "strele-strike-popup-shell";
+const strikePopupOptions: L.PopupOptions = { className: STRIKE_POPUP_CLASS };
+
 function strikePopupHtml(strike: StrikePoint): string {
-  return `<strong>Strela</strong><br>${formatStrikeDateTime(strike.ts_utc)}<br>~${formatSlDecimal(strike.distance_km)}`;
+  return `<div class="strele-strike-tooltip"><strong>Strela</strong> ~${formatSlDecimal(strike.distance_km)} km<br>${formatStrikeDateTime(strike.ts_utc)}</div>`;
+}
+
+function homePopupHtml(): string {
+  return `<div class="strele-strike-tooltip"><strong>Vaša lokacija</strong></div>`;
 }
 
 function rebuildStrikeLayer(
@@ -41,7 +48,7 @@ function rebuildStrikeLayer(
   group.addLayer(L.marker([lat, lon]));
   strikes.forEach((strike) => {
     const marker = L.marker([strike.lat, strike.lon], { icon: STRIKE_ICON });
-    marker.bindPopup(strikePopupHtml(strike));
+    marker.bindPopup(strikePopupHtml(strike), strikePopupOptions);
     marker.addTo(layer);
     group.addLayer(marker);
   });
@@ -105,7 +112,11 @@ function fitStrikeGroup(
   minZoom?: number
 ) {
   if (strikeCount > 0) {
-    map.fitBounds(group.getBounds().pad(0.15), { animate: false, maxZoom: 15 });
+    try {
+      map.fitBounds(group.getBounds().pad(0.15), { animate: false, maxZoom: 15 });
+    } catch {
+      map.setView([lat, lon], minZoom ?? 11, { animate: false });
+    }
   } else {
     map.setView([lat, lon], minZoom ?? 11, { animate: false });
   }
@@ -222,7 +233,7 @@ export function createStrikeMap(
 
   L.marker([lat, lon], { icon: HOME_ICON })
     .addTo(map)
-    .bindPopup("<strong>Vaša lokacija</strong>");
+    .bindPopup(homePopupHtml(), strikePopupOptions);
 
   L.circle([lat, lon], {
     radius: radiusKm * 1000,
@@ -260,9 +271,21 @@ export function createStrikeMap(
     },
     destroy() {
       basemapLoadActive = false;
-      unbindGestures();
-      map.remove();
-      delete (el as HTMLElement & { _leafletMap?: L.Map })._leafletMap;
+      try {
+        unbindGestures();
+      } catch {
+        /* ignore */
+      }
+      try {
+        map.remove();
+      } catch {
+        /* ignore — container may already be detached */
+      }
+      try {
+        delete (el as HTMLElement & { _leafletMap?: L.Map })._leafletMap;
+      } catch {
+        /* ignore */
+      }
     },
   };
 }

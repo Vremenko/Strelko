@@ -286,6 +286,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         date_to: searchDateTo,
       };
       const res = (await api.search(body)) as SearchResult;
+      if (!res || typeof res !== "object" || !Array.isArray(res.daily)) {
+        alert(
+          "Odgovor strežnika ni v pričakovani obliki. Poskusite znova ali zmanjšajte obdobje/radij."
+        );
+        return;
+      }
       setSearchResult(res);
       setPreview(null);
       setPreviewScreen(null);

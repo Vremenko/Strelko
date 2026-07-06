@@ -1,14 +1,14 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { HourlyChartPanel } from "./HourlyChartPanel";
 import { ResultsWidgetPanel } from "./ResultsWidgetPanel";
+import { StrikeMap } from "./StrikeMap";
 import { useStrelko } from "../context/StrelkoContext";
 import { formatSlDate, formatSlDateRange, formatSlDecimal, formatStrikeDateTime } from "../lib/dates";
-import { HOURLY_PROFILE_MIN_STRIKES, SEARCH_PERIOD_DAYS } from "../lib/search-dates";
+import { HOURLY_PROFILE_MIN_STRIKES } from "../lib/search-dates";
 import type { DailyStrike, HourlyChartData, StrikePoint } from "../types";
-
-const StrikeMap = lazy(() => import("./StrikeMap").then((m) => ({ default: m.StrikeMap })));
 
 function nearestStrikeKm(daily: DailyStrike[]): number | null {
   return daily.reduce<number | null>((min, row) => {
@@ -123,9 +123,9 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
   const r = searchResult;
   const panelClass = zavarovalnica ? " results-panel--zavarovalnica" : "";
   const backTo = zavarovalnica ? "/pomoc-pri-zavarovalnici" : "/";
-  const periodDays = r.period_days ?? SEARCH_PERIOD_DAYS;
-  const nearestKm = nearestStrikeKm(r.daily);
-  const periodLabel = `Obdobje: ${formatSlDateRange(r.date_from, r.date_to)} (${periodDays} dni) · radij ${r.radius_km} km`;
+  const daily = Array.isArray(r.daily) ? r.daily : [];
+  const nearestKm = nearestStrikeKm(daily);
+  const periodLabel = `Obdobje: ${formatSlDateRange(r.date_from, r.date_to)} · radij ${r.radius_km} km`;
 
   return (
     <section className={`results-panel${panelClass}`}>
@@ -138,7 +138,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           <div className="lbl">Skupaj udarov</div>
         </div>
         <div className="stat-box">
-          <div className="num">{r.daily.length}</div>
+          <div className="num">{daily.length}</div>
           <div className="lbl">Dni z udari</div>
         </div>
         <div className="stat-box">
@@ -149,13 +149,14 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
         </div>
       </div>
       <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{periodLabel}</p>
+      {!daily.length && (
+        <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+          Za izbrano obdobje ni bilo najdenih podatkov o udarih strel.
+        </p>
+      )}
       <ResultsWidgetPanel />
       <div className="strike-map-block">
-        <Suspense
-          fallback={
-            <div id="strike-map" aria-busy="true" aria-label="Nalaganje zemljevida udarov strel" />
-          }
-        >
+        <ErrorBoundary>
           <StrikeMap
             lat={r.lat}
             lon={r.lon}
@@ -163,7 +164,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
             strikes={mapStrikes}
             refit={selectedMapDay != null}
           />
-        </Suspense>
+        </ErrorBoundary>
       </div>
       <p className="daily-table-hint">
         Kliknite na vrstico dneva za prikaz udarov na zemljevidu. Ponovni klik prikaže vse dni. Pri
@@ -181,8 +182,8 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
             </tr>
           </thead>
           <tbody>
-            {r.daily.length ? (
-              r.daily.map((d) => {
+            {daily.length ? (
+              daily.map((d) => {
                 const key = dayKey(d.datum);
                 const selected = selectedMapDay === key;
                 const hourlyActive = hourlyChartDay === key;
@@ -236,7 +237,9 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
               })
             ) : (
               <tr>
-                <td colSpan={5}>Ni dnevnih zapisov</td>
+                <td colSpan={5}>
+                  Za izbrano obdobje ni bilo najdenih podatkov o udarih strel.
+                </td>
               </tr>
             )}
           </tbody>

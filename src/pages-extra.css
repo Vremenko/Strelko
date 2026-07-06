@@ -390,6 +390,52 @@
   font-family: var(--font);
 }
 
+/* —— strike map popup (ob-tooltip) —— */
+#strike-map .leaflet-popup.strele-strike-popup-shell .leaflet-popup-content-wrapper {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+#strike-map .leaflet-popup.strele-strike-popup-shell .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+#strike-map .strele-strike-tooltip {
+  background: #333333;
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+#strike-map .strele-strike-tooltip strong {
+  color: var(--accent);
+}
+
+#strike-map .leaflet-popup.strele-strike-popup-shell .leaflet-popup-tip {
+  background: #333333;
+  box-shadow: none;
+}
+
+#strike-map .leaflet-popup.strele-strike-popup-shell .leaflet-popup-close-button {
+  color: var(--muted);
+  font-size: 18px;
+  padding: 4px 6px 0 0;
+  width: auto;
+  height: auto;
+}
+
+#strike-map .leaflet-popup.strele-strike-popup-shell .leaflet-popup-close-button:hover {
+  color: var(--text);
+}
+
 @media (max-width: 899px) {
   .strike-map-canvas,
   #strike-map {
