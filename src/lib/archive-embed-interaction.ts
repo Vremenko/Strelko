@@ -33,7 +33,7 @@ export function archiveMapEmbedUrl(days = 30) {
     api: "/arhiv",
     days: String(days),
     refresh_sec: "600",
-    v: "2",
+    v: "5",
   })}`;
 }
 
