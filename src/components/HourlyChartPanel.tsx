@@ -29,23 +29,26 @@ export function HourlyChartPanel({ day, loading, data, onClose }: HourlyChartPan
   }, [loading, data, day]);
 
   return (
-    <div className="hourly-chart-panel embed-hourly-panel" id="hourly-chart-panel">
-      <div className="hourly-chart-head">
-        <h4>Urni profil – {formatSlDate(day)}</h4>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-          Zapri
-        </button>
+    <section className="panel results-hourly-panel" id="hourly-chart-panel">
+      <div className="panel-head">
+        <div className="panel-head-top">
+          <h2 className="panel-head-title">Urni profil</h2>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+            Zapri
+          </button>
+        </div>
+        <p className="panel-period">{formatSlDate(day)}</p>
       </div>
       {loading ? (
         <p className="hourly-chart-loading">Nalagam urni profil …</p>
       ) : (
         <>
-          <div className="hourly-chart-stats stats" ref={statsRef} id="hourly-chart-stats" />
-          <div className="hourly-chart-wrap chart-wrap" ref={wrapRef} id="hourly-chart-wrap">
+          <div className="stats" ref={statsRef} id="hourly-chart-stats" />
+          <div className="chart-wrap hourly-chart-wrap" ref={wrapRef} id="hourly-chart-wrap">
             <canvas id="hourly-strike-chart" ref={canvasRef} />
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }

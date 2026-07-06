@@ -143,7 +143,7 @@ export function mountHourlyChart({
     statsEl.innerHTML = [
       { label: "Skupaj", value: fmt.format(total) },
       {
-        label: "Konica",
+        label: "Vrh",
         value: peak.count
           ? `${hourIntervalLabel(peak.hour)} (${fmt.format(peak.count)})`
           : "—",
