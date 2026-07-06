@@ -251,10 +251,6 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
             day={hourlyChartDay}
             loading={hourlyChartLoading}
             data={hourlyChartData}
-            onClose={() => {
-              setHourlyChartDay(null);
-              setHourlyChartData(null);
-            }}
           />
         )}
       </div>

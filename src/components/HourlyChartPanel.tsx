@@ -7,10 +7,9 @@ interface HourlyChartPanelProps {
   day: string;
   loading: boolean;
   data: HourlyChartData | null;
-  onClose: () => void;
 }
 
-export function HourlyChartPanel({ day, loading, data, onClose }: HourlyChartPanelProps) {
+export function HourlyChartPanel({ day, loading, data }: HourlyChartPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -31,12 +30,7 @@ export function HourlyChartPanel({ day, loading, data, onClose }: HourlyChartPan
   return (
     <section className="panel results-hourly-panel" id="hourly-chart-panel">
       <div className="panel-head">
-        <div className="panel-head-top">
-          <h2 className="panel-head-title">Urni profil</h2>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-            Zapri
-          </button>
-        </div>
+        <h2 className="panel-head-title">Urni profil</h2>
         <p className="panel-period">{formatSlDate(day)}</p>
       </div>
       {loading ? (
