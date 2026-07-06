@@ -1,5 +1,6 @@
 import { SearchCard } from "../components/SearchCard";
 import { CreditsBar } from "../components/CreditsBar";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { ResultsView } from "../components/ResultsView";
 import { useStrelko } from "../context/StrelkoContext";
@@ -11,7 +12,15 @@ export function ZavarovalnicaPage() {
     return (
       <>
         <CreditsBar />
-        <ResultsView zavarovalnica />
+        <ErrorBoundary
+          fallback={
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+              Pregleda rezultatov trenutno ni mogoče prikazati. Poskusite znova iskanje.
+            </p>
+          }
+        >
+          <ResultsView zavarovalnica />
+        </ErrorBoundary>
       </>
     );
   }

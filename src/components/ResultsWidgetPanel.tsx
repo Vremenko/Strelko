@@ -25,10 +25,6 @@ export function ResultsWidgetPanel() {
           <p className="widget-panel-lead">
             Vdelajte spodnjo kodo na svojo stran (1 domena).
           </p>
-          <div
-            className="widget-embed-preview"
-            dangerouslySetInnerHTML={{ __html: embedHtml }}
-          />
           <label className="widget-code-label">Koda za vdelavo</label>
           <textarea className="widget-embed-code" readOnly rows={3} value={embedHtml} />
         </>

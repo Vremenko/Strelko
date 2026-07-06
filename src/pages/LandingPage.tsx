@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { HeroHouseIllustration } from "../components/HeroHouseIllustration";
 import { LandingArchivePreview, ArchiveEmbedHost } from "../components/ArchiveEmbed";
 import { CreditsBar } from "../components/CreditsBar";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { IconInsurance, IconMap, IconShield } from "../components/icons";
 import { ResultsView } from "../components/ResultsView";
@@ -15,7 +16,15 @@ export function LandingPage() {
       <>
         <ArchiveEmbedHost />
         <CreditsBar />
-        <ResultsView />
+        <ErrorBoundary
+          fallback={
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+              Pregleda rezultatov trenutno ni mogoče prikazati. Poskusite znova iskanje.
+            </p>
+          }
+        >
+          <ResultsView />
+        </ErrorBoundary>
       </>
     );
   }

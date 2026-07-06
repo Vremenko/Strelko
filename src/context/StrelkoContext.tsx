@@ -37,6 +37,31 @@ import type {
 } from "../types";
 
 const DEFAULT_OB_MID = 11027849;
+const SEARCH_RESULT_STORAGE_KEY = "strelko_search_result_v1";
+
+function readSearchResultFromStorage(): SearchResult | null {
+  try {
+    const raw = sessionStorage.getItem(SEARCH_RESULT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SearchResult;
+    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.daily)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSearchResultToStorage(res: SearchResult | null): void {
+  try {
+    if (res) {
+      sessionStorage.setItem(SEARCH_RESULT_STORAGE_KEY, JSON.stringify(res));
+    } else {
+      sessionStorage.removeItem(SEARCH_RESULT_STORAGE_KEY);
+    }
+  } catch {
+    /* private browsing / quota */
+  }
+}
 
 interface StrelkoState {
   user: User | null;
@@ -149,7 +174,13 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>(null);
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [searchResult, setSearchResultState] = useState<SearchResult | null>(() =>
+    readSearchResultFromStorage()
+  );
+  const applySearchResult = useCallback((res: SearchResult | null) => {
+    writeSearchResultToStorage(res);
+    setSearchResultState(res);
+  }, []);
   const [searchRadiusKm, setSearchRadiusKm] = useState(DEFAULT_SEARCH_RADIUS_KM);
   const [searchDateFrom, setSearchDateFrom] = useState(defaultRange.from);
   const [searchDateTo, setSearchDateTo] = useState(defaultRange.to);
@@ -248,6 +279,34 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   }, [loadPlans, refreshUser]);
 
   useEffect(() => {
+    const onBeforeUnload = () => {
+      console.warn("[strelko] beforeunload — stran se osvežuje ali zapira");
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      console.warn("[strelko] pageshow", { persisted: event.persisted });
+      const stored = readSearchResultFromStorage();
+      if (stored) {
+        console.warn("[strelko] restore searchResult after pageshow");
+        applySearchResult(stored);
+      }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [applySearchResult]);
+
+  useEffect(() => {
+    if (searchResult) return;
+    const stored = readSearchResultFromStorage();
+    if (!stored) return;
+    console.warn("[strelko] rehydrate searchResult from sessionStorage");
+    applySearchResult(stored);
+  }, [searchResult, applySearchResult]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get("checkout");
     if (!checkout) return;
@@ -326,11 +385,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         );
         return;
       }
-      console.debug("[strelko] setSearchResult", {
+      console.warn("[strelko] setSearchResult", {
         total_strikes: res.total_strikes,
         label: res.location_label,
       });
-      setSearchResult(res);
+      applySearchResult(res);
       setPreview(null);
       setPreviewScreen(null);
       setCredits((c) => ({ ...(c || {}), credits_balance: res.credits_remaining }));
@@ -401,7 +460,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       runPreview: async () => {
         if (runPreviewInFlightRef.current) {
-          console.debug("[strelko] runPreview skipped (in flight)");
+          console.warn("[strelko] runPreview skipped (in flight)");
           return;
         }
         const q = locationQuery.trim();
@@ -545,10 +604,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCookieAccepted(true);
       },
       clearSearch: () => {
-        console.debug("[strelko] clearSearch", new Error().stack);
+        console.warn("[strelko] clearSearch", new Error().stack);
+        writeSearchResultToStorage(null);
         setPreview(null);
         setPreviewScreen(null);
-        setSearchResult(null);
+        setSearchResultState(null);
         setSelected(null);
         setLocationQueryState("");
       },
