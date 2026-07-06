@@ -132,6 +132,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
       <h3 className="results-panel-title">
         ⚡ Pregled strel – {r.location_label || "vaša lokacija"}
       </h3>
+      <p className="results-period">{periodLabel}</p>
       <div className="stats-grid">
         <div className="stat-box">
           <div className="num">{r.total_strikes}</div>
@@ -148,7 +149,6 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           <div className="lbl">Najbližji udar</div>
         </div>
       </div>
-      <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{periodLabel}</p>
       {!daily.length && (
         <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
           Za izbrano obdobje ni bilo najdenih podatkov o udarih strel.
@@ -258,10 +258,6 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           />
         )}
       </div>
-      <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "var(--muted)" }}>
-        Te podatke lahko uporabite kot informativno podlago pri komunikaciji z zavarovalnico. Za
-        uradno potrdilo se obrnite na pristojne institucije.
-      </p>
       <div className="results-actions">
         <button type="button" className="btn btn-primary" onClick={() => void downloadPdf()}>
           Prenesi PDF poročilo
