@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -169,26 +170,43 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     () => localStorage.getItem("strelko_cookie_consent") === "1"
   );
 
+  const refreshUserInFlightRef = useRef<Promise<void> | null>(null);
+  const runPreviewInFlightRef = useRef(false);
+
   const refreshUser = useCallback(async () => {
-    if (!getToken()) {
-      setUser(null);
-      setCredits(null);
-      setPaymentsEnabled(false);
-      return;
-    }
+    const pending = refreshUserInFlightRef.current;
+    if (pending) return pending;
+
+    const task = (async () => {
+      if (!getToken()) {
+        setUser(null);
+        setCredits(null);
+        setPaymentsEnabled(false);
+        return;
+      }
+      try {
+        const u = await api.whoami();
+        const [c, a] = await Promise.all([api.credits(), api.alerts()]);
+        setUser(u);
+        setCredits(c);
+        setAlerts(a);
+        setPaymentsEnabled(!!c.payments_enabled);
+      } catch {
+        setToken(null);
+        setUser(null);
+        setCredits(null);
+        setAlerts(null);
+        setPaymentsEnabled(false);
+      }
+    })();
+
+    refreshUserInFlightRef.current = task;
     try {
-      const u = await api.whoami();
-      const [c, a] = await Promise.all([api.credits(), api.alerts()]);
-      setUser(u);
-      setCredits(c);
-      setAlerts(a);
-      setPaymentsEnabled(!!c.payments_enabled);
-    } catch {
-      setToken(null);
-      setUser(null);
-      setCredits(null);
-      setAlerts(null);
-      setPaymentsEnabled(false);
+      await task;
+    } finally {
+      if (refreshUserInFlightRef.current === task) {
+        refreshUserInFlightRef.current = null;
+      }
     }
   }, []);
 
@@ -308,6 +326,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         );
         return;
       }
+      console.debug("[strelko] setSearchResult", {
+        total_strikes: res.total_strikes,
+        label: res.location_label,
+      });
       setSearchResult(res);
       setPreview(null);
       setPreviewScreen(null);
@@ -378,11 +400,16 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         }
       },
       runPreview: async () => {
+        if (runPreviewInFlightRef.current) {
+          console.debug("[strelko] runPreview skipped (in flight)");
+          return;
+        }
         const q = locationQuery.trim();
         if (!q && !selected) {
           alert("Vnesite naslov ali kraj.");
           return;
         }
+        runPreviewInFlightRef.current = true;
         setLoading(true);
         setPreview(null);
         setPreviewScreen(null);
@@ -401,9 +428,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             days: SEARCH_PERIOD_DAYS,
           })) as PreviewResult;
           if (getToken()) {
-            if (!user) {
-              await refreshUser();
-            }
+            await refreshUser();
             await runFullSearchInner(place);
             return;
           }
@@ -416,6 +441,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           alert((e as Error).message || "Napaka pri predogledu.");
         } finally {
+          runPreviewInFlightRef.current = false;
           setLoading(false);
         }
       },
@@ -519,6 +545,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCookieAccepted(true);
       },
       clearSearch: () => {
+        console.debug("[strelko] clearSearch", new Error().stack);
         setPreview(null);
         setPreviewScreen(null);
         setSearchResult(null);
