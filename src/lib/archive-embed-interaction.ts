@@ -273,9 +273,18 @@ export function initArchiveDaysOverlay() {
 
   const applyFrameHeight = (iframe, frameId, reported) => {
     if (!iframe || !reported) return;
-    const preview = frameId === "archive-embed";
-    const min = preview ? 200 : 320;
-    const max = preview ? 520 : 2400;
+    let min: number;
+    let max: number;
+    if (frameId === "archive-embed") {
+      min = 200;
+      max = 520;
+    } else if (frameId === "archive-map-iframe") {
+      min = 560;
+      max = 1200;
+    } else {
+      min = 320;
+      max = 2400;
+    }
     const h = Math.max(min, Math.min(max, Math.round(reported)));
     iframe.height = String(h);
     iframe.style.height = `${h}px`;
@@ -360,17 +369,19 @@ export function initArchiveDaysOverlay() {
     if (!data || typeof data !== "object") return;
 
     if (data.type === "strele-embed-resize") {
-      const frame = ["archive-embed", "archive-embed-full"].find((id) => {
+      const frame = ["archive-embed", "archive-embed-full", "archive-map-iframe"].find((id) => {
         const el = document.getElementById(id);
         return el && el.contentWindow === ev.source;
       });
       if (frame) {
         const el = document.getElementById(frame);
-        activeIframe = el;
         applyFrameHeight(el, frame, +data.height || 0);
-        ensureOverlay(el.parentElement, el);
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(requestDaysRect, 60);
+        if (frame !== "archive-map-iframe") {
+          activeIframe = el;
+          ensureOverlay(el.parentElement, el);
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(requestDaysRect, 60);
+        }
       }
       return;
     }

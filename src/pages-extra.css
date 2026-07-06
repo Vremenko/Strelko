@@ -381,23 +381,19 @@
   touch-action: pan-y;
 }
 
-.archive-map-wrap {
-  min-height: 0 !important;
-}
-
 .archive-map-iframe {
-  min-height: 0 !important;
-  height: auto;
+  display: block;
+  width: 100%;
+  min-height: 560px;
 }
 
 @media (max-width: 899px) {
   .archive-map-wrap {
-    min-height: 0 !important;
     background: transparent;
   }
 
   .archive-map-iframe {
-    min-height: 320px !important;
+    min-height: 480px !important;
     width: 100% !important;
     display: block !important;
     background: #1a1a1a !important;
