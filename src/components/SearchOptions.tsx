@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { useStrelko } from "../context/StrelkoContext";
+import { openSearchDatePicker } from "../lib/search-date-picker";
 import {
   SEARCH_RADIUS_OPTIONS,
   formatSearchDateLabel,
@@ -23,6 +25,8 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
 
   const busy = disabled || loading;
   const today = todayIso();
+  const fromRef = useRef<HTMLInputElement>(null);
+  const toRef = useRef<HTMLInputElement>(null);
 
   const onRadiusChange = (value: string) => {
     setSearchRadiusKm(Number(value));
@@ -60,11 +64,15 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
       <div className="search-options-row">
         <label className="search-option">
           <span>Od</span>
-          <div className="search-date-wrap">
+          <div
+            className="search-date-wrap"
+            onClick={(e) => openSearchDatePicker(fromRef.current, e)}
+          >
             <span className="search-date-label" id="search-date-from-label">
               {formatSearchDateLabel(searchDateFrom)}
             </span>
             <input
+              ref={fromRef}
               id="search-date-from"
               className="search-date-input search-date-input--picker"
               type="date"
@@ -72,16 +80,21 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
               max={today}
               disabled={busy}
               onChange={(e) => onFromChange(e.target.value)}
+              onInput={(e) => onFromChange((e.target as HTMLInputElement).value)}
             />
           </div>
         </label>
         <label className="search-option">
           <span>Do</span>
-          <div className="search-date-wrap">
+          <div
+            className="search-date-wrap"
+            onClick={(e) => openSearchDatePicker(toRef.current, e)}
+          >
             <span className="search-date-label" id="search-date-to-label">
               {formatSearchDateLabel(searchDateTo)}
             </span>
             <input
+              ref={toRef}
               id="search-date-to"
               className="search-date-input search-date-input--picker"
               type="date"
@@ -89,6 +102,7 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
               max={today}
               disabled={busy}
               onChange={(e) => onToChange(e.target.value)}
+              onInput={(e) => onToChange((e.target as HTMLInputElement).value)}
             />
           </div>
         </label>

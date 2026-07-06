@@ -1,4 +1,5 @@
 import { SearchCard } from "../components/SearchCard";
+import { CreditsBar } from "../components/CreditsBar";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { ResultsView } from "../components/ResultsView";
 import { useStrelko } from "../context/StrelkoContext";
@@ -7,7 +8,12 @@ export function ZavarovalnicaPage() {
   const { searchResult, previewScreen, loading } = useStrelko();
 
   if (searchResult) {
-    return <ResultsView zavarovalnica />;
+    return (
+      <>
+        <CreditsBar />
+        <ResultsView zavarovalnica />
+      </>
+    );
   }
 
   if (previewScreen === "teaser") {
@@ -32,7 +38,8 @@ export function ZavarovalnicaPage() {
         </p>
         <p className="zavarovalnica-lead">
           Na podlagi razpoložljivih podatkov prikažemo, ali so bili v izbranem obdobju v okolici
-          vašega naslova zaznani udari strel.
+          vašega naslova zaznani udari strel. Rezultate si lahko ogledate na zemljevidu in v tabeli
+          ter jih shranite kot PDF izpis.
         </p>
       </div>
       <div className="zavarovalnica-grid">
@@ -58,8 +65,11 @@ export function ZavarovalnicaPage() {
       </div>
       <SearchCard
         busy={loading}
-        label="Preverite udare strel v bližini"
-        placeholder="npr. Ženjak 4, Benedikt"
+        inline
+        title="Preverite udare strel v bližini"
+        intro="Vnesite naslov, izberite radij in obdobje pregleda. Po kliku na gumb se bodo prikazani udari strel v okolici izbrane lokacije."
+        label="Vnesite naslov (kraj in hišna št.), občino ali ulico"
+        placeholder="npr. Škrabčev trg 2, Ribnica"
         buttonText="Prikaži rezultate"
         showOptions
       />

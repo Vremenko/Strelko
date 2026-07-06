@@ -1,6 +1,7 @@
 import { formatSlDate } from "./dates";
 
 export const SEARCH_PERIOD_DAYS = 14;
+export const HOURLY_PROFILE_MIN_STRIKES = 100;
 export const DEFAULT_SEARCH_RADIUS_KM = 10;
 export const SEARCH_RADIUS_OPTIONS = [10, 15, 20] as const;
 

@@ -31,6 +31,7 @@ import type {
   SearchResult,
   StatTab,
   User,
+  UserWidgetConfig,
   WidgetObcina,
 } from "../types";
 
@@ -83,6 +84,8 @@ interface StrelkoContextValue extends StrelkoState {
   setSearchDateRange: (range: { from: string; to: string }) => void;
   openAuth: (mode: AuthMode) => void;
   closeAuth: () => void;
+  openForgotPassword: () => void;
+  closeForgotPassword: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   loginGoogle: (credential: string) => Promise<void>;
@@ -104,6 +107,16 @@ interface StrelkoContextValue extends StrelkoState {
   loadWidgetObcine: () => Promise<void>;
   loadWidgetObMid: (mid: number) => Promise<void>;
   resetWidget: () => void;
+  userWidget: UserWidgetConfig | null;
+  loadUserWidget: () => Promise<void>;
+  openWidgetSetup: () => Promise<void>;
+  closeWidgetSetup: () => void;
+  saveUserWidget: (body: {
+    lat: number;
+    lon: number;
+    label?: string | null;
+    domain?: string | null;
+  }) => Promise<void>;
 }
 
 const StrelkoContext = createContext<StrelkoContextValue | null>(null);
@@ -142,10 +155,13 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [statistikaTab, setStatistikaTab] = useState<StatTab>("grafi");
   const [widget, setWidgetState] = useState(initialWidget);
+  const [userWidget, setUserWidget] = useState<UserWidgetConfig | null>(null);
   const [modals, setModals] = useState<ModalState>({
     auth: null,
     credits: false,
     alerts: false,
+    widget: false,
+    forgotPassword: false,
     checkoutSuccess: null,
     creditsOptions: {},
   });
@@ -226,6 +242,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           auth: null,
           credits: false,
           alerts: false,
+          widget: false,
+          forgotPassword: false,
           checkoutSuccess: {
             creditsAdded: res.credits_added,
             balance: res.credits_balance,
@@ -318,6 +336,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       loading,
       statistikaTab,
       widget,
+      userWidget,
       modals,
       cookieAccepted,
       refreshUser,
@@ -424,8 +443,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           alert((e as Error).message || "PDF ni na voljo.");
         }
       },
-      openAuth: (mode) => setModals((m) => ({ ...m, auth: mode })),
+      openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
       closeAuth: () => setModals((m) => ({ ...m, auth: null })),
+      openForgotPassword: () =>
+        setModals((m) => ({ ...m, auth: null, forgotPassword: true })),
+      closeForgotPassword: () => setModals((m) => ({ ...m, forgotPassword: false })),
       login: async (email, password) => {
         const tok = await api.login(email, password);
         setToken(tok.access_token);
@@ -528,6 +550,45 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         }
       },
       resetWidget: () => setWidgetState(initialWidget()),
+      loadUserWidget: async () => {
+        if (!getToken()) {
+          setUserWidget(null);
+          return;
+        }
+        try {
+          setUserWidget(await api.widget());
+        } catch {
+          setUserWidget(null);
+        }
+      },
+      openWidgetSetup: async () => {
+        if (!user) {
+          setModals((m) => ({ ...m, auth: "login" }));
+          return;
+        }
+        if (!credits?.widget_active) {
+          setSelectedPlanState("podpornik");
+          setModals((m) => ({
+            ...m,
+            credits: true,
+            creditsOptions: {},
+          }));
+          return;
+        }
+        try {
+          setUserWidget(await api.widget());
+        } catch {
+          setUserWidget(null);
+        }
+        setModals((m) => ({ ...m, widget: true }));
+      },
+      closeWidgetSetup: () => setModals((m) => ({ ...m, widget: false })),
+      saveUserWidget: async (body) => {
+        const updated = await api.updateWidget(body);
+        setUserWidget(updated);
+        await refreshUser();
+        setModals((m) => ({ ...m, widget: false }));
+      },
     }),
     [
       user,
@@ -549,6 +610,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       loading,
       statistikaTab,
       widget,
+      userWidget,
       modals,
       cookieAccepted,
       refreshUser,

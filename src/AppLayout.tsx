@@ -5,6 +5,8 @@ import { CookieBanner } from "./components/layout/CookieBanner";
 import { AuthModal } from "./components/modals/AuthModal";
 import { AlertsModal } from "./components/modals/AlertsModal";
 import { CreditsModal, CheckoutSuccessModal } from "./components/modals/CreditsModal";
+import { WidgetSetupModal } from "./components/modals/WidgetSetupModal";
+import { ForgotPasswordModal } from "./components/modals/ForgotPasswordModal";
 
 export function AppLayout() {
   return (
@@ -22,6 +24,8 @@ export function AppLayout() {
       <AlertsModal />
       <CreditsModal />
       <CheckoutSuccessModal />
+      <WidgetSetupModal />
+      <ForgotPasswordModal />
     </>
   );
 }

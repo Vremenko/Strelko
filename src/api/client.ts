@@ -84,6 +84,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
+  forgotPassword: (email: string) =>
+    request<{ message?: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email, client_app: "strelko" }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<{ message?: string }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
   whoami: () => request<import("../types").User>("/auth/whoami"),
   checkout: (plan = "basic") =>
     request<{ checkout_url: string }>("/strelko/checkout", {
@@ -120,6 +130,17 @@ export const api = {
   dayHourly: (body: object) =>
     request<import("../types").HourlyChartData>("/strelko/strikes/hourly", {
       method: "POST",
+      body: JSON.stringify(body),
+    }),
+  widget: () => request<import("../types").UserWidgetConfig>("/strelko/widget"),
+  updateWidget: (body: {
+    lat: number;
+    lon: number;
+    label?: string | null;
+    domain?: string | null;
+  }) =>
+    request<import("../types").UserWidgetConfig>("/strelko/widget", {
+      method: "PUT",
       body: JSON.stringify(body),
     }),
 };

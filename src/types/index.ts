@@ -30,6 +30,20 @@ export interface Credits {
   pdf_reports_available?: boolean;
   archive_full_access?: boolean;
   payments_enabled?: boolean;
+  widget_active?: boolean;
+  widget_configured?: boolean;
+}
+
+export interface UserWidgetConfig {
+  active: boolean;
+  configured: boolean;
+  lat: number | null;
+  lon: number | null;
+  label: string | null;
+  domain: string | null;
+  public_key: string | null;
+  embed_html: string | null;
+  expires_at: string | null;
 }
 
 export interface PlansMeta {
@@ -95,6 +109,9 @@ export interface PreviewResult {
   days_with_strikes?: number;
   nearest_km?: number;
   nearest_date?: string;
+  date_from?: string;
+  date_to?: string;
+  period_days?: number;
   teaser_daily?: { datum: string; stevilo_strel: number }[];
 }
 
@@ -123,6 +140,7 @@ export interface SearchResult {
   daily: DailyStrike[];
   strikes?: StrikePoint[];
   credits_remaining: number;
+  period_days?: number;
 }
 
 export interface WidgetObcina {
@@ -150,6 +168,8 @@ export interface ModalState {
   auth: AuthMode | null;
   credits: boolean;
   alerts: boolean;
+  widget: boolean;
+  forgotPassword: boolean;
   checkoutSuccess: {
     creditsAdded: number;
     balance: number;

@@ -1,10 +1,12 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useStrelko } from "../../context/StrelkoContext";
+import { COMPANY } from "../../lib/legal";
 import { renderGoogleButton } from "../../lib/auth-google";
 
 export function AuthModal() {
-  const { modals, closeAuth, login, register, loginGoogle, openAuth } = useStrelko();
+  const { modals, closeAuth, login, register, loginGoogle, openAuth, openForgotPassword } =
+    useStrelko();
   const mode = modals.auth;
   const googleRef = useRef<HTMLDivElement>(null);
   const loginGoogleRef = useRef(loginGoogle);
@@ -73,11 +75,22 @@ export function AuthModal() {
               <input type="checkbox" name="terms_accepted" required />
               <span>
                 Strinjam se s <Link to="/pogoji-uporabe">pogoji uporabe</Link>,{" "}
-                <Link to="/zasebnost">politiko zasebnosti Strelko</Link>
+                <Link to="/zasebnost">politiko zasebnosti Strelko</Link> in{" "}
+                <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
+                  politiko zasebnosti Meteoinfo
+                </a>
+                .
               </span>
             </label>
           )}
           {error && <p className="form-error">{error}</p>}
+          {isLogin && (
+            <p className="auth-forgot-row">
+              <button type="button" className="btn-link" onClick={openForgotPassword}>
+                Pozabljeno geslo?
+              </button>
+            </p>
+          )}
           <button type="submit" className="btn btn-primary btn-block">
             {isLogin ? "Prijava" : "Ustvari račun"}
           </button>

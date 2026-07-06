@@ -52,3 +52,30 @@ export function formatSlDecimal(value: number | null | undefined, decimals = 1):
   if (value == null || Number.isNaN(Number(value))) return "—";
   return Number(value).toFixed(decimals).replace(".", ",");
 }
+
+export function formatPreviewPeriod(preview: {
+  date_from?: string;
+  date_to?: string;
+  period_days?: number;
+}): string {
+  if (preview.date_from && preview.date_to) {
+    return formatSlDateRange(preview.date_from, preview.date_to);
+  }
+  const days = preview.period_days ?? 14;
+  return `zadnjih ${days} dni`;
+}
+
+export function formatSlTime(iso: string | null | undefined): string {
+  const d = parseIsoDate(iso);
+  if (!d) return "—";
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${h}.${m}`;
+}
+
+export function formatStrikeDateTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = parseIsoDate(iso);
+  if (!d) return String(iso);
+  return `${formatSlDate(iso)}, ${formatSlTime(iso)}`;
+}

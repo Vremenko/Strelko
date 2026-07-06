@@ -17,6 +17,8 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
+    "@maptiler/leaflet-maptilersdk": "^4.1.1",
+    "@maptiler/sdk": "^3.11.2",
     "chart.js": "^4.4.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.7",

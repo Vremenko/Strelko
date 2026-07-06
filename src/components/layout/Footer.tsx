@@ -11,27 +11,23 @@ export function Footer() {
 
   return (
     <footer className="site-footer">
-      <p>
-        &copy; {year} <strong>{COMPANY.shortName}</strong> · Strelko
-      </p>
-      <p>
-        <a href={COMPANY.website} target="_blank" rel="noopener noreferrer">
-          meteoinfo.si
-        </a>{" "}
-        · <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
-      </p>
+      <div className="site-footer-row site-footer-row--top">
+        <p className="site-footer-copy">
+          &copy; {year} <strong>{COMPANY.shortName}</strong> · Strelko
+        </p>
+        <p className="site-footer-contact">
+          <a href={COMPANY.website} target="_blank" rel="noopener noreferrer">
+            meteoinfo.si
+          </a>{" "}
+          · <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
+        </p>
+      </div>
       <nav className="legal-footer-nav" aria-label="Pravne informacije">
         {legalLinks}
         <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
           Politika zasebnosti Meteoinfo
         </a>
       </nav>
-      <p className="site-footer-source">
-        Vir podatkov o udarih strel:{" "}
-        <a href="https://meteo.hr/" target="_blank" rel="noopener noreferrer">
-          DHMZ (meteo.hr)
-        </a>
-      </p>
     </footer>
   );
 }

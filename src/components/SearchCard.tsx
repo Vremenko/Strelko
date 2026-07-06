@@ -12,6 +12,9 @@ interface SearchCardProps {
   buttonText?: string;
   showOverlay?: boolean;
   showOptions?: boolean;
+  inline?: boolean;
+  title?: string;
+  intro?: string;
 }
 
 export function SearchCard({
@@ -21,6 +24,9 @@ export function SearchCard({
   buttonText = "Preveri",
   showOverlay = true,
   showOptions = false,
+  inline = false,
+  title,
+  intro,
 }: SearchCardProps) {
   const {
     locationQuery,
@@ -56,7 +62,9 @@ export function SearchCard({
   const overlayActive = (loading || (preview && showOverlay)) && !previewScreen;
 
   return (
-    <div className={`search-card${overlayActive ? " search-card--busy" : ""}`}>
+    <div
+      className={`search-card${inline ? " search-card--inline" : ""}${overlayActive ? " search-card--busy" : ""}`}
+    >
       {showOverlay && overlayActive && (
         <div
           className={`search-overlay${preview && !loading ? " search-overlay--result is-active" : " is-active"}`}
@@ -96,7 +104,14 @@ export function SearchCard({
         </div>
       )}
       <div className="search-card-body">
-        <label htmlFor="location-input">{label}</label>
+        {title && <h3 className="search-card-title">{title}</h3>}
+        {intro && <p className="search-card-intro">{intro}</p>}
+        {!title && <label htmlFor="location-input">{label}</label>}
+        {title && (
+          <label className="visually-hidden" htmlFor="location-input">
+            {label}
+          </label>
+        )}
         <div className="location-field">
           <input
             id="location-input"

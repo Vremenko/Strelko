@@ -1,32 +1,37 @@
 import { useStrelko } from "../context/StrelkoContext";
+import { formatPreviewPeriod, formatSlDecimal } from "../lib/dates";
+import { SEARCH_PERIOD_DAYS } from "../lib/search-dates";
 import { formatPlaceName } from "../lib/utils";
-import { IconShield } from "./icons";
+import { IconMap } from "./icons";
+
+const FAKE_ROWS = Array.from({ length: 6 }, (_, i) => (
+  <tr key={i}>
+    <td>●●●●-●●-●●</td>
+    <td>●●</td>
+    <td>●● km</td>
+    <td>●●.●●</td>
+  </tr>
+));
 
 export function PreviewTeaser() {
-  const { preview, selected, openAuth, openPremiumUpsell, clearSearch } = useStrelko();
+  const { preview, selected, searchRadiusKm, openAuth, openPremiumUpsell, clearSearch } =
+    useStrelko();
   if (!preview) return null;
 
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
-  const nearest = preview.nearest_km != null ? `${preview.nearest_km.toFixed(1)} km` : "—";
-  const nearestDate = preview.nearest_date || "—";
-
-  const fakeRows = Array.from({ length: 6 }, (_, i) => {
-    const day = 12 - i;
-    return (
-      <tr key={day}>
-        <td>{`2025-06-${String(day).padStart(2, "0")}`}</td>
-        <td>●●</td>
-        <td>●● km</td>
-        <td>●●:●●</td>
-      </tr>
-    );
-  });
+  const nearest =
+    preview.nearest_km != null ? `${formatSlDecimal(preview.nearest_km)} km` : "—";
+  const periodLabel = formatPreviewPeriod(preview);
 
   return (
     <section className="results-panel preview-teaser">
       <p className="preview-teaser-badge">Brezplačen predogled</p>
       <h3 className="results-panel-title">⚡ Strele zaznane — {place}</h3>
       <p className="preview-teaser-lead">{preview.message_sl}</p>
+      <p className="preview-teaser-period">
+        Obdobje pregleda: <strong>{periodLabel}</strong> · radij{" "}
+        <strong>{searchRadiusKm} km</strong>
+      </p>
       <div className="stats-grid">
         <div className="stat-box">
           <div className="num">{preview.total_strikes ?? 0}</div>
@@ -41,18 +46,8 @@ export function PreviewTeaser() {
           <div className="lbl">Najbližji udar</div>
         </div>
       </div>
-      {preview.teaser_daily && preview.teaser_daily.length > 0 && (
-        <ul className="preview-teaser-visible">
-          {preview.teaser_daily.map((d) => (
-            <li key={d.datum}>
-              <strong>{d.datum}</strong> · {d.stevilo_strel}{" "}
-              {d.stevilo_strel === 1 ? "udar" : "udarov"}
-            </li>
-          ))}
-        </ul>
-      )}
       <p className="preview-teaser-hint">
-        Najbližji udarec: <strong>{nearestDate}</strong> · natančen čas in lokacije so skriti.
+        Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo.
       </p>
       <div className="preview-blur-block">
         <div className="preview-blur-content" aria-hidden="true">
@@ -71,7 +66,7 @@ export function PreviewTeaser() {
                 <th>Čas</th>
               </tr>
             </thead>
-            <tbody>{fakeRows}</tbody>
+            <tbody>{FAKE_ROWS}</tbody>
           </table>
         </div>
         <div className="preview-blur-cta">
@@ -80,7 +75,7 @@ export function PreviewTeaser() {
           <ul className="preview-blur-perks">
             <li>Interaktivni zemljevid vseh udarcev</li>
             <li>Točen čas in oddaljenost vsake strele</li>
-            <li>SMS opozorila ob nevihti (Premium)</li>
+            <li>PDF poročilo za zavarovalnico (paket Ob škodi)</li>
           </ul>
           <div className="preview-blur-actions">
             <button type="button" className="btn btn-primary" onClick={() => openAuth("register")}>
@@ -90,7 +85,7 @@ export function PreviewTeaser() {
               Prijava
             </button>
             <button type="button" className="btn btn-ghost" onClick={() => openPremiumUpsell()}>
-              Paketi od 4,99 €
+              Paketi od 4,50 € (vklj. DDV)
             </button>
           </div>
         </div>
@@ -108,12 +103,18 @@ export function PreviewNoStrikes() {
   if (!preview) return null;
 
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
+  const periodLabel = formatPreviewPeriod(preview);
+  const periodDays = preview.period_days ?? SEARCH_PERIOD_DAYS;
 
   return (
     <section className="results-panel preview-teaser preview-no-strikes">
       <p className="preview-teaser-badge preview-teaser-badge--ok">Brez udarov v radiju</p>
       <h3 className="results-panel-title">✓ Brez strel — {place}</h3>
       <p className="preview-teaser-lead">{preview.message_sl}</p>
+      <p className="preview-teaser-period">
+        Obdobje pregleda: <strong>{periodLabel}</strong> · radij{" "}
+        <strong>{searchRadiusKm} km</strong>
+      </p>
       <div className="stats-grid">
         <div className="stat-box">
           <div className="num">0</div>
@@ -124,34 +125,34 @@ export function PreviewNoStrikes() {
           <div className="lbl">Preverjen radij</div>
         </div>
         <div className="stat-box">
-          <div className="num">14</div>
+          <div className="num">{periodDays}</div>
           <div className="lbl">Dni pregleda</div>
         </div>
       </div>
-      <div className="preview-meteoalarm-offer">
-        <div className="preview-meteoalarm-head">
-          <IconShield />
+      <div className="preview-archive-offer">
+        <div className="preview-archive-head">
+          <IconMap />
         </div>
-        <h4>Bodite pripravljeni na naslednjo nevihto</h4>
+        <h4>Statistika strel v Sloveniji</h4>
         <p>
-          Trenutno ni zabeleženih udarov, a nevihte se lahko hitro približajo. Z{" "}
-          <strong>MeteoAlarm</strong> SMS prejmete opozorilo ARSO, ko je v vaši okolici izdano
-          vremensko opozorilo — še preden strela udari.
+          Spremljajte sezonski potek udarov in primerjajte regije. Med sezono odklenite polni
+          arhiv s paketom <strong>Podpornik</strong> — pozimi (nov–feb) je statistika brezplačna
+          za vse.
         </p>
         <ul className="preview-blur-perks">
-          <li>SMS ob rdečem ali oranžnem MeteoAlarm opozorilu</li>
-          <li>Lokacija po vaši izbiri (dom, vikend, objekt)</li>
-          <li>Vključeno v paketu Premium (9,99 €/mesec)</li>
+          <li>Dnevni in urni profil strel po Sloveniji</li>
+          <li>Widget za vašo spletno stran (Podpornik)</li>
+          <li>5 podrobnih pregledov lokacije na sezono</li>
         </ul>
         <div className="preview-blur-actions">
           <button type="button" className="btn btn-primary" onClick={() => openAuth("register")}>
-            Registracija — vključi opozorila
+            Registracija — 1 brezplačen pregled
           </button>
           <button type="button" className="btn btn-ghost" onClick={() => openAuth("login")}>
             Prijava
           </button>
           <button type="button" className="btn btn-ghost" onClick={() => openPremiumUpsell()}>
-            Paket Premium od 9,99 €
+            Paket Podpornik 8,50 €
           </button>
         </div>
       </div>

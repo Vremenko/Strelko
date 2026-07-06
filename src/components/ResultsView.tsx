@@ -1,19 +1,36 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import { StrikeMap } from "./StrikeMap";
 import { HourlyChartPanel } from "./HourlyChartPanel";
+import { ResultsWidgetPanel } from "./ResultsWidgetPanel";
 import { useStrelko } from "../context/StrelkoContext";
-import { formatSlDateRange } from "../lib/dates";
-import type { HourlyChartData, StrikePoint } from "../types";
+import { formatSlDate, formatSlDateRange, formatSlDecimal, formatStrikeDateTime } from "../lib/dates";
+import { HOURLY_PROFILE_MIN_STRIKES, SEARCH_PERIOD_DAYS } from "../lib/search-dates";
+import type { DailyStrike, HourlyChartData, StrikePoint } from "../types";
+
+const StrikeMap = lazy(() => import("./StrikeMap").then((m) => ({ default: m.StrikeMap })));
+
+function nearestStrikeKm(daily: DailyStrike[]): number | null {
+  return daily.reduce<number | null>((min, row) => {
+    const km = row.oddaljenost_najblizje_km;
+    if (km == null) return min;
+    if (min == null || km < min) return km;
+    return min;
+  }, null);
+}
+
+function dayKey(datum: string): string {
+  return String(datum).slice(0, 10);
+}
 
 export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean }) {
-  const { searchResult, credits, downloadPdf, clearSearch } = useStrelko();
+  const { searchResult, downloadPdf, clearSearch } = useStrelko();
   const [selectedMapDay, setSelectedMapDay] = useState<string | null>(null);
   const [mapStrikes, setMapStrikes] = useState<StrikePoint[]>([]);
   const [hourlyChartDay, setHourlyChartDay] = useState<string | null>(null);
   const [hourlyChartLoading, setHourlyChartLoading] = useState(false);
   const [hourlyChartData, setHourlyChartData] = useState<HourlyChartData | null>(null);
+  const hourlyPanelRef = useRef<HTMLDivElement>(null);
   const cacheRef = useRef<{ period: StrikePoint[] | null; days: Record<string, StrikePoint[]> }>({
     period: null,
     days: {},
@@ -85,6 +102,9 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
         datum: day,
       });
       setHourlyChartData(data);
+      requestAnimationFrame(() => {
+        hourlyPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
     } catch (e) {
       setHourlyChartDay(null);
       alert((e as Error).message || "Urni profil ni na voljo.");
@@ -93,11 +113,19 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
     }
   };
 
+  const toggleMapDay = (datum: string) => {
+    const key = dayKey(datum);
+    setSelectedMapDay((prev) => (prev === key ? null : key));
+  };
+
   if (!searchResult) return null;
 
   const r = searchResult;
   const panelClass = zavarovalnica ? " results-panel--zavarovalnica" : "";
   const backTo = zavarovalnica ? "/pomoc-pri-zavarovalnici" : "/";
+  const periodDays = r.period_days ?? SEARCH_PERIOD_DAYS;
+  const nearestKm = nearestStrikeKm(r.daily);
+  const periodLabel = `Obdobje: ${formatSlDateRange(r.date_from, r.date_to)} (${periodDays} dni) · radij ${r.radius_km} km`;
 
   return (
     <section className={`results-panel${panelClass}`}>
@@ -114,27 +142,33 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           <div className="lbl">Dni z udari</div>
         </div>
         <div className="stat-box">
-          <div className="num">{r.credits_remaining}</div>
-          <div className="lbl">Preostali krediti</div>
+          <div className="num">
+            {nearestKm != null ? `${formatSlDecimal(nearestKm)} km` : "—"}
+          </div>
+          <div className="lbl">Najbližji udar</div>
         </div>
       </div>
-      <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
-        Obdobje: {formatSlDateRange(r.date_from, r.date_to)} · radij {r.radius_km} km
-      </p>
-      <StrikeMap lat={r.lat} lon={r.lon} radiusKm={r.radius_km} strikes={mapStrikes} />
-      <div id="hourly-chart-slot">
-        {hourlyChartDay && (
-          <HourlyChartPanel
-            day={hourlyChartDay}
-            loading={hourlyChartLoading}
-            data={hourlyChartData}
-            onClose={() => {
-              setHourlyChartDay(null);
-              setHourlyChartData(null);
-            }}
+      <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{periodLabel}</p>
+      <ResultsWidgetPanel />
+      <div className="strike-map-block">
+        <Suspense
+          fallback={
+            <div id="strike-map" aria-busy="true" aria-label="Nalaganje zemljevida udarov strel" />
+          }
+        >
+          <StrikeMap
+            lat={r.lat}
+            lon={r.lon}
+            radiusKm={r.radius_km}
+            strikes={mapStrikes}
+            refit={selectedMapDay != null}
           />
-        )}
+        </Suspense>
       </div>
+      <p className="daily-table-hint">
+        Kliknite na vrstico dneva za prikaz udarov na zemljevidu. Ponovni klik prikaže vse dni. Pri
+        več kot {HOURLY_PROFILE_MIN_STRIKES} udarih na dan je na voljo urni profil.
+      </p>
       <div className="daily-table-scroll">
         <table className="daily-table">
           <thead>
@@ -143,45 +177,53 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
               <th>Št. strel</th>
               <th>Najbližje</th>
               <th>Čas najbližje</th>
-              <th>Urni graf</th>
+              <th>Profil</th>
             </tr>
           </thead>
           <tbody>
             {r.daily.length ? (
               r.daily.map((d) => {
-                const selected = selectedMapDay === d.datum;
-                const hourlyActive = hourlyChartDay === d.datum;
-                const showHourly = d.stevilo_strel > 0;
+                const key = dayKey(d.datum);
+                const selected = selectedMapDay === key;
+                const hourlyActive = hourlyChartDay === key;
+                const showHourly = d.stevilo_strel > HOURLY_PROFILE_MIN_STRIKES;
                 return (
                   <tr
-                    key={d.datum}
-                    data-day={d.datum}
-                    className={selected ? "daily-row--selected" : ""}
+                    key={key}
+                    className={`daily-row${selected ? " daily-row--selected" : ""}`}
+                    data-day={key}
+                    tabIndex={0}
+                    role="button"
                     aria-pressed={selected}
-                    onClick={() =>
-                      setSelectedMapDay((prev) => (prev === d.datum ? null : d.datum))
-                    }
-                    style={{ cursor: "pointer" }}
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest(".btn-hourly-chart")) return;
+                      toggleMapDay(d.datum);
+                    }}
+                    onKeyDown={(e) => {
+                      if ((e.target as HTMLElement).closest(".btn-hourly-chart")) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleMapDay(d.datum);
+                      }
+                    }}
                   >
-                    <td>{d.datum}</td>
+                    <td>{formatSlDate(d.datum)}</td>
                     <td>{d.stevilo_strel}</td>
                     <td>
                       {d.oddaljenost_najblizje_km != null
-                        ? `${d.oddaljenost_najblizje_km.toFixed(1)} km`
+                        ? `${formatSlDecimal(d.oddaljenost_najblizje_km)} km`
                         : "—"}
                     </td>
                     <td>
-                      {d.cas_najblizje_strele
-                        ? new Date(d.cas_najblizje_strele).toLocaleString("sl-SI")
-                        : "—"}
+                      {d.cas_najblizje_strele ? formatStrikeDateTime(d.cas_najblizje_strele) : "—"}
                     </td>
                     <td className="daily-row-hourly" onClick={(e) => e.stopPropagation()}>
                       {showHourly ? (
                         <button
                           type="button"
                           className={`btn btn-ghost btn-sm btn-hourly-chart${hourlyActive ? " btn-hourly-chart--active" : ""}`}
-                          data-day={d.datum}
-                          onClick={() => void toggleHourlyChart(d.datum)}
+                          data-day={key}
+                          onClick={() => void toggleHourlyChart(key)}
                         >
                           graf
                         </button>
@@ -200,16 +242,27 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           </tbody>
         </table>
       </div>
-      <div className="results-actions">
-        {credits?.pdf_reports_available ? (
-          <button type="button" className="btn btn-primary" onClick={() => void downloadPdf()}>
-            Prenesi PDF poročilo
-          </button>
-        ) : (
-          <p className="pdf-upsell">
-            PDF poročilo za zavarovalnico je na voljo v paketu <strong>Poslovni</strong>.
-          </p>
+      <div id="hourly-chart-slot" ref={hourlyPanelRef}>
+        {hourlyChartDay && (
+          <HourlyChartPanel
+            day={hourlyChartDay}
+            loading={hourlyChartLoading}
+            data={hourlyChartData}
+            onClose={() => {
+              setHourlyChartDay(null);
+              setHourlyChartData(null);
+            }}
+          />
         )}
+      </div>
+      <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "var(--muted)" }}>
+        Te podatke lahko uporabite kot informativno podlago pri komunikaciji z zavarovalnico. Za
+        uradno potrdilo se obrnite na pristojne institucije.
+      </p>
+      <div className="results-actions">
+        <button type="button" className="btn btn-primary" onClick={() => void downloadPdf()}>
+          Prenesi PDF poročilo
+        </button>
         <Link to={backTo} className="btn btn-ghost" onClick={clearSearch}>
           Nova preiskava
         </Link>

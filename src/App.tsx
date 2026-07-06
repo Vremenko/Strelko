@@ -7,6 +7,7 @@ import { StatistikaPage } from "./pages/StatistikaPage";
 import { WidgetObcinePage } from "./pages/WidgetObcinePage";
 import { LegalPage } from "./pages/LegalPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { LEGAL_PAGES, type LegalPageId } from "./lib/legal";
 
 export function App() {
@@ -15,6 +16,7 @@ export function App() {
       <StrelkoProvider>
         <Routes>
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route element={<AppLayout />}>
             <Route index element={<LandingPage />} />
             <Route path="/pomoc-pri-zavarovalnici" element={<ZavarovalnicaPage />} />

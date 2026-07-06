@@ -1,19 +1,20 @@
 import { Link } from "react-router-dom";
 import { HeroHouseIllustration } from "../components/HeroHouseIllustration";
-import { SearchCard } from "../components/SearchCard";
 import { LandingArchivePreview, ArchiveEmbedHost } from "../components/ArchiveEmbed";
+import { CreditsBar } from "../components/CreditsBar";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { IconInsurance, IconMap, IconShield } from "../components/icons";
 import { ResultsView } from "../components/ResultsView";
 import { useStrelko } from "../context/StrelkoContext";
 
 export function LandingPage() {
-  const { searchResult, previewScreen, loading } = useStrelko();
+  const { searchResult, previewScreen } = useStrelko();
 
   if (searchResult) {
     return (
       <>
         <ArchiveEmbedHost />
+        <CreditsBar />
         <ResultsView />
       </>
     );
@@ -40,31 +41,31 @@ export function LandingPage() {
   return (
     <>
       <ArchiveEmbedHost />
-      <section className="hero">
+      <section className="hero hero--landing">
         <HeroHouseIllustration />
         <h2>
-          Vam je udar <em>strele</em> uničil klimatsko napravo ali televizijo?
+          Strele v bližini vašega doma — <em>na enem mestu</em>
         </h2>
         <p className="lead lead-follow">
-          Strelko vam lahko pomaga povrniti stroške z informativnim pregledom udarov strel v bližini.
+          Preverite udare strel, si oglejte statistiko Slovenije ali pripravite podlago za
+          zavarovalnico.
         </p>
-        <SearchCard busy={loading} showOptions />
       </section>
       <section className="features">
         <Link to="/pomoc-pri-zavarovalnici" className="feature feature--link">
           <IconInsurance />
           <h4>Pomoč pri zavarovalnici</h4>
-          <p>Podatki za dokazovanje bližnjih udarov strel pri zavrnitvi škode.</p>
+          <p>Podatki in PDF poročilo za dokazovanje bližnjih udarov (paket Ob škodi).</p>
         </Link>
         <Link to="/statistika#zemljevid" className="feature feature--link">
           <IconMap />
           <h4>Zemljevid udarov</h4>
-          <p>Pregled strel okoli vašega doma na interaktivnem zemljevidu.</p>
+          <p>Pregled strel po Sloveniji na interaktivnem zemljevidu.</p>
         </Link>
         <Link to="/statistika" className="feature feature--link">
           <IconShield />
-          <h4>Arhiv strel</h4>
-          <p>Statistika udarov strel po Sloveniji — dnevni in urni pregled.</p>
+          <h4>Statistika strel</h4>
+          <p>Sezonski arhiv in brezplačen widget občine za vašo spletno stran.</p>
         </Link>
       </section>
       <LandingArchivePreview />
