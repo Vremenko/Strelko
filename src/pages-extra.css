@@ -186,6 +186,27 @@
   line-height: 1.55;
 }
 
+.zavarovalnica-list li,
+.zavarovalnica-steps li {
+  margin-bottom: 0.35rem;
+}
+
+.zavarovalnica-page .search-card-body label {
+  text-align: left;
+}
+
+.zavarovalnica-page .search-options {
+  text-align: left;
+}
+
+.zavarovalnica-page .search-options-row--radius {
+  grid-template-columns: 1fr;
+}
+
+.zavarovalnica-page .search-options-row:not(.search-options-row--radius) {
+  grid-template-columns: 1fr 1fr;
+}
+
 .zavarovalnica-page .search-card--inline {
   max-width: none;
   margin: 0;
@@ -207,6 +228,32 @@
 
 .results-panel--zavarovalnica {
   max-width: 100%;
+}
+
+.results-panel--zavarovalnica .strike-map-block #strike-map {
+  height: min(52vh, 420px);
+}
+
+.results-period {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 899px) {
+  .zavarovalnica-page .zavarovalnica-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .zavarovalnica-page .search-options-row--radius,
+  .zavarovalnica-page .search-options-row:not(.search-options-row--radius) {
+    grid-template-columns: 1fr;
+  }
+
+  .zavarovalnica-page .search-option--radius {
+    max-width: none;
+  }
 }
 
 /* statistika */

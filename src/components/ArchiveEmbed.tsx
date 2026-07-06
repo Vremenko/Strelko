@@ -165,7 +165,6 @@ export function StatistikaTabs({
 export function LandingArchivePreview() {
   return (
     <section className="archive-charts-preview" id="statistika-strel">
-      <h3 className="archive-charts-title">Statistika strel v Sloveniji</h3>
       <ArchiveChartEmbed
         wrapId="archive-embed-wrap"
         iframeId="archive-embed"
