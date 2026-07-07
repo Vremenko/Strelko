@@ -12,7 +12,6 @@ export function AppLayout() {
   return (
     <>
       <div className="hero-bg" />
-      <div className="lightning-flash" />
       <div className="content-wrap">
         <Header />
         <Outlet />
