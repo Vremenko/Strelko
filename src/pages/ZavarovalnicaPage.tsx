@@ -56,11 +56,6 @@ export function ZavarovalnicaPage() {
             Strelko preveri udare strel v bližini vašega naslova in pripravi pregleden izpis, ki vam
             lahko pomaga pri komunikaciji z zavarovalnico.
           </p>
-          <p className="zavarovalnica-lead">
-            Na podlagi razpoložljivih podatkov prikažemo, ali so bili v izbranem obdobju v okolici
-            vašega naslova zaznani udari strel. Rezultate si lahko ogledate na zemljevidu in v tabeli
-            ter jih shranite kot informativni PDF za prijavo škode zavarovalnici.
-          </p>
         </div>
       </div>
       <div className="zavarovalnica-includes">
