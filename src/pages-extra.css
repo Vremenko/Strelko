@@ -515,13 +515,14 @@
   box-sizing: border-box;
   font: inherit;
   font-size: 0.8125rem;
-  padding: 0.15rem 1.75rem 0.15rem 0.45rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background-color: var(--bg-deep);
+  padding: 0.28rem 1.75rem 0.28rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(0, 0, 0, 0.35);
   color: var(--text);
   min-height: 32px;
   cursor: pointer;
+  color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -531,18 +532,10 @@
   background-position: right 8px center;
 }
 
-.stat-days-hit {
-  position: absolute;
-  z-index: 20;
-  pointer-events: auto;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  cursor: pointer;
-  background: transparent;
-  min-height: 36px;
-  -webkit-tap-highlight-color: transparent;
+.stat-days-overlay select:focus-visible {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(5, 165, 206, 0.35);
 }
 
 .archive-map-wrap,
