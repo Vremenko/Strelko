@@ -28,6 +28,42 @@
   margin-bottom: clamp(2.25rem, 1.5rem + 1.25vw, 3rem);
 }
 
+.hero--landing + .features .feature.feature--link {
+  background: rgba(45, 48, 52, 0.88);
+  border-color: rgba(255, 255, 255, 0.11);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero--landing + .features .feature.feature--link:hover {
+    transform: translateY(-4px);
+    border-color: rgba(5, 165, 206, 0.38);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+  }
+}
+
+.hero--landing + .features .feature.feature--link:focus-visible {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 2px rgba(5, 165, 206, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero--landing + .features .feature.feature--link {
+    transition: none;
+  }
+
+  .hero--landing + .features .feature.feature--link:hover {
+    transform: none;
+  }
+}
+
 .hero--landing .search-card {
   display: none;
 }
