@@ -103,27 +103,54 @@ function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: numbe
   return true;
 }
 
-function fitStrikeGroup(
+function fitSearchRadius(
   map: L.Map,
-  group: L.FeatureGroup,
   lat: number,
   lon: number,
-  strikeCount: number,
+  radiusKm: number,
   minZoom?: number
 ) {
-  if (strikeCount > 0) {
-    try {
-      map.fitBounds(group.getBounds().pad(0.15), { animate: false, maxZoom: 15 });
-    } catch {
-      map.setView([lat, lon], minZoom ?? 11, { animate: false });
-    }
-  } else {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || radiusKm <= 0) {
+    map.setView([lat, lon], minZoom ?? 11, { animate: false });
+    return;
+  }
+  try {
+    const bounds = L.circle([lat, lon], { radius: radiusKm * 1000 }).getBounds();
+    map.fitBounds(bounds.pad(0.06), { animate: false, maxZoom: 15 });
+  } catch {
     map.setView([lat, lon], minZoom ?? 11, { animate: false });
   }
   if (minZoom != null && map.getZoom() < minZoom) {
     map.setZoom(minZoom, { animate: false });
   }
 }
+
+function fitStrikeMarkers(
+  map: L.Map,
+  group: L.FeatureGroup,
+  lat: number,
+  lon: number,
+  radiusKm: number,
+  strikeCount: number,
+  minZoom?: number
+) {
+  if (strikeCount > 0) {
+    try {
+      map.fitBounds(group.getBounds().pad(0.12), { animate: false, maxZoom: 15 });
+    } catch {
+      fitSearchRadius(map, lat, lon, radiusKm, minZoom);
+      return;
+    }
+  } else {
+    fitSearchRadius(map, lat, lon, radiusKm, minZoom);
+    return;
+  }
+  if (minZoom != null && map.getZoom() < minZoom) {
+    map.setZoom(minZoom, { animate: false });
+  }
+}
+
+type RefitMode = "radius" | "strikes";
 
 function waitForSearchLimits(
   map: L.Map,
@@ -245,29 +272,25 @@ export function createStrikeMap(
   }).addTo(map);
 
   const strikeLayer = L.layerGroup().addTo(map);
-  let fitted = false;
-  let lastStrikeCount = 0;
   let fitGroup = rebuildStrikeLayer(strikeLayer, strikes, lat, lon);
 
-  const refitMap = (nextStrikes: StrikePoint[], force = false) => {
+  const refitMap = (nextStrikes: StrikePoint[], mode: RefitMode) => {
     fitGroup = rebuildStrikeLayer(strikeLayer, nextStrikes, lat, lon);
     const minZoom = (map as L.Map & { _searchMinZoom?: number })._searchMinZoom;
-    const shouldRefit =
-      force || !fitted || (nextStrikes.length > 0 && lastStrikeCount === 0);
-    if (shouldRefit) {
-      fitStrikeGroup(map, fitGroup, lat, lon, nextStrikes.length, minZoom);
-      fitted = true;
+    if (mode === "radius") {
+      fitSearchRadius(map, lat, lon, radiusKm, minZoom);
+      return;
     }
-    lastStrikeCount = nextStrikes.length;
+    fitStrikeMarkers(map, fitGroup, lat, lon, radiusKm, nextStrikes.length, minZoom);
   };
 
   waitForSearchLimits(map, lat, lon, radiusKm, () => {
-    refitMap(strikes, true);
+    refitMap(strikes, "radius");
   });
 
   return {
     updateStrikes(nextStrikes, opts = {}) {
-      refitMap(nextStrikes, opts.refit ?? false);
+      refitMap(nextStrikes, opts.refit ? "strikes" : "radius");
     },
     destroy() {
       basemapLoadActive = false;

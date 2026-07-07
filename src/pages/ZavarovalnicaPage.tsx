@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { SearchCard } from "../components/SearchCard";
 import { CreditsBar } from "../components/CreditsBar";
 import { ErrorBoundary } from "../components/ErrorBoundary";
@@ -7,6 +8,15 @@ import { useStrelko } from "../context/StrelkoContext";
 
 export function ZavarovalnicaPage() {
   const { searchResult, previewScreen, loading } = useStrelko();
+  const hadSearchResultRef = useRef(Boolean(searchResult));
+
+  useEffect(() => {
+    const hasResult = Boolean(searchResult);
+    if (hasResult && !hadSearchResultRef.current) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+    hadSearchResultRef.current = hasResult;
+  }, [searchResult]);
 
   if (searchResult) {
     return (
