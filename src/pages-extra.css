@@ -20,7 +20,7 @@
 /* Homepage vertical rhythm — section gaps only, not inner card/chart padding */
 .hero--landing + .features {
   margin-top: clamp(1.75rem, 1.25rem + 1.25vw, 2.75rem);
-  margin-bottom: clamp(3rem, 2.25rem + 1.25vw, 4rem);
+  margin-bottom: clamp(4rem, 3rem + 1.5vw, 5.5rem);
 }
 
 .features + .archive-charts-preview {
@@ -30,7 +30,6 @@
 
 .hero--landing + .features .feature.feature--link {
   background: rgba(48, 51, 56, 0.94);
-  border-color: rgba(255, 255, 255, 0.16);
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
@@ -40,14 +39,40 @@
     border-color 0.2s ease;
 }
 
+.hero--landing + .features .feature.feature--link[href="/pomoc-pri-zavarovalnici"] {
+  --landing-card-border: color-mix(in srgb, var(--accent) 58%, #94a3b8);
+  border-color: color-mix(in srgb, var(--landing-card-border) 50%, rgba(255, 255, 255, 0.12));
+}
+
+.hero--landing + .features .feature.feature--link[href="/statistika#zemljevid"] {
+  --landing-card-border: var(--accent);
+  border-color: color-mix(in srgb, var(--landing-card-border) 46%, rgba(255, 255, 255, 0.12));
+}
+
+.hero--landing + .features .feature.feature--link[href="/statistika"] {
+  --landing-card-border: var(--blue);
+  border-color: color-mix(in srgb, var(--landing-card-border) 44%, rgba(255, 255, 255, 0.12));
+}
+
 @media (hover: hover) and (pointer: fine) {
   .hero--landing + .features .feature.feature--link:hover {
     transform: translateY(-6px);
     background: rgba(52, 56, 62, 0.97);
-    border-color: rgba(5, 165, 206, 0.52);
     box-shadow:
       0 20px 40px rgba(0, 0, 0, 0.42),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .hero--landing + .features .feature.feature--link[href="/pomoc-pri-zavarovalnici"]:hover {
+    border-color: color-mix(in srgb, var(--landing-card-border) 78%, rgba(255, 255, 255, 0.06));
+  }
+
+  .hero--landing + .features .feature.feature--link[href="/statistika#zemljevid"]:hover {
+    border-color: color-mix(in srgb, var(--landing-card-border) 72%, rgba(255, 255, 255, 0.06));
+  }
+
+  .hero--landing + .features .feature.feature--link[href="/statistika"]:hover {
+    border-color: color-mix(in srgb, var(--landing-card-border) 70%, rgba(255, 255, 255, 0.06));
   }
 }
 
