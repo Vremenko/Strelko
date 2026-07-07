@@ -58,27 +58,31 @@ export function ZavarovalnicaPage() {
           </p>
         </div>
       </div>
-      <div className="zavarovalnica-includes">
-        <h3 className="zavarovalnica-includes__title">Kaj vključuje pregled</h3>
-        <ul className="zavarovalnica-includes__list">
-          <li>zaznane strele v okolici izbranega naslova,</li>
-          <li>čas in oddaljenost posamezne strele,</li>
-          <li>pregled rezultatov v tabeli,</li>
-          <li>zemljevid z označeno lokacijo in udari strel,</li>
-          <li>povzetek izbranega radija in obdobja,</li>
-          <li>izvoz pregleda v PDF.</li>
-        </ul>
+      <div className="zavarovalnica-main-grid">
+        <div className="zavarovalnica-includes">
+          <h3 className="zavarovalnica-includes__title">Kaj vključuje pregled</h3>
+          <ul className="zavarovalnica-includes__list">
+            <li>zaznane strele v okolici izbranega naslova,</li>
+            <li>čas in oddaljenost posamezne strele,</li>
+            <li>pregled rezultatov v tabeli,</li>
+            <li>zemljevid z označeno lokacijo in udari strel,</li>
+            <li>povzetek izbranega radija in obdobja,</li>
+            <li>izvoz pregleda v PDF.</li>
+          </ul>
+        </div>
+        <div className="zavarovalnica-main-grid__form">
+          <SearchCard
+            busy={loading}
+            inline
+            title="Preverite strele v bližini naslova"
+            intro="Vnesite naslov ter izberite radij in obdobje pregleda."
+            label="Vnesite naslov (kraj in hišna št.), občino ali ulico"
+            placeholder="npr. Škrabčev trg 2, Ribnica"
+            buttonText="Prikaži rezultate"
+            showOptions
+          />
+        </div>
       </div>
-      <SearchCard
-        busy={loading}
-        inline
-        title="Preverite strele v bližini naslova"
-        intro="Vnesite naslov ter izberite radij in obdobje pregleda."
-        label="Vnesite naslov (kraj in hišna št.), občino ali ulico"
-        placeholder="npr. Škrabčev trg 2, Ribnica"
-        buttonText="Prikaži rezultate"
-        showOptions
-      />
     </section>
   );
 }
