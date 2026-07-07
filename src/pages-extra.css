@@ -327,7 +327,7 @@
 }
 
 .zavarovalnica-hero {
-  text-align: left;
+  text-align: center;
   margin-bottom: 0;
 }
 
@@ -336,68 +336,74 @@
   padding-top: 0;
 }
 
-.zavarovalnica-page .zavarovalnica-hero h2 {
-  text-align: left;
+.zavarovalnica-page .page-header h2 {
+  max-width: 32ch;
+  margin-inline: auto;
+  text-align: center;
+  font-size: clamp(1.65rem, 1.45rem + 0.7vw, 2.1rem);
+  line-height: 1.18;
 }
 
 .zavarovalnica-intro {
-  text-align: left;
+  text-align: center;
   margin-bottom: 0;
 }
 
-.zavarovalnica-grid {
+.zavarovalnica-page.page--standard > .page-header + .zavarovalnica-includes {
+  margin-top: clamp(2rem, 1.5rem + 1vw, 3rem);
+}
+
+.zavarovalnica-includes {
+  width: 100%;
+  margin-bottom: 0;
+  padding: clamp(1.25rem, 1rem + 0.75vw, 1.75rem) clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  background: rgba(51, 51, 51, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  text-align: left;
+}
+
+.zavarovalnica-includes__title {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.1rem, 1.05rem + 0.2vw, 1.2rem);
+  font-weight: 800;
+  color: var(--accent);
+  text-align: left;
+}
+
+.zavarovalnica-includes__list {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.6;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: start;
-  gap: 1.25rem 2rem;
-  margin-bottom: 0;
-  margin-top: 0;
-  text-align: left;
+  grid-template-columns: 1fr;
+  row-gap: 0.35rem;
+  list-style-position: outside;
 }
 
-.zavarovalnica-page.page--standard > .page-header + .zavarovalnica-grid {
-  margin-top: clamp(1.25rem, 1rem + 0.75vw, 1.75rem);
+.zavarovalnica-includes__list li {
+  margin: 0;
+}
+
+@media (min-width: 900px) {
+  .zavarovalnica-includes__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    column-gap: clamp(2rem, 1.5rem + 1.5vw, 3.5rem);
+  }
+}
+
+@media (max-width: 479px) {
+  .zavarovalnica-includes__list {
+    padding-left: 1rem;
+  }
 }
 
 .zavarovalnica-page.page--standard > .search-card--inline {
   margin-top: clamp(3rem, 2.25rem + 1.25vw, 4.25rem);
-}
-
-.zavarovalnica-block {
-  text-align: left;
-  margin-bottom: 0;
-}
-
-.zavarovalnica-grid .zavarovalnica-block {
-  margin-bottom: 0;
-}
-
-.zavarovalnica-block--how,
-.zavarovalnica-block--benefits {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.zavarovalnica-subtitle {
-  margin: 0 0 0.45rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.zavarovalnica-list,
-.zavarovalnica-steps {
-  margin: 0;
-  padding-left: 1.2rem;
-  font-size: 0.88rem;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.zavarovalnica-list li,
-.zavarovalnica-steps li {
-  margin-bottom: 0.35rem;
 }
 
 .zavarovalnica-page .search-card-body label {
@@ -610,10 +616,6 @@
 }
 
 @media (max-width: 899px) {
-  .zavarovalnica-page .zavarovalnica-grid {
-    grid-template-columns: 1fr;
-  }
-
   .zavarovalnica-page .search-options-row--radius,
   .zavarovalnica-page .search-options-row:not(.search-options-row--radius) {
     grid-template-columns: 1fr;
@@ -1532,10 +1534,6 @@ body.site-nav-open {
 
   .site-header__bar {
     align-items: center;
-  }
-
-  .zavarovalnica-grid {
-    grid-template-columns: 1fr;
   }
 }
 

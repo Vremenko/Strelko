@@ -59,36 +59,26 @@ export function ZavarovalnicaPage() {
           <p className="zavarovalnica-lead">
             Na podlagi razpoložljivih podatkov prikažemo, ali so bili v izbranem obdobju v okolici
             vašega naslova zaznani udari strel. Rezultate si lahko ogledate na zemljevidu in v tabeli
-            ter jih shranite kot PDF izpis.
+            ter jih shranite kot informativni PDF za prijavo škode zavarovalnici.
           </p>
         </div>
       </div>
-      <div className="zavarovalnica-grid">
-        <div className="zavarovalnica-block zavarovalnica-block--how">
-          <h3 className="zavarovalnica-subtitle">Kako deluje</h3>
-          <ol className="zavarovalnica-steps">
-            <li>Vnesete naslov, kjer je nastala škoda, ter izberete obdobje pregleda.</li>
-            <li>Strelko preveri zaznane udare strel v izbranem radiju okoli naslova.</li>
-            <li>Rezultate prikaže na zemljevidu in v tabeli.</li>
-            <li>Pregled lahko shranite kot PDF in ga uporabite kot prilogo pri prijavi škode zavarovalnici.</li>
-          </ol>
-        </div>
-        <div className="zavarovalnica-block zavarovalnica-block--benefits">
-          <h3 className="zavarovalnica-subtitle">Kaj vključuje pregled</h3>
-          <ul className="zavarovalnica-list">
-            <li>pregled zaznanih udarov strel v bližini izbranega naslova,</li>
-            <li>zemljevid z lokacijami udarov in označeno lokacijo naslova,</li>
-            <li>čas in oddaljenost posameznih udarov strel,</li>
-            <li>povzetek rezultatov za izbrano obdobje,</li>
-            <li>možnost izvoza oziroma shranjevanja pregleda v PDF obliki.</li>
-          </ul>
-        </div>
+      <div className="zavarovalnica-includes">
+        <h3 className="zavarovalnica-includes__title">Kaj vključuje pregled</h3>
+        <ul className="zavarovalnica-includes__list">
+          <li>zaznane strele v okolici izbranega naslova,</li>
+          <li>čas in oddaljenost posamezne strele,</li>
+          <li>pregled rezultatov v tabeli.</li>
+          <li>zemljevid z označeno lokacijo in udari strel,</li>
+          <li>povzetek izbranega radija in obdobja,</li>
+          <li>izvoz pregleda v PDF.</li>
+        </ul>
       </div>
       <SearchCard
         busy={loading}
         inline
-        title="Preverite udare strel v bližini"
-        intro="Vnesite naslov, izberite radij in obdobje pregleda. Po kliku na gumb se bodo prikazani udari strel v okolici izbrane lokacije."
+        title="Preverite strele v bližini naslova"
+        intro="Vnesite naslov ter izberite radij in obdobje pregleda."
         label="Vnesite naslov (kraj in hišna št.), občino ali ulico"
         placeholder="npr. Škrabčev trg 2, Ribnica"
         buttonText="Prikaži rezultate"
