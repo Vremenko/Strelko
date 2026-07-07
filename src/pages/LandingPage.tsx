@@ -32,10 +32,10 @@ export function LandingPage() {
       <section className="hero hero--landing">
         <HeroHouseIllustration />
         <h2>
-          Strele v bližini vašega doma — <em>na enem mestu</em>
+          Preverite udare strel <em>v svoji bližini</em>
         </h2>
         <p className="lead lead-follow">
-          Preverite udare strel, si oglejte statistiko Slovenije ali pripravite podlago za
+          Oglejte si zemljevid strel v Sloveniji, raziščite statistiko ali pripravite poročilo za
           zavarovalnico.
         </p>
       </section>
@@ -43,17 +43,17 @@ export function LandingPage() {
         <Link to="/pomoc-pri-zavarovalnici" className="feature feature--link">
           <IconInsurance />
           <h4>Pomoč pri zavarovalnici</h4>
-          <p>Podatki in PDF poročilo za dokazovanje bližnjih udarov (paket Ob škodi).</p>
+          <p>Pridobite podatke o udarih strel v bližini škodnega dogodka in ustvarite PDF poročilo.</p>
         </Link>
         <Link to="/statistika#zemljevid" className="feature feature--link">
           <IconMap />
-          <h4>Zemljevid udarov</h4>
-          <p>Pregled strel po Sloveniji na interaktivnem zemljevidu.</p>
+          <h4>Zemljevid strel</h4>
+          <p>Na interaktivnem zemljevidu raziščite, kje in kdaj so bile po Sloveniji zaznane strele.</p>
         </Link>
         <Link to="/statistika" className="feature feature--link">
           <IconShield />
           <h4>Statistika strel</h4>
-          <p>Sezonski arhiv in brezplačen widget občine za vašo spletno stran.</p>
+          <p>Primerjajte število strel po občinah in časovnih obdobjih.</p>
         </Link>
       </section>
       <LandingArchivePreview />
