@@ -5,6 +5,7 @@ export function HeroHouseIllustration() {
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
         viewBox="0 0 95 150"
+        overflow="visible"
         aria-hidden="true"
       >
         <image
