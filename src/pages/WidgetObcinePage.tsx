@@ -64,8 +64,8 @@ export function WidgetObcinePage() {
   const iframeStyle = widgetPreviewIframeStyle(isFull, mobile);
 
   return (
-    <section className="widget-obcine-page">
-      <div className="widget-obcine-head">
+    <section className="widget-obcine-page page--standard">
+      <div className="widget-obcine-head page-header">
         <h2>Widget udarov strel za spletne strani</h2>
         <p className="widget-obcine-lead">
           Brezplačen informativni widget za vdelavo na vašo spletno stran. Prikazuje udare strel v

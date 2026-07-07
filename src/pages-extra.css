@@ -110,6 +110,98 @@
   border: 0;
 }
 
+/* —— notranje strani: enoten navpični ritem (brez domače strani) —— */
+.page--standard {
+  padding-top: clamp(3.5rem, 2.5rem + 2vw, 5.5rem);
+  padding-bottom: clamp(4rem, 3rem + 2vw, 6rem);
+}
+
+.page--standard > * + * {
+  margin-top: clamp(1.75rem, 1.25rem + 1vw, 2.75rem);
+}
+
+.page--standard > .page-header + * {
+  margin-top: clamp(2.25rem, 1.5rem + 1.25vw, 3.5rem);
+}
+
+.page--standard .page-header {
+  margin-bottom: 0;
+}
+
+.page--standard .page-header :is(h1, h2) {
+  margin: 0;
+  font-family: var(--font);
+  font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.7rem);
+  font-weight: 800;
+  line-height: 1.22;
+  color: var(--text);
+}
+
+.page--standard .page-header .legal-title {
+  color: var(--accent);
+}
+
+.page--standard .page-header h2 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.page--standard .page-header :is(
+    .page-header__lead,
+    .archive-charts-lead,
+    .widget-obcine-lead
+  ) {
+  margin: 0.8rem 0 0;
+  font-size: clamp(1.02rem, 0.98rem + 0.18vw, 1.1rem);
+  line-height: 1.65;
+  max-width: 70ch;
+  color: var(--muted);
+}
+
+.page--standard .page-header .zavarovalnica-intro {
+  width: 100%;
+  max-width: none;
+}
+
+.page--standard .page-header .zavarovalnica-intro .zavarovalnica-lead {
+  width: 100%;
+  max-width: none;
+}
+
+.page--standard .page-header .zavarovalnica-intro .zavarovalnica-lead:first-child {
+  margin-top: 0.8rem;
+  font-size: clamp(1.02rem, 0.98rem + 0.18vw, 1.1rem);
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.page--standard .page-header .zavarovalnica-intro .zavarovalnica-lead + .zavarovalnica-lead {
+  margin-top: clamp(0.65rem, 0.6rem + 0.15vw, 0.85rem);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.page--standard .page-header .zavarovalnica-intro .zavarovalnica-lead:last-child {
+  margin-bottom: 0;
+}
+
+.page--standard .page-header .legal-meta {
+  margin: 0.8rem 0 0;
+  max-width: 70ch;
+}
+
+.page--standard .page-header .stat-tabs {
+  margin-top: clamp(1.25rem, 1rem + 0.75vw, 2rem);
+  margin-bottom: 0;
+}
+
+@media (max-width: 639px) {
+  .page--standard {
+    padding-top: 2.5rem;
+  }
+}
+
 .hero-mascot--house .hero-house {
   pointer-events: none;
 }
@@ -231,13 +323,12 @@
 /* zavarovalnica */
 .zavarovalnica-page {
   max-width: 100%;
-  margin: 0 0 2rem;
-  padding-top: 2.5rem;
+  margin: 0;
 }
 
 .zavarovalnica-hero {
   text-align: left;
-  margin-bottom: 1.35rem;
+  margin-bottom: 0;
 }
 
 .zavarovalnica-page .zavarovalnica-hero {
@@ -246,41 +337,30 @@
 }
 
 .zavarovalnica-page .zavarovalnica-hero h2 {
-  margin: 0 0 0.65rem;
-  font-size: clamp(1.2rem, 3.5vw, 1.85rem);
-  line-height: 1.25;
-  font-weight: 800;
-  color: var(--text);
   text-align: left;
-}
-
-.zavarovalnica-page .zavarovalnica-hero h2 em {
-  font-style: normal;
-  color: var(--accent);
-}
-
-.zavarovalnica-page .zavarovalnica-lead {
-  margin: 0 0 0.85rem;
-  font-size: 0.92rem;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.zavarovalnica-page .zavarovalnica-lead:last-child {
-  margin-bottom: 0;
 }
 
 .zavarovalnica-intro {
   text-align: left;
-  margin-bottom: 1.15rem;
+  margin-bottom: 0;
 }
 
 .zavarovalnica-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem 1.75rem;
-  margin-bottom: 1.25rem;
+  align-items: start;
+  gap: 1.25rem 2rem;
+  margin-bottom: 0;
+  margin-top: 0;
   text-align: left;
+}
+
+.zavarovalnica-page.page--standard > .page-header + .zavarovalnica-grid {
+  margin-top: clamp(1.25rem, 1rem + 0.75vw, 1.75rem);
+}
+
+.zavarovalnica-page.page--standard > .search-card--inline {
+  margin-top: clamp(3rem, 2.25rem + 1.25vw, 4.25rem);
 }
 
 .zavarovalnica-block {
@@ -564,6 +644,14 @@
 .archive-charts-lead,
 .archive-charts-page .archive-charts-head h2 {
   text-align: left;
+}
+
+.archive-charts-page.page--standard {
+  margin-bottom: 0;
+}
+
+.archive-charts-page.page--standard .archive-charts-head {
+  margin-bottom: 0;
 }
 
 .archive-charts-actions {
@@ -1460,36 +1548,23 @@ body.site-nav-open {
 /* —— widget občine page —— */
 .widget-obcine-page {
   max-width: 100%;
-  margin: 0 0 2.5rem;
-  padding: 2.5rem 0 0;
+  margin: 0;
 }
 
 .widget-obcine-page .widget-obcine-head {
   text-align: left;
-  margin-bottom: 1.35rem;
-}
-
-.widget-obcine-page .widget-obcine-head h2 {
-  margin: 0 0 0.65rem;
-  font-size: clamp(1.2rem, 3.5vw, 1.85rem);
-  line-height: 1.25;
-  font-weight: 800;
-  color: var(--text);
+  margin-bottom: 0;
 }
 
 .widget-obcine-page .widget-obcine-lead {
-  margin: 0;
-  font-size: 0.92rem;
-  color: var(--muted);
-  line-height: 1.55;
-  max-width: 42rem;
+  max-width: 70ch;
 }
 
 .widget-obcine-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-top: 1.25rem;
+  gap: clamp(1.75rem, 1.25rem + 1vw, 2.75rem);
+  margin-top: 0;
 }
 
 .widget-obcine-page .search-card--inline {
@@ -1629,12 +1704,21 @@ body.site-nav-open {
   line-height: 1.45;
 }
 
-@media (max-width: 899px) {
-  .widget-obcine-page {
-    max-width: 100%;
-    padding-top: 1.5rem;
-  }
+/* —— pravne strani —— */
+.legal-page.page--standard {
+  margin-bottom: 0;
+}
 
+.legal-page.page--standard .page-header .legal-nav {
+  margin-top: clamp(1rem, 0.75rem + 0.5vw, 1.35rem);
+  margin-bottom: 0;
+}
+
+.legal-page.page--standard .legal-back {
+  margin-bottom: 0;
+}
+
+@media (max-width: 899px) {
   .widget-preview-frame {
     padding: 0.5rem;
   }

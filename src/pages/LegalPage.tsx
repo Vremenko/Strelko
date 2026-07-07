@@ -15,15 +15,17 @@ export function LegalPage({ pageId }: { pageId: LegalPageId }) {
   ));
 
   return (
-    <article className="legal-page">
+    <article className="legal-page page--standard">
       <p className="legal-back">
         <Link to="/">← Nazaj na Strelko</Link>
       </p>
-      <h1 className="legal-title">{page.title}</h1>
-      <p className="legal-meta">Zadnja posodobitev: {COMPANY.updated}</p>
-      <nav className="legal-nav" aria-label="Pravne informacije">
-        {nav}
-      </nav>
+      <header className="page-header">
+        <h1 className="legal-title">{page.title}</h1>
+        <p className="legal-meta">Zadnja posodobitev: {COMPANY.updated}</p>
+        <nav className="legal-nav" aria-label="Pravne informacije">
+          {nav}
+        </nav>
+      </header>
       <div className="legal-card">
         {page.sections.map((s) => (
           <section className="legal-section" key={s.title}>

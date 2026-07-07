@@ -44,22 +44,24 @@ export function ZavarovalnicaPage() {
   }
 
   return (
-    <section className="zavarovalnica-page">
-      <header className="zavarovalnica-hero">
-        <h2>
-          Vam je <em>strela</em> poškodovala klimatsko napravo, televizijo ali drugo elektroniko?
-        </h2>
-      </header>
-      <div className="zavarovalnica-intro">
-        <p className="zavarovalnica-lead">
-          Strelko preveri udare strel v bližini vašega naslova in pripravi pregleden izpis, ki vam
-          lahko pomaga pri komunikaciji z zavarovalnico.
-        </p>
-        <p className="zavarovalnica-lead">
-          Na podlagi razpoložljivih podatkov prikažemo, ali so bili v izbranem obdobju v okolici
-          vašega naslova zaznani udari strel. Rezultate si lahko ogledate na zemljevidu in v tabeli
-          ter jih shranite kot PDF izpis.
-        </p>
+    <section className="zavarovalnica-page page--standard">
+      <div className="page-header">
+        <header className="zavarovalnica-hero">
+          <h2>
+            Vam je <em>strela</em> poškodovala klimatsko napravo, televizijo ali drugo elektroniko?
+          </h2>
+        </header>
+        <div className="zavarovalnica-intro">
+          <p className="zavarovalnica-lead">
+            Strelko preveri udare strel v bližini vašega naslova in pripravi pregleden izpis, ki vam
+            lahko pomaga pri komunikaciji z zavarovalnico.
+          </p>
+          <p className="zavarovalnica-lead">
+            Na podlagi razpoložljivih podatkov prikažemo, ali so bili v izbranem obdobju v okolici
+            vašega naslova zaznani udari strel. Rezultate si lahko ogledate na zemljevidu in v tabeli
+            ter jih shranite kot PDF izpis.
+          </p>
+        </div>
       </div>
       <div className="zavarovalnica-grid">
         <div className="zavarovalnica-block zavarovalnica-block--how">

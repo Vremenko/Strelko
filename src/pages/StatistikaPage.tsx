@@ -30,8 +30,8 @@ export function StatistikaPage() {
   return (
     <>
       <ArchiveEmbedHost />
-      <section className="archive-charts-page">
-        <div className="archive-charts-head">
+      <section className="archive-charts-page page--standard">
+        <div className="archive-charts-head page-header">
           <h2>Statistika strel v Sloveniji</h2>
           <p className="archive-charts-lead">
             Dnevni potek, urni profil, regije
