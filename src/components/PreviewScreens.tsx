@@ -3,6 +3,7 @@ import { formatPreviewPeriod, formatSlDecimal } from "../lib/dates";
 import { SEARCH_PERIOD_DAYS } from "../lib/search-dates";
 import { formatPlaceName } from "../lib/utils";
 import { IconMap } from "./icons";
+import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
 
 const FAKE_ROWS = Array.from({ length: 6 }, (_, i) => (
   <tr key={i}>
@@ -21,31 +22,21 @@ export function PreviewTeaser() {
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
   const nearest =
     preview.nearest_km != null ? `${formatSlDecimal(preview.nearest_km)} km` : "—";
-  const periodLabel = formatPreviewPeriod(preview);
+  const periodLabel = formatResultsPeriodLabel(searchRadiusKm, preview);
 
   return (
     <section className="results-panel preview-teaser">
       <p className="preview-teaser-badge">Brezplačen predogled</p>
       <h3 className="results-panel-title">⚡ Strele zaznane — {place}</h3>
       <p className="preview-teaser-lead">{preview.message_sl}</p>
-      <p className="preview-teaser-period">
-        Obdobje pregleda: <strong>{periodLabel}</strong> · radij{" "}
-        <strong>{searchRadiusKm} km</strong>
-      </p>
-      <div className="stats-grid">
-        <div className="stat-box">
-          <div className="num">{preview.total_strikes ?? 0}</div>
-          <div className="lbl">Skupaj udarov</div>
-        </div>
-        <div className="stat-box">
-          <div className="num">{preview.days_with_strikes ?? 0}</div>
-          <div className="lbl">Dni z udari</div>
-        </div>
-        <div className="stat-box">
-          <div className="num">{nearest}</div>
-          <div className="lbl">Najbližji udar</div>
-        </div>
-      </div>
+      <ResultsPeriod label={periodLabel} />
+      <ResultsStats
+        items={[
+          { label: "Št. strel", value: preview.total_strikes ?? 0 },
+          { label: "Št. dni s strelami", value: preview.days_with_strikes ?? 0 },
+          { label: "Najbližja strela", value: nearest },
+        ]}
+      />
       <p className="preview-teaser-hint">
         Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo.
       </p>

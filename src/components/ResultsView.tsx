@@ -6,7 +6,8 @@ import { HourlyChartPanel } from "./HourlyChartPanel";
 import { ResultsWidgetPanel } from "./ResultsWidgetPanel";
 import { StrikeMap } from "./StrikeMap";
 import { useStrelko } from "../context/StrelkoContext";
-import { formatSlDate, formatSlDateRange, formatSlDecimal, formatSlTime } from "../lib/dates";
+import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
+import { formatSlDate, formatSlDecimal, formatSlTime } from "../lib/dates";
 import { HOURLY_PROFILE_MIN_STRIKES } from "../lib/search-dates";
 import type { DailyStrike, HourlyChartData, StrikePoint } from "../types";
 
@@ -125,30 +126,27 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
   const backTo = zavarovalnica ? "/pomoc-pri-zavarovalnici" : "/";
   const daily = Array.isArray(r.daily) ? r.daily : [];
   const nearestKm = nearestStrikeKm(daily);
-  const periodLabel = `Obdobje: ${formatSlDateRange(r.date_from, r.date_to)} · radij ${r.radius_km} km`;
+  const periodLabel = formatResultsPeriodLabel(r.radius_km, {
+    date_from: r.date_from,
+    date_to: r.date_to,
+  });
 
   return (
     <section className={`results-panel${panelClass}`}>
       <h3 className="results-panel-title">
         ⚡ Pregled strel – {r.location_label || "vaša lokacija"}
       </h3>
-      <p className="results-period">{periodLabel}</p>
-      <div className="stats">
-        <div className="stat">
-          <div className="label">Št. strel</div>
-          <div className="value">{r.total_strikes}</div>
-        </div>
-        <div className="stat">
-          <div className="label">Št. dni s strelami</div>
-          <div className="value">{daily.length}</div>
-        </div>
-        <div className="stat">
-          <div className="label">Najbližja strela</div>
-          <div className="value">
-            {nearestKm != null ? `${formatSlDecimal(nearestKm)} km` : "—"}
-          </div>
-        </div>
-      </div>
+      <ResultsPeriod label={periodLabel} />
+      <ResultsStats
+        items={[
+          { label: "Št. strel", value: r.total_strikes },
+          { label: "Št. dni s strelami", value: daily.length },
+          {
+            label: "Najbližja strela",
+            value: nearestKm != null ? `${formatSlDecimal(nearestKm)} km` : "—",
+          },
+        ]}
+      />
       {!daily.length && (
         <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
           Za izbrano obdobje ni bilo najdenih podatkov o udarih strel.
