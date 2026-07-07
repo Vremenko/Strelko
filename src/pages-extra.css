@@ -538,6 +538,14 @@
   box-shadow: 0 0 0 2px rgba(5, 165, 206, 0.35);
 }
 
+@media (max-width: 639px) {
+  .stat-days-overlay select {
+    padding-right: 1.1rem;
+    padding-left: 0.55rem;
+    background-position: right 6px center;
+  }
+}
+
 .stat-days-hit {
   position: absolute;
   z-index: 20;
