@@ -1,18 +1,25 @@
-/** Klik na label datuma odpre native picker (kot patch-search-date-picker-fix.py). */
+/** Odpre native date picker — samo prek showPicker(), z preventDefault za eno pot odpiranja. */
 
-import type { MouseEvent } from "react";
+type SearchDatePickerEvent = {
+  preventDefault: () => void;
+};
 
-export function openSearchDatePicker(input: HTMLInputElement | null, event?: MouseEvent) {
-  if (!input || input.disabled) return;
-  if (event?.target === input) return;
+export function openSearchDatePicker(
+  input: HTMLInputElement | null,
+  event?: SearchDatePickerEvent,
+): void {
+  if (!input || input.disabled || input.readOnly) return;
+
+  if (typeof input.showPicker !== "function") {
+    return;
+  }
+
   event?.preventDefault();
+  input.focus({ preventScroll: true });
+
   try {
-    if (typeof input.showPicker === "function") {
-      input.showPicker();
-    } else {
-      input.focus();
-    }
+    input.showPicker();
   } catch {
-    input.focus();
+    // Native vedenje oziroma fokus ostaneta varen fallback.
   }
 }

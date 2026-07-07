@@ -3,14 +3,42 @@ import { useStrelko } from "../context/StrelkoContext";
 import { openSearchDatePicker } from "../lib/search-date-picker";
 import {
   SEARCH_RADIUS_OPTIONS,
+  adjustRangeFromEnd,
+  adjustRangeFromStart,
   formatSearchDateLabel,
-  rangeFromEnd,
-  rangeFromStart,
+  maxEndDateForStart,
+  rollingWindowMin,
+  searchPeriodHint,
   todayIso,
 } from "../lib/search-dates";
 
 interface SearchOptionsProps {
   disabled?: boolean;
+}
+
+function SearchDateCalendarIcon() {
+  return (
+    <span className="search-date-icon" aria-hidden="true">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" focusable="false">
+        <rect
+          x="3"
+          y="4"
+          width="18"
+          height="18"
+          rx="2"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path d="M3 10h18" stroke="currentColor" strokeWidth="2" />
+        <path
+          d="M8 2v4M16 2v4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
 }
 
 export function SearchOptions({ disabled = false }: SearchOptionsProps) {
@@ -25,8 +53,14 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
 
   const busy = disabled || loading;
   const today = todayIso();
+  const windowMin = rollingWindowMin(today);
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
+
+  const fromMin = windowMin;
+  const fromMax = today;
+  const toMin = searchDateFrom;
+  const toMax = maxEndDateForStart(searchDateFrom, today);
 
   const onRadiusChange = (value: string) => {
     setSearchRadiusKm(Number(value));
@@ -34,12 +68,12 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
 
   const onFromChange = (value: string) => {
     if (!value) return;
-    setSearchDateRange(rangeFromStart(value));
+    setSearchDateRange(adjustRangeFromStart(value, searchDateTo, today));
   };
 
   const onToChange = (value: string) => {
     if (!value) return;
-    setSearchDateRange(rangeFromEnd(value));
+    setSearchDateRange(adjustRangeFromEnd(value, searchDateFrom, today));
   };
 
   return (
@@ -64,21 +98,23 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
       <div className="search-options-row">
         <label className="search-option">
           <span>Od</span>
-          <div
-            className="search-date-wrap"
-            onClick={(e) => openSearchDatePicker(fromRef.current, e)}
-          >
+          <div className="search-date-wrap">
             <span className="search-date-label" id="search-date-from-label">
               {formatSearchDateLabel(searchDateFrom)}
             </span>
+            <SearchDateCalendarIcon />
             <input
               ref={fromRef}
               id="search-date-from"
               className="search-date-input search-date-input--picker"
               type="date"
               value={searchDateFrom}
-              max={today}
+              min={fromMin}
+              max={fromMax}
               disabled={busy}
+              onClick={(event) =>
+                openSearchDatePicker(fromRef.current, event)
+              }
               onChange={(e) => onFromChange(e.target.value)}
               onInput={(e) => onFromChange((e.target as HTMLInputElement).value)}
             />
@@ -86,30 +122,30 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
         </label>
         <label className="search-option">
           <span>Do</span>
-          <div
-            className="search-date-wrap"
-            onClick={(e) => openSearchDatePicker(toRef.current, e)}
-          >
+          <div className="search-date-wrap">
             <span className="search-date-label" id="search-date-to-label">
               {formatSearchDateLabel(searchDateTo)}
             </span>
+            <SearchDateCalendarIcon />
             <input
               ref={toRef}
               id="search-date-to"
               className="search-date-input search-date-input--picker"
               type="date"
               value={searchDateTo}
-              max={today}
+              min={toMin}
+              max={toMax}
               disabled={busy}
+              onClick={(event) =>
+                openSearchDatePicker(toRef.current, event)
+              }
               onChange={(e) => onToChange(e.target.value)}
               onInput={(e) => onToChange((e.target as HTMLInputElement).value)}
             />
           </div>
         </label>
       </div>
-      <p className="search-options-hint">
-        14-dnevno obdobje — spremenite začetek ali konec, drug datum se nastavi samodejno.
-      </p>
+      <p className="search-options-hint">{searchPeriodHint()}</p>
     </div>
   );
 }

@@ -1802,29 +1802,63 @@ body.site-nav-open {
 }
 
 .search-date-wrap {
+  position: relative;
+  display: block;
+}
+
+/* Datumska polja Od/Do — samo stran /pomoc-pri-zavarovalnici */
+.zavarovalnica-page .search-date-wrap {
   cursor: pointer;
   isolation: isolate;
 }
 
-.search-date-input--picker {
+.zavarovalnica-page .search-date-label {
+  position: relative;
+  z-index: 1;
+  padding-right: 2.75rem;
+  pointer-events: none;
+}
+
+.zavarovalnica-page .search-date-icon {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  color: var(--text);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.zavarovalnica-page .search-date-input--picker {
   position: absolute;
   inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  padding: 0;
-  border: 0;
-  background: transparent;
   z-index: 3;
   width: 100%;
   height: 100%;
   min-height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  cursor: pointer;
+  color-scheme: dark;
   font-size: 16px;
 }
 
-.search-date-label {
-  pointer-events: none;
-  position: relative;
-  z-index: 1;
+.zavarovalnica-page .search-date-input--picker::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 /* —— footer layout —— */

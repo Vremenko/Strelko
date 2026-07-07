@@ -15,7 +15,8 @@ import { getToken, setToken } from "../lib/utils";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
 import {
   DEFAULT_SEARCH_RADIUS_KM,
-  SEARCH_PERIOD_DAYS,
+  buildPreviewRequestBody,
+  clampSearchRange,
   defaultSearchRange,
 } from "../lib/search-dates";
 import type {
@@ -417,13 +418,17 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
     setLoading(true);
     try {
+      const searchRange = clampSearchRange({
+        from: searchDateFrom,
+        to: searchDateTo,
+      });
       const body = {
         lat: target.lat,
         lon: target.lon,
         radius_km: searchRadiusKm,
         label: target.label,
-        date_from: searchDateFrom,
-        date_to: searchDateTo,
+        date_from: searchRange.from,
+        date_to: searchRange.to,
       };
       const res = (await api.search(body)) as SearchResult;
       if (!res || typeof res !== "object" || !Array.isArray(res.daily)) {
@@ -526,13 +531,27 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             alert("Lokacija ni veljavna. Izberite naslov s seznama predlogov.");
             return;
           }
-          const res = (await api.preview({
-            lat: place.lat,
-            lon: place.lon,
-            radius_km: searchRadiusKm,
-            label: place.label,
-            days: SEARCH_PERIOD_DAYS,
-          })) as PreviewResult;
+          const previewRange = clampSearchRange({
+            from: searchDateFrom,
+            to: searchDateTo,
+          });
+          if (
+            previewRange.from !== searchDateFrom ||
+            previewRange.to !== searchDateTo
+          ) {
+            setSearchDateFrom(previewRange.from);
+            setSearchDateTo(previewRange.to);
+          }
+          const res = (await api.preview(
+            buildPreviewRequestBody({
+              lat: place.lat,
+              lon: place.lon,
+              radius_km: searchRadiusKm,
+              label: place.label,
+              date_from: previewRange.from,
+              date_to: previewRange.to,
+            })
+          )) as PreviewResult;
           if (getToken()) {
             await refreshUser();
             await runFullSearchInner(place);
