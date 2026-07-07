@@ -55,20 +55,19 @@ export async function renderGoogleButton(
   container: HTMLElement,
   onCredential: (credential: string) => void
 ): Promise<void> {
-  if (!STRELKO_GOOGLE_CLIENT_ID || container.dataset.gsiRendered === "1") return;
+  if (!STRELKO_GOOGLE_CLIENT_ID) return;
   gsiOnCredential = onCredential;
+  if (container.dataset.gsiRendered === "1") return;
   await ensureGsiInitialized();
   if (container.dataset.gsiRendered === "1") return;
-  const width = Math.min(
-    400,
-    Math.max(200, Math.floor(container.getBoundingClientRect().width || 320))
-  );
+  const measuredWidth = Math.floor(container.getBoundingClientRect().width);
+  const width = Math.min(400, Math.max(200, measuredWidth || 320));
   window.google!.accounts.id.renderButton(container, {
     type: "standard",
     theme: "filled_black",
     size: "large",
     text: "signin_with",
-    shape: "rectangular",
+    shape: "pill",
     width,
     locale: "sl",
   });

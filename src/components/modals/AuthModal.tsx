@@ -17,25 +17,32 @@ export function AuthModal() {
   useEffect(() => {
     if (!mode || !googleRef.current) return;
     const container = googleRef.current;
-    container.replaceChildren();
-    delete container.dataset.gsiRendered;
 
     let cancelled = false;
-    void renderGoogleButton(container, async (credential) => {
-      try {
-        setError("");
-        await loginGoogleRef.current(credential);
-      } catch (e) {
-        setError((e as Error).message || "Google prijava ni uspela.");
-      }
-    }).catch((e) => {
-      if (!cancelled) setError((e as Error).message || "Google prijava ni na voljo.");
+    let firstRaf = 0;
+    let secondRaf = 0;
+
+    firstRaf = requestAnimationFrame(() => {
+      secondRaf = requestAnimationFrame(() => {
+        if (cancelled) return;
+
+        void renderGoogleButton(container, async (credential) => {
+          try {
+            setError("");
+            await loginGoogleRef.current(credential);
+          } catch (e) {
+            setError((e as Error).message || "Google prijava ni uspela.");
+          }
+        }).catch((e) => {
+          if (!cancelled) setError((e as Error).message || "Google prijava ni na voljo.");
+        });
+      });
     });
 
     return () => {
       cancelled = true;
-      container.replaceChildren();
-      delete container.dataset.gsiRendered;
+      cancelAnimationFrame(firstRaf);
+      cancelAnimationFrame(secondRaf);
     };
   }, [mode]);
 
@@ -57,8 +64,17 @@ export function AuthModal() {
   };
 
   return (
-    <div className="modal-overlay" id="auth-modal">
-      <div className="modal">
+    <div
+      className="modal-overlay"
+      id="auth-modal"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeAuth();
+      }}
+    >
+      <div className="modal auth-modal">
+        <button type="button" className="modal-close-btn" aria-label="Zapri" onClick={closeAuth}>
+          ×
+        </button>
         <h3>{isLogin ? "Prijava" : "Registracija"}</h3>
         <form id="auth-form" onSubmit={onSubmit}>
           <input type="email" name="email" placeholder="E-pošta" required autoComplete="email" />
@@ -99,7 +115,6 @@ export function AuthModal() {
           <span>ali</span>
         </div>
         <div
-          key={mode}
           id="strelko-google-signin"
           className="auth-google-wrap"
           ref={googleRef}
@@ -108,20 +123,12 @@ export function AuthModal() {
           {isLogin ? "Nimate računa?" : "Že imate račun?"}{" "}
           <button
             type="button"
-            className="btn-link"
+            className={`btn-link${isLogin ? " auth-register-link" : ""}`}
             onClick={() => openAuth(isLogin ? "register" : "login")}
           >
             {isLogin ? "Registracija" : "Prijava"}
           </button>
         </p>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          style={{ width: "100%", marginTop: "0.5rem" }}
-          onClick={closeAuth}
-        >
-          Zapri
-        </button>
       </div>
     </div>
   );
