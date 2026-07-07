@@ -17,6 +17,17 @@
   padding-bottom: 0.5rem;
 }
 
+/* Homepage vertical rhythm — section gaps only, not inner card/chart padding */
+.hero--landing + .features {
+  margin-top: clamp(1.75rem, 1.25rem + 1.25vw, 2.75rem);
+  margin-bottom: clamp(2.25rem, 1.5rem + 1.25vw, 3rem);
+}
+
+.features + .archive-charts-preview {
+  margin-top: 0;
+  margin-bottom: clamp(2.25rem, 1.5rem + 1.25vw, 3rem);
+}
+
 .hero--landing .search-card {
   display: none;
 }
@@ -1718,5 +1729,13 @@ body.site-nav-open {
 #app .content-wrap .disclaimer strong {
   color: var(--accent);
   font-weight: 700;
+}
+
+#app .content-wrap:has(.hero--landing) .disclaimer {
+  margin-top: clamp(2.875rem, 2rem + 1.5vw, 3.75rem);
+}
+
+#app .content-wrap:has(.hero--landing) .site-footer {
+  margin-top: clamp(2rem, 1.5rem + 1vw, 2.75rem);
 }
 
