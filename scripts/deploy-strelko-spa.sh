@@ -31,6 +31,9 @@ echo "Cache bust ?v=$VERSION in dist/index.html"
 
 docker cp "$ASSETS/." "$CONTAINER:/usr/share/nginx/html/assets/"
 docker cp "$HTML" "$CONTAINER:/usr/share/nginx/html/index.html"
+if [[ -f "$ROOT/dist/favicon.png" ]]; then
+  docker cp "$ROOT/dist/favicon.png" "$CONTAINER:/usr/share/nginx/html/favicon.png"
+fi
 if [[ -f "$ROOT/dist/favicon.svg" ]]; then
   docker cp "$ROOT/dist/favicon.svg" "$CONTAINER:/usr/share/nginx/html/favicon.svg"
 fi
