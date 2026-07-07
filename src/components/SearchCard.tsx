@@ -1,7 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult } from "../types";
-import { formatPlaceName } from "../lib/utils";
 import { SearchScanBolt } from "./icons";
 import { SearchOptions } from "./SearchOptions";
 
@@ -143,11 +142,6 @@ export function SearchCard({
             ))}
           </ul>
         </div>
-        {selected && (
-          <p className="selected-place" id="selected-place">
-            {formatPlaceName(selected.label)}
-          </p>
-        )}
         {showOptions && <SearchOptions />}
         <button
           type="submit"
