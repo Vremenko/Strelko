@@ -68,7 +68,7 @@ export function ZavarovalnicaPage() {
         <ul className="zavarovalnica-includes__list">
           <li>zaznane strele v okolici izbranega naslova,</li>
           <li>čas in oddaljenost posamezne strele,</li>
-          <li>pregled rezultatov v tabeli.</li>
+          <li>pregled rezultatov v tabeli,</li>
           <li>zemljevid z označeno lokacijo in udari strel,</li>
           <li>povzetek izbranega radija in obdobja,</li>
           <li>izvoz pregleda v PDF.</li>
