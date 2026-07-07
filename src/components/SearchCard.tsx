@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult } from "../types";
 import { formatPlaceName } from "../lib/utils";
@@ -47,7 +47,7 @@ export function SearchCard({
 
   const onInput = (value: string) => {
     setLocationQuery(value);
-    if (selected && selected.label !== value.trim()) selectPlace(null);
+    if (selected && selected.label.trim() !== value.trim()) selectPlace(null);
     clearTimeout(debounce.current);
     debounce.current = setTimeout(() => void fetchSuggestions(value), 400);
     setShowSuggestions(true);
@@ -57,6 +57,11 @@ export function SearchCard({
     selectPlace(s);
     setLocationQuery(s.label);
     setShowSuggestions(false);
+  };
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void runPreview();
   };
 
   const overlayActive = (loading || (preview && showOverlay)) && !previewScreen;
@@ -103,7 +108,7 @@ export function SearchCard({
           ) : null}
         </div>
       )}
-      <div className="search-card-body">
+      <form className="search-card-body" onSubmit={onSubmit}>
         {title && <h3 className="search-card-title">{title}</h3>}
         {intro && <p className="search-card-intro">{intro}</p>}
         {!title && <label htmlFor="location-input">{label}</label>}
@@ -122,13 +127,16 @@ export function SearchCard({
             value={locationQuery}
             disabled={loading}
             onChange={(e) => onInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), void runPreview())}
             onFocus={() => suggestions.length && setShowSuggestions(true)}
           />
           <ul className={`suggestions${showSuggestions && suggestions.length ? "" : " hidden"}`}>
             {suggestions.map((s: GeocodeResult) => (
               <li key={`${s.lat}-${s.lon}`}>
-                <button type="button" onClick={() => pickSuggestion(s)}>
+                <button
+                  type="button"
+                  onPointerDown={(event) => event.preventDefault()}
+                  onClick={() => pickSuggestion(s)}
+                >
                   {s.label}
                 </button>
               </li>
@@ -142,15 +150,14 @@ export function SearchCard({
         )}
         {showOptions && <SearchOptions />}
         <button
-          type="button"
+          type="submit"
           className="btn btn-primary btn-search-full"
           id="btn-search"
           disabled={loading}
-          onClick={() => void runPreview()}
         >
           {buttonText}
         </button>
-      </div>
+      </form>
     </div>
   );
 }

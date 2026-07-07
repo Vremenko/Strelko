@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
-import { geocodeAddress } from "../lib/geocode";
+import { geocodeAddress, isValidGeocodePlace } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
 import {
@@ -411,8 +411,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
 
   async function runFullSearchInner(place?: GeocodeResult) {
     const target = place ?? selected;
-    if (!target) {
-      console.warn("runFullSearchInner: manjkajoča lokacija (selected/places)");
+    if (!isValidGeocodePlace(target)) {
+      alert("Izberite veljaven naslov s seznama predlogov ali vnesite naslov, ki ga sistem prepozna.");
       return;
     }
     setLoading(true);
@@ -516,10 +516,15 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setPreviewScreen(null);
         try {
           let place = selected;
-          if (!place || place.label !== q) {
+          if (!isValidGeocodePlace(place) || place.label.trim() !== q) {
             const results = await geocodeAddress(q);
             place = results[0];
             setSelected(place);
+            setLocationQueryState(place.label);
+          }
+          if (!isValidGeocodePlace(place)) {
+            alert("Lokacija ni veljavna. Izberite naslov s seznama predlogov.");
+            return;
           }
           const res = (await api.preview({
             lat: place.lat,
@@ -540,7 +545,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             setPreviewScreen("no-strikes");
           }
         } catch (e) {
-          alert((e as Error).message || "Napaka pri predogledu.");
+          const err = e as ApiError;
+          alert(err.message || "Napaka pri predogledu.");
         } finally {
           runPreviewInFlightRef.current = false;
           setLoading(false);
