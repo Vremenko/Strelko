@@ -691,6 +691,11 @@
   margin-bottom: 0;
 }
 
+.archive-charts-page.page--standard > .page-header + .archive-charts-embed-wrap--full,
+.archive-charts-page.page--standard > .archive-map-wrap {
+  margin-top: 1rem;
+}
+
 .archive-charts-actions {
   display: flex;
   justify-content: flex-start;
@@ -715,20 +720,28 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.stat-days-overlay[hidden] {
+  display: none !important;
 }
 
 .stat-days-overlay select {
   width: 100%;
   height: 100%;
+  max-width: 6rem;
   box-sizing: border-box;
   font: inherit;
   font-size: 0.95rem;
-  padding: 0.3rem 1.75rem 0.3rem 0.65rem;
+  padding: 0.35rem 1.1rem 0.35rem 0.65rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background-color: #333333;
   color: var(--text);
-  min-height: 32px;
+  min-height: 34px;
   cursor: pointer;
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
@@ -748,6 +761,9 @@
 
 @media (max-width: 639px) {
   .stat-days-overlay select {
+    max-width: 5.75rem;
+    min-height: 32px;
+    font-size: 0.8125rem;
     padding-right: 1.1rem;
     padding-left: 0.55rem;
     background-position: right 6px center;

@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import { archiveEmbedUrl, archiveMapEmbedUrl } from "../lib/archive-embed";
-import { initArchiveDaysOverlay, initArchiveEmbedTap } from "../lib/archive-embed-interaction";
+import {
+  activateStatDaysOverlayForGrafi,
+  deactivateStatDaysOverlay,
+  initArchiveDaysOverlay,
+  initArchiveEmbedTap,
+} from "../lib/archive-embed-interaction";
 import { hasArchiveFullAccess } from "../lib/season";
 import type { StatTab } from "../types";
 
@@ -61,6 +66,17 @@ export function ArchiveChartEmbed({
     scope === "preview" ? "Dnevni graf strel — Slovenija" : "Arhiv strel — Slovenija";
   const { show, wrapRef } = useLazyShow(visible);
 
+  useLayoutEffect(() => {
+    if (scope !== "full") return;
+    if (!visible) {
+      deactivateStatDaysOverlay(wrapId);
+      return;
+    }
+    if (show) {
+      activateStatDaysOverlayForGrafi(wrapId, iframeId);
+    }
+  }, [visible, show, scope, wrapId, iframeId]);
+
   return (
     <div
       ref={wrapRef}
@@ -81,6 +97,11 @@ export function ArchiveChartEmbed({
           loading={window.matchMedia("(max-width:899px)").matches ? "eager" : "lazy"}
           scrolling="no"
           style={{ overflow: "hidden" }}
+          onLoad={() => {
+            if (scope === "full" && visible) {
+              activateStatDaysOverlayForGrafi(wrapId, iframeId);
+            }
+          }}
         />
       ) : (
         <p className="archive-charts-placeholder" aria-hidden="true">
@@ -93,7 +114,63 @@ export function ArchiveChartEmbed({
 
 export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
   const src = archiveMapEmbedUrl(30);
-  const { show, wrapRef } = useLazyShow(visible);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const mountedRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
+  const mapHeight = window.matchMedia("(max-width:899px)").matches ? "480" : "560";
+
+  const ensureMounted = () => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+    setMounted(true);
+  };
+
+  useEffect(() => {
+    if (mountedRef.current) return;
+
+    let cancelled = false;
+    let idleId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const run = () => {
+      if (cancelled || mountedRef.current) return;
+      ensureMounted();
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      idleId = requestIdleCallback(run, { timeout: 800 });
+    } else {
+      timeoutId = setTimeout(run, 800);
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleId !== undefined && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (visible) ensureMounted();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !mounted) return;
+    iframeRef.current?.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+  }, [visible, mounted]);
+
+  useLayoutEffect(() => {
+    if (visible) {
+      deactivateStatDaysOverlay("archive-embed-full-wrap");
+    }
+  }, [visible]);
+
+  const notifyMapVisible = (iframe: HTMLIFrameElement) => {
+    iframe.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+  };
 
   return (
     <div
@@ -102,23 +179,19 @@ export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
       id="archive-map-wrap"
       data-map-src={src}
     >
-      {show ? (
+      {mounted ? (
         <iframe
+          ref={iframeRef}
           id="archive-map-iframe"
           className="archive-map-iframe"
           src={src}
           title="Zemljevid strel po občinah — Slovenija"
           width="100%"
-          height={window.matchMedia("(max-width:899px)").matches ? "480" : "560"}
+          height={mapHeight}
           loading="eager"
           scrolling="no"
           style={{ overflow: "hidden" }}
-          onLoad={(e) => {
-            (e.currentTarget as HTMLIFrameElement).contentWindow?.postMessage(
-              { type: "strele-map-visible" },
-              "*"
-            );
-          }}
+          onLoad={(e) => notifyMapVisible(e.currentTarget)}
         />
       ) : (
         <p className="archive-charts-placeholder" aria-hidden="true">
@@ -130,7 +203,7 @@ export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
 }
 
 export function ArchiveEmbedHost() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     initArchiveEmbedTap();
     initArchiveDaysOverlay();
   }, []);

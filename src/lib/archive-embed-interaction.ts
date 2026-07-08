@@ -253,18 +253,107 @@ export function initArchiveEmbedTap() {
   );
 }
 
+export function deactivateStatDaysOverlay(wrapId?: string) {
+  initArchiveDaysOverlay();
+  window.__streleDaysOverlayApi?.deactivate(wrapId);
+}
+
+/** Aktivira overlay samo za polni prikaz grafov na /statistika (ne preview). */
+export function activateStatDaysOverlayForGrafi(wrapId: string, iframeId: string) {
+  initArchiveDaysOverlay();
+  window.__streleDaysOverlayApi?.activateGrafi(wrapId, iframeId);
+}
+
 export function initArchiveDaysOverlay() {
   if (window.__streleDaysOverlay) return;
   window.__streleDaysOverlay = 1;
 
+  const FULL_WRAP_ID = "archive-embed-full-wrap";
+
   let overlay = null;
   let control = null;
   let activeIframe = null;
+  let activeWrapId = null;
   let resizeTimer = null;
-  let top = 0;
-  let left = 0;
-  let width = 0;
-  let height = 0;
+  let statGrafiTabActive = false;
+
+  const isFullStatWrap = (wrapId) => wrapId === FULL_WRAP_ID;
+
+  const isWrapChartsVisible = (wrap) =>
+    !!wrap && !wrap.classList.contains("stat-panel--hidden");
+
+  const canShowOverlay = (wrapId, wrap) => {
+    if (!isWrapChartsVisible(wrap)) return false;
+    if (isFullStatWrap(wrapId)) return statGrafiTabActive;
+    return true;
+  };
+
+  const removeOverlay = () => {
+    overlay?.remove();
+    overlay = null;
+    control = null;
+  };
+
+  const prepareWrapHost = (wrap) => {
+    if (!wrap) return;
+    wrap.classList.add("archive-charts-embed-wrap--overlay-host");
+    wrap.querySelector("#stat-days-hit")?.remove();
+  };
+
+  const mountOverlayFromRect = (wrap, iframe, data) => {
+    removeOverlay();
+    prepareWrapHost(wrap);
+    overlay = document.createElement("div");
+    overlay.id = "stat-days-overlay";
+    overlay.className = "stat-days-overlay";
+    overlay.hidden = true;
+    overlay.innerHTML =
+      '<select id="stat-days-overlay-select" aria-label="Obdobje">' +
+      '<option value="7">7 dni</option><option value="14">14 dni</option>' +
+      '<option value="30">30 dni</option><option value="90">90 dni</option></select>';
+    wrap.insertBefore(overlay, iframe);
+    control = overlay.querySelector("select");
+    const wrapRect = wrap.getBoundingClientRect();
+    overlay.style.top = `${(+data.top || 0) - wrapRect.top}px`;
+    overlay.style.left = `${(+data.left || 0) - wrapRect.left}px`;
+    overlay.style.width = `${+data.width || 0}px`;
+    overlay.style.height = `${+data.height || 0}px`;
+    const days = String(data.days || 30);
+    if (control && control.value !== days) control.value = days;
+    overlay.hidden = false;
+  };
+
+  const deactivate = (wrapId?: string) => {
+    clearTimeout(resizeTimer);
+    if (wrapId && activeWrapId && wrapId !== activeWrapId) return;
+    statGrafiTabActive = false;
+    removeOverlay();
+    activeIframe = null;
+    activeWrapId = null;
+  };
+
+  const activateGrafi = (wrapId: string, iframeId: string) => {
+    if (!isFullStatWrap(wrapId)) return;
+    clearTimeout(resizeTimer);
+    statGrafiTabActive = true;
+    removeOverlay();
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) {
+      statGrafiTabActive = false;
+      activeWrapId = null;
+      activeIframe = null;
+      return;
+    }
+    activeWrapId = wrapId;
+    prepareWrapHost(wrap);
+    const iframe = document.getElementById(iframeId);
+    activeIframe = iframe || null;
+    if (iframe?.contentWindow) {
+      requestDaysRect();
+    }
+  };
+
+  window.__streleDaysOverlayApi = { deactivate, activateGrafi };
 
   const applyFrameHeight = (iframe, frameId, reported) => {
     if (!iframe || !reported) return;
@@ -285,36 +374,12 @@ export function initArchiveDaysOverlay() {
     iframe.style.height = `${h}px`;
   };
 
-  const ensureOverlay = (wrap, iframe) => {
-    if (!wrap || !iframe) return null;
-    wrap.classList.add("archive-charts-embed-wrap--overlay-host");
-    overlay = wrap.querySelector("#stat-days-overlay");
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = "stat-days-overlay";
-      overlay.className = "stat-days-overlay";
-      overlay.hidden = true;
-      overlay.innerHTML =
-        '<select id="stat-days-overlay-select" aria-label="Obdobje">' +
-        '<option value="7">7 dni</option><option value="14">14 dni</option>' +
-        '<option value="30">30 dni</option><option value="90">90 dni</option></select>';
-      wrap.insertBefore(overlay, iframe);
-    }
-    wrap.querySelector("#stat-days-hit")?.remove();
-    control = overlay.querySelector("select");
-    return overlay;
-  };
-
-  const positionOverlay = () => {
-    if (!overlay || overlay.hidden) return;
-    overlay.style.top = `${top}px`;
-    overlay.style.left = `${left}px`;
-    overlay.style.width = `${width}px`;
-    overlay.style.height = `${height}px`;
-  };
-
   const requestDaysRect = () => {
-    activeIframe?.contentWindow?.postMessage({ type: "strele-embed-request-days-rect" }, "*");
+    removeOverlay();
+    if (!activeIframe || !activeWrapId) return;
+    const wrap = activeIframe.parentElement;
+    if (!canShowOverlay(activeWrapId, wrap)) return;
+    activeIframe.contentWindow?.postMessage({ type: "strele-embed-request-days-rect" }, "*");
   };
 
   document.addEventListener(
@@ -343,7 +408,10 @@ export function initArchiveDaysOverlay() {
         applyFrameHeight(el, frame, +data.height || 0);
         if (frame !== "archive-map-iframe") {
           activeIframe = el;
-          ensureOverlay(el.parentElement, el);
+          activeWrapId = el.parentElement?.id || null;
+          prepareWrapHost(el.parentElement);
+          removeOverlay();
+          if (!canShowOverlay(activeWrapId, el.parentElement)) return;
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(requestDaysRect, 60);
         }
@@ -358,37 +426,45 @@ export function initArchiveDaysOverlay() {
       return el && el.contentWindow === ev.source;
     });
     if (!frame) {
-      if (overlay) overlay.hidden = true;
+      removeOverlay();
       return;
     }
     const el = document.getElementById(frame);
+    const wrap = el?.parentElement;
+    const wrapId = wrap?.id || null;
+    if (!el || !wrap || !wrapId) {
+      removeOverlay();
+      return;
+    }
+    if (!canShowOverlay(wrapId, wrap)) {
+      removeOverlay();
+      return;
+    }
     activeIframe = el;
-    if (!ensureOverlay(el.parentElement, el)) {
-      if (overlay) overlay.hidden = true;
+    activeWrapId = wrapId;
+    const nextWidth = +data.width || 0;
+    const nextHeight = +data.height || 0;
+    if (!nextWidth || !nextHeight) {
+      removeOverlay();
       return;
     }
-    top = +data.top || 0;
-    left = +data.left || 0;
-    width = +data.width || 0;
-    height = +data.height || 0;
-    if (!width || !height) {
-      overlay.hidden = true;
-      return;
-    }
-    overlay.hidden = false;
-    const days = String(data.days || 30);
-    if (control && control.value !== days) control.value = days;
-    positionOverlay();
+    mountOverlayFromRect(wrap, el, data);
   });
 
-  window.addEventListener("scroll", () => positionOverlay(), { passive: true });
   window.addEventListener(
     "resize",
     () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        if (activeIframe) ensureOverlay(activeIframe.parentElement, activeIframe);
-        positionOverlay();
+        if (!activeIframe || !activeWrapId) {
+          removeOverlay();
+          return;
+        }
+        const wrap = activeIframe.parentElement;
+        if (!canShowOverlay(activeWrapId, wrap)) {
+          removeOverlay();
+          return;
+        }
         requestDaysRect();
       }, 40);
     },

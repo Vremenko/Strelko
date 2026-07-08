@@ -19,7 +19,7 @@ function hourEndLabel(ura: number) {
 
 function hourIntervalLabel(ura: number) {
   const end = ura === 23 ? "24.00" : hourEndLabel(ura);
-  return `${formatHour(ura)}–${end}`;
+  return `${formatHour(ura)} - ${end}`;
 }
 
 function hourlyYMax(values: number[]) {
