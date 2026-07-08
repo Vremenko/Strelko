@@ -152,7 +152,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           Za izbrano obdobje ni bilo najdenih podatkov o udarih strel.
         </p>
       )}
-      <ResultsWidgetPanel />
+      {!zavarovalnica && <ResultsWidgetPanel />}
       <div className="strike-map-block">
         <ErrorBoundary>
           <StrikeMap
