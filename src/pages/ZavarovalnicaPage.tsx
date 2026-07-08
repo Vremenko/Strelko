@@ -19,7 +19,8 @@ export function ZavarovalnicaPage() {
 
   if (searchResult) {
     return (
-      <ErrorBoundary
+      <section className="zavarovalnica-page page--standard">
+        <ErrorBoundary
           fallback={
             <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
               Pregleda rezultatov trenutno ni mogoče prikazati. Poskusite znova iskanje.
@@ -28,15 +29,24 @@ export function ZavarovalnicaPage() {
         >
           <ResultsView zavarovalnica />
         </ErrorBoundary>
+      </section>
     );
   }
 
   if (previewScreen === "teaser") {
-    return <PreviewTeaser />;
+    return (
+      <section className="zavarovalnica-page page--standard">
+        <PreviewTeaser />
+      </section>
+    );
   }
 
   if (previewScreen === "no-strikes") {
-    return <PreviewNoStrikes />;
+    return (
+      <section className="zavarovalnica-page page--standard">
+        <PreviewNoStrikes />
+      </section>
+    );
   }
 
   return (
