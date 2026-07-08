@@ -77,7 +77,7 @@ export function ZavarovalnicaPage() {
             title="Preverite strele v bližini naslova"
             intro="Vnesite naslov ter izberite radij in obdobje pregleda."
             label="Vnesite naslov (kraj in hišna št.), občino ali ulico"
-            placeholder="npr. Škrabčev trg 2, Ribnica"
+            placeholder="npr. Ulica 1, Ljubljana"
             buttonText="Prikaži rezultate"
             showOptions
           />
