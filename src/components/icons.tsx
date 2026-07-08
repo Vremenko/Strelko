@@ -51,33 +51,22 @@ export function IconInsurance() {
   );
 }
 
+/** Ščit + strela iz header logotipa (strelko-logo.png) — brez wordmarka. */
+const LOGO_MARK_VIEW_W = 60;
+const LOGO_MARK_VIEW_H = 70;
+
 export function SearchScanBolt() {
   return (
-    <svg className="search-scan-bolt" viewBox="0 0 64 64" width="72" height="72" aria-hidden="true">
-      <circle
-        className="search-scan-ring"
-        cx="32"
-        cy="32"
-        r="28"
-        fill="none"
-        stroke="rgba(96,165,250,0.35)"
-        strokeWidth="2"
-      />
-      <circle
-        className="search-scan-ring search-scan-ring--2"
-        cx="32"
-        cy="32"
-        r="20"
-        fill="none"
-        stroke="rgba(245,197,66,0.4)"
-        strokeWidth="2"
-      />
-      <path
-        d="M38 8L22 36h12l-6 20 22-32H36l2-16z"
-        fill="#f5c542"
-        stroke="#fff"
-        strokeWidth="1"
-      />
-    </svg>
+    <div className="search-scan-symbol" aria-hidden="true">
+      <span className="search-scan-symbol__halo" />
+      <span className="search-scan-symbol__halo search-scan-symbol__halo--delay" />
+      <svg
+        className="search-scan-symbol__mark"
+        viewBox={`0 0 ${LOGO_MARK_VIEW_W} ${LOGO_MARK_VIEW_H}`}
+        aria-hidden="true"
+      >
+        <image href="/assets/strelko-logo.png" width={300} height={70} />
+      </svg>
+    </div>
   );
 }
