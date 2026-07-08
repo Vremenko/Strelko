@@ -6,12 +6,11 @@ import {
   ArchiveMapEmbed,
   StatistikaTabs,
 } from "../components/ArchiveEmbed";
-import { hasArchiveFullAccess } from "../lib/season";
 import { useStrelko } from "../context/StrelkoContext";
 import type { StatTab } from "../types";
 
 export function StatistikaPage() {
-  const { statistikaTab, setStatTab, credits, plansMeta } = useStrelko();
+  const { statistikaTab, setStatTab } = useStrelko();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -25,8 +24,6 @@ export function StatistikaPage() {
     navigate(tab === "grafi" ? "/statistika" : `/statistika#${tab}`, { replace: true });
   };
 
-  const fullAccess = hasArchiveFullAccess(credits, plansMeta);
-
   return (
     <>
       <ArchiveEmbedHost />
@@ -34,8 +31,7 @@ export function StatistikaPage() {
         <div className="archive-charts-head page-header">
           <h2>Statistika strel v Sloveniji</h2>
           <p className="archive-charts-lead">
-            Dnevni potek, urni profil, regije
-            {fullAccess ? " in občine" : " — polni arhiv s paketom Podpornik"}.
+            Pregled števila strel po dnevih, urah, statističnih regijah in občinah.
           </p>
           <StatistikaTabs tab={statistikaTab} onChange={onTab} />
         </div>

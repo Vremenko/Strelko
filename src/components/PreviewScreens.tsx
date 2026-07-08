@@ -131,7 +131,7 @@ export function PreviewNoStrikes() {
           za vse.
         </p>
         <ul className="preview-blur-perks">
-          <li>Dnevni in urni profil strel po Sloveniji</li>
+          <li>Pregled po dnevih, urah, statističnih regijah in občinah</li>
           <li>Widget za vašo spletno stran (Podpornik)</li>
           <li>5 podrobnih pregledov lokacije na sezono</li>
         </ul>

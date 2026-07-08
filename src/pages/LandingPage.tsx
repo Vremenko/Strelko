@@ -53,7 +53,7 @@ export function LandingPage() {
         <Link to="/statistika" className="feature feature--link">
           <IconShield />
           <h4>Statistika strel</h4>
-          <p>Primerjajte število strel po občinah in časovnih obdobjih.</p>
+          <p>Pregled števila strel po dnevih, urah, statističnih regijah in občinah.</p>
         </Link>
       </section>
       <LandingArchivePreview />
