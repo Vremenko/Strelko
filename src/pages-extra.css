@@ -726,7 +726,7 @@
   padding: 0.3rem 1.75rem 0.3rem 0.65rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: #333333;
   color: var(--text);
   min-height: 32px;
   cursor: pointer;
