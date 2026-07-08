@@ -112,9 +112,7 @@ function embedAtPoint(x, y) {
 }
 
 function daysOverlayHit(x, y) {
-  const el =
-    document.getElementById("stat-days-overlay") ||
-    document.getElementById("stat-days-hit");
+  const el = document.getElementById("stat-days-overlay");
   if (!el || el.hidden) return false;
   const r = el.getBoundingClientRect();
   return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
@@ -140,8 +138,7 @@ export function initArchiveEmbedTap() {
   let hoverX = 0;
   let hoverY = 0;
 
-  const skipChartUi = (node) =>
-    node?.closest?.(".stat-days-overlay") || node?.closest?.("#stat-days-hit");
+  const skipChartUi = (node) => node?.closest?.(".stat-days-overlay");
 
   const hoverAt = (frame, x, y) => {
     frame?.contentWindow?.postMessage(
@@ -269,8 +266,6 @@ export function initArchiveDaysOverlay() {
   let width = 0;
   let height = 0;
 
-  const isMobile = () => window.matchMedia("(max-width:899px)").matches;
-
   const applyFrameHeight = (iframe, frameId, reported) => {
     if (!iframe || !reported) return;
     let min: number;
@@ -293,35 +288,20 @@ export function initArchiveDaysOverlay() {
   const ensureOverlay = (wrap, iframe) => {
     if (!wrap || !iframe) return null;
     wrap.classList.add("archive-charts-embed-wrap--overlay-host");
-    if (isMobile()) {
-      overlay = wrap.querySelector("#stat-days-overlay");
-      if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.id = "stat-days-overlay";
-        overlay.className = "stat-days-overlay";
-        overlay.hidden = true;
-        overlay.innerHTML =
-          '<select id="stat-days-overlay-select" aria-label="Obdobje">' +
-          '<option value="7">7 dni</option><option value="14">14 dni</option>' +
-          '<option value="30">30 dni</option><option value="90">90 dni</option></select>';
-        wrap.insertBefore(overlay, iframe);
-      }
-      control = overlay.querySelector("select");
-      wrap.querySelector("#stat-days-hit")?.remove();
-    } else {
-      overlay = wrap.querySelector("#stat-days-hit");
-      if (!overlay) {
-        overlay = document.createElement("button");
-        overlay.type = "button";
-        overlay.id = "stat-days-hit";
-        overlay.className = "stat-days-hit";
-        overlay.hidden = true;
-        overlay.setAttribute("aria-label", "Obdobje");
-        wrap.insertBefore(overlay, iframe);
-      }
-      control = null;
-      wrap.querySelector("#stat-days-overlay")?.remove();
+    overlay = wrap.querySelector("#stat-days-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "stat-days-overlay";
+      overlay.className = "stat-days-overlay";
+      overlay.hidden = true;
+      overlay.innerHTML =
+        '<select id="stat-days-overlay-select" aria-label="Obdobje">' +
+        '<option value="7">7 dni</option><option value="14">14 dni</option>' +
+        '<option value="30">30 dni</option><option value="90">90 dni</option></select>';
+      wrap.insertBefore(overlay, iframe);
     }
+    wrap.querySelector("#stat-days-hit")?.remove();
+    control = overlay.querySelector("select");
     return overlay;
   };
 
@@ -348,21 +328,6 @@ export function initArchiveDaysOverlay() {
     },
     true
   );
-
-  document.addEventListener("click", (ev) => {
-    if (isMobile()) return;
-    if (ev.target?.id !== "stat-days-hit") return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    activeIframe?.contentWindow?.postMessage({ type: "strele-embed-open-days" }, "*");
-  }, true);
-
-  document.addEventListener("touchend", (ev) => {
-    if (isMobile()) return;
-    if (ev.target?.id !== "stat-days-hit") return;
-    ev.preventDefault();
-    activeIframe?.contentWindow?.postMessage({ type: "strele-embed-open-days" }, "*");
-  }, true);
 
   window.addEventListener("message", (ev) => {
     const data = ev.data;

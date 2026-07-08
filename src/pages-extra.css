@@ -754,20 +754,6 @@
   }
 }
 
-.stat-days-hit {
-  position: absolute;
-  z-index: 20;
-  pointer-events: auto;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  cursor: pointer;
-  background: transparent;
-  min-height: 36px;
-  -webkit-tap-highlight-color: transparent;
-}
-
 .archive-map-wrap,
 .archive-charts-embed-wrap,
 .archive-charts-embed-wrap--full {
