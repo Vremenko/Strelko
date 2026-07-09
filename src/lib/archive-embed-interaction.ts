@@ -314,8 +314,11 @@ export function initArchiveDaysOverlay() {
     wrap.insertBefore(overlay, iframe);
     control = overlay.querySelector("select");
     const wrapRect = wrap.getBoundingClientRect();
-    overlay.style.top = `${(+data.top || 0) - wrapRect.top}px`;
-    overlay.style.left = `${(+data.left || 0) - wrapRect.left}px`;
+    const iframeRect = iframe.getBoundingClientRect();
+    // Embed pošlje rect relativno na iframe dokument; za absolute v wrapu
+    // je treba prišteti iframe offset znotraj wrapa.
+    overlay.style.top = `${(+data.top || 0) + iframeRect.top - wrapRect.top}px`;
+    overlay.style.left = `${(+data.left || 0) + iframeRect.left - wrapRect.left}px`;
     overlay.style.width = `${+data.width || 0}px`;
     overlay.style.height = `${+data.height || 0}px`;
     const days = String(data.days || 30);

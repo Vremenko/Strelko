@@ -79,7 +79,7 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
   return (
     <div className="search-options" id="search-options">
       <div className="search-options-row search-options-row--radius">
-        <label className="search-option search-option--radius">
+        <label className="search-option search-option--radius field-labeled">
           <span>Radij</span>
           <select
             id="search-radius-km"
@@ -96,7 +96,7 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
         </label>
       </div>
       <div className="search-options-row">
-        <label className="search-option">
+        <label className="search-option field-labeled">
           <span>Od</span>
           <div className="search-date-wrap">
             <span className="search-date-label" id="search-date-from-label">
@@ -120,7 +120,7 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
             />
           </div>
         </label>
-        <label className="search-option">
+        <label className="search-option field-labeled">
           <span>Do</span>
           <div className="search-date-wrap">
             <span className="search-date-label" id="search-date-to-label">

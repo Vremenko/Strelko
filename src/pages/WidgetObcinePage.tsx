@@ -83,7 +83,7 @@ export function WidgetObcinePage() {
         <div className="widget-obcine-settings-bar search-card search-card--inline">
           <div className="search-card-body">
             <div className="widget-obcine-settings-row">
-              <label className="widget-obcine-field search-option" htmlFor="public-widget-obcina">
+              <label className="widget-obcine-field search-option field-labeled" htmlFor="public-widget-obcina">
                 <span>Občina</span>
                 <select
                   id="public-widget-obcina"
@@ -108,7 +108,7 @@ export function WidgetObcinePage() {
                   )}
                 </select>
               </label>
-              <label className="widget-obcine-field search-option" htmlFor="public-widget-theme">
+              <label className="widget-obcine-field search-option field-labeled" htmlFor="public-widget-theme">
                 <span>Tema widgeta</span>
                 <select
                   id="public-widget-theme"

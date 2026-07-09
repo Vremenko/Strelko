@@ -1,5 +1,53 @@
 /* Dodatni slogi za strani in navigacijo (prej v dist patch skriptah). */
 
+/* —— native select: enotna bela puščica —— */
+:root {
+  --strelko-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f2f2f2' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  --strelko-select-arrow-size: 12px;
+  --strelko-select-arrow-inset: 0.65rem;
+  --strelko-select-padding-right: 2rem;
+  --strelko-select-bg: var(--bg-deep);
+  --strelko-select-bg-hover: #262626;
+}
+
+#app select:not(#stat-days-overlay-select) {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+  padding-right: var(--strelko-select-padding-right);
+  background-color: var(--strelko-select-bg);
+  background-image: var(--strelko-select-arrow);
+  background-repeat: no-repeat;
+  background-position: right var(--strelko-select-arrow-inset) center;
+  background-size: var(--strelko-select-arrow-size) var(--strelko-select-arrow-size);
+}
+
+#app select:not(#stat-days-overlay-select):hover {
+  background-color: var(--strelko-select-bg-hover);
+}
+
+/* —— label + polje v okvirčku: enoten razmik oznake —— */
+label.field-labeled {
+  display: block;
+  gap: 0;
+  margin: 0;
+}
+
+label.field-labeled > span {
+  display: block;
+  margin: 0 0 6px;
+  padding: 0;
+  line-height: normal;
+  transform: none;
+  position: static;
+}
+
+.widget-obcine-page label.field-labeled > span {
+  padding-left: 3px;
+}
+
 .hero-mascot.hero-mascot--house {
   width: 95px;
   height: 150px;
@@ -739,7 +787,7 @@
   padding: 0.35rem 1.1rem 0.35rem 0.65rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background-color: #333333;
+  background-color: var(--strelko-select-bg);
   color: var(--text);
   min-height: 34px;
   cursor: pointer;
@@ -751,6 +799,10 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f2f2f2' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
+}
+
+.stat-days-overlay select:hover {
+  background-color: var(--strelko-select-bg-hover);
 }
 
 .stat-days-overlay select:focus-visible {
@@ -1741,21 +1793,6 @@ body.site-nav-open {
 .widget-obcine-field {
   flex: 1 1 10rem;
   min-width: 0;
-}
-
-.widget-obcine-page label.widget-obcine-field.search-option {
-  display: block;
-  gap: 0;
-  margin: 0;
-}
-
-.widget-obcine-page label.widget-obcine-field.search-option > span {
-  display: block;
-  margin: 0 0 5px;
-  padding: 0 0 0 3px;
-  line-height: normal;
-  transform: none;
-  position: static;
 }
 
 .widget-obcine-page .search-card-body label,
