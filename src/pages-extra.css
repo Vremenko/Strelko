@@ -949,10 +949,8 @@ label.field-labeled > span {
 }
 
 .auth-google-wrap iframe {
-  width: 100% !important;
   height: 40px !important;
   display: block !important;
-  margin: 0 !important;
 }
 
 .auth-divider {
