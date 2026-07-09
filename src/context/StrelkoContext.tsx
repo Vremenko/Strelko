@@ -306,35 +306,17 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
 
   const loadWidgetObMid = useCallback(async (mid: number) => {
     const obMid = Number(mid) || DEFAULT_OB_MID;
-    setWidgetState((w) => ({
-      ...w,
-      publicWidgetObMid: obMid,
-      publicWidgetObMids: [obMid],
-      publicWidgetLat: null,
-      publicWidgetLon: null,
-      publicWidgetLabel: "",
-    }));
-    try {
-      const res = await fetch(`/widget/api/obcina-widget?ob_mid=${obMid}`);
-      if (!res.ok) return;
-      const data = (await res.json()) as {
-        bounds?: [number, number][];
-        obcina?: string;
+    setWidgetState((w) => {
+      const name = w.publicWidgetObcine.find((o) => o.ob_mid === obMid)?.name ?? "";
+      return {
+        ...w,
+        publicWidgetObMid: obMid,
+        publicWidgetObMids: [obMid],
+        publicWidgetLat: null,
+        publicWidgetLon: null,
+        publicWidgetLabel: name,
       };
-      if (data.bounds && data.bounds.length >= 2) {
-        setWidgetState((w) => {
-          if (w.publicWidgetObMid !== obMid) return w;
-          return {
-            ...w,
-            publicWidgetLat: (data.bounds![0][0] + data.bounds![1][0]) / 2,
-            publicWidgetLon: (data.bounds![0][1] + data.bounds![1][1]) / 2,
-            publicWidgetLabel: data.obcina || "",
-          };
-        });
-      }
-    } catch {
-      /* ignore */
-    }
+    });
   }, []);
 
   const resetWidget = useCallback(() => {

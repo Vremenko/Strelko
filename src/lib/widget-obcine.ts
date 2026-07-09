@@ -7,13 +7,6 @@ function buildWidgetParams(widget: WidgetState, size: WidgetPreviewSize): URLSea
   const params = new URLSearchParams();
   const mid = widget.publicWidgetObMid;
   if (mid) params.set("ob_mid", String(mid));
-  if (widget.publicWidgetLat != null && widget.publicWidgetLon != null) {
-    params.set("lat", String(widget.publicWidgetLat));
-    params.set("lon", String(widget.publicWidgetLon));
-    if (widget.publicWidgetLabel) {
-      params.set("label", widget.publicWidgetLabel.slice(0, 80));
-    }
-  }
   params.set("theme", widget.publicWidgetTheme || "dark");
   params.set("size", size === "full" ? "full" : "compact");
   params.set("api", `${location.origin}/widget/api`);
@@ -28,14 +21,7 @@ export function widgetPreviewPath(widget: WidgetState, size: WidgetPreviewSize):
 }
 
 export function widgetEmbedConfigKey(widget: WidgetState, size: WidgetPreviewSize): string {
-  return [
-    size,
-    widget.publicWidgetObMid ?? "",
-    widget.publicWidgetTheme,
-    widget.publicWidgetLat ?? "",
-    widget.publicWidgetLon ?? "",
-    widget.publicWidgetLabel,
-  ].join("|");
+  return [size, widget.publicWidgetObMid ?? "", widget.publicWidgetTheme].join("|");
 }
 
 export function newWidgetEmbedFrameId(size: WidgetPreviewSize): string {
