@@ -98,7 +98,7 @@ export function Header() {
                 Arhiv strel
               </Link>
               <Link to="/widget-obcine" className="nav-link">
-                Widget občine
+                Widget
               </Link>
             </div>
             <div className="site-nav__auth nav-actions">
@@ -174,7 +174,7 @@ export function Header() {
               Arhiv strel
             </button>
             <button type="button" className="nav-link nav-link--drawer" onClick={() => go("/widget-obcine")}>
-              Widget občine
+              Widget
             </button>
           </nav>
           <div className="site-nav-drawer__auth">

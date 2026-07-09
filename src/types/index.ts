@@ -152,6 +152,7 @@ export interface WidgetState {
   publicWidgetObMid: number | null;
   publicWidgetObMids: number[];
   publicWidgetObcine: WidgetObcina[];
+  publicWidgetScope: "slovenija" | null;
   publicWidgetTheme: "dark" | "light";
   publicWidgetPreviewSize: "compact" | "full";
   publicWidgetLat: number | null;

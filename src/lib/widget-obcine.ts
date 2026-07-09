@@ -1,12 +1,17 @@
-import type { CSSProperties } from "react";
 import type { WidgetState } from "../types";
 
 export type WidgetPreviewSize = "compact" | "full";
+export const NATIONAL_WIDGET_SCOPE = "slovenija" as const;
 
 function buildWidgetParams(widget: WidgetState, size: WidgetPreviewSize): URLSearchParams {
   const params = new URLSearchParams();
-  const mid = widget.publicWidgetObMid;
-  if (mid) params.set("ob_mid", String(mid));
+  if (widget.publicWidgetScope === NATIONAL_WIDGET_SCOPE) {
+    params.set("scope", NATIONAL_WIDGET_SCOPE);
+    params.set("label", "SLOVENIJA");
+  } else {
+    const mid = widget.publicWidgetObMid;
+    if (mid) params.set("ob_mid", String(mid));
+  }
   params.set("theme", widget.publicWidgetTheme || "dark");
   params.set("size", size === "full" ? "full" : "compact");
   params.set("api", `${location.origin}/widget/api`);
@@ -15,30 +20,18 @@ function buildWidgetParams(widget: WidgetState, size: WidgetPreviewSize): URLSea
 
 export function widgetPreviewPath(widget: WidgetState, size: WidgetPreviewSize): string {
   const params = buildWidgetParams(widget, size);
-  return params.has("ob_mid")
+  return params.has("ob_mid") || params.has("scope")
     ? `/widget/obcina-widget.html?${params}`
     : `/widget/obcina-widget.html?size=${size === "full" ? "full" : "compact"}`;
 }
 
 export function widgetEmbedConfigKey(widget: WidgetState, size: WidgetPreviewSize): string {
-  return [size, widget.publicWidgetObMid ?? "", widget.publicWidgetTheme].join("|");
+  return [size, widget.publicWidgetScope ?? "", widget.publicWidgetObMid ?? "", widget.publicWidgetTheme].join("|");
 }
 
 export function newWidgetEmbedFrameId(size: WidgetPreviewSize): string {
   const full = size === "full";
   return `strele-obcina-${full ? "full" : "compact"}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-export function widgetSizeHintText(isFull: boolean): string {
-  return isFull
-    ? "Priporočena širina 700–1000 px · vključuje mini zemljevid"
-    : "Priporočena širina 300–450 px · za stranski stolpec";
-}
-
-export function widgetPreviewIframeStyle(isFull: boolean, mobile: boolean): CSSProperties {
-  const height = mobile ? (isFull ? "520px" : "360px") : isFull ? "640px" : "420px";
-  const minHeight = mobile ? (isFull ? "420px" : "320px") : undefined;
-  return minHeight ? { height, minHeight } : { height };
 }
 
 export function widgetEmbedHtml(
@@ -71,17 +64,22 @@ export function ensureWidgetResizeListener(): void {
   });
 }
 
-export async function copyWidgetEmbedCode(code: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(code);
-    return;
+export async function copyWidgetEmbedCode(code: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(code);
+      return true;
+    }
+    const ta = document.createElement("textarea");
+    ta.value = code;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
   }
-  const ta = document.createElement("textarea");
-  ta.value = code;
-  ta.style.position = "fixed";
-  ta.style.left = "-9999px";
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand("copy");
-  document.body.removeChild(ta);
 }

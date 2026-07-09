@@ -19,6 +19,7 @@ import {
   clampSearchRange,
   defaultSearchRange,
 } from "../lib/search-dates";
+import { NATIONAL_WIDGET_SCOPE } from "../lib/widget-obcine";
 import type {
   AlertsSettings,
   ApiError,
@@ -37,7 +38,7 @@ import type {
   WidgetObcina,
 } from "../types";
 
-const DEFAULT_OB_MID = 11027849;
+const DEFAULT_OB_MID = 11026516;
 const SEARCH_RESULT_STORAGE_KEY = "strelko_search_result_v1";
 
 function readSearchResultFromStorage(): SearchResult | null {
@@ -87,6 +88,7 @@ interface StrelkoState {
     publicWidgetObMid: number | null;
     publicWidgetObMids: number[];
     publicWidgetObcine: WidgetObcina[];
+    publicWidgetScope: "slovenija" | null;
     publicWidgetTheme: "dark" | "light";
     publicWidgetPreviewSize: "compact" | "full";
     publicWidgetLat: number | null;
@@ -132,7 +134,7 @@ interface StrelkoContextValue extends StrelkoState {
   setStatTab: (tab: StatTab) => void;
   setWidget: (patch: Partial<StrelkoState["widget"]>) => void;
   loadWidgetObcine: () => Promise<void>;
-  loadWidgetObMid: (mid: number) => Promise<void>;
+  loadWidgetSelection: (value: string | number) => Promise<void>;
   resetWidget: () => void;
   userWidget: UserWidgetConfig | null;
   loadUserWidget: () => Promise<void>;
@@ -152,6 +154,7 @@ const initialWidget = (): StrelkoState["widget"] => ({
   publicWidgetObMid: DEFAULT_OB_MID,
   publicWidgetObMids: [DEFAULT_OB_MID],
   publicWidgetObcine: [],
+  publicWidgetScope: null,
   publicWidgetTheme: "dark",
   publicWidgetPreviewSize: "compact",
   publicWidgetLat: null,
@@ -304,12 +307,24 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const loadWidgetObMid = useCallback(async (mid: number) => {
-    const obMid = Number(mid) || DEFAULT_OB_MID;
+  const loadWidgetSelection = useCallback(async (value: string | number) => {
+    if (value === NATIONAL_WIDGET_SCOPE) {
+      setWidgetState((w) => ({
+        ...w,
+        publicWidgetScope: NATIONAL_WIDGET_SCOPE,
+        publicWidgetObMids: [],
+        publicWidgetLat: null,
+        publicWidgetLon: null,
+        publicWidgetLabel: "SLOVENIJA",
+      }));
+      return;
+    }
+    const obMid = Number(value) || DEFAULT_OB_MID;
     setWidgetState((w) => {
       const name = w.publicWidgetObcine.find((o) => o.ob_mid === obMid)?.name ?? "";
       return {
         ...w,
+        publicWidgetScope: null,
         publicWidgetObMid: obMid,
         publicWidgetObMids: [obMid],
         publicWidgetLat: null,
@@ -657,7 +672,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       setStatTab: setStatistikaTab,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
       loadWidgetObcine,
-      loadWidgetObMid,
+      loadWidgetSelection,
       resetWidget,
       loadUserWidget,
       openWidgetSetup: async () => {
@@ -716,7 +731,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       loadPlans,
       loadUserWidget,
       loadWidgetObcine,
-      loadWidgetObMid,
+      loadWidgetSelection,
       resetWidget,
       afterAuth,
       navigate,
