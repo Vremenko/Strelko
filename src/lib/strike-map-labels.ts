@@ -13,9 +13,33 @@ export const MAPTILER_OVERLAY_PANE = "maptilerOverlayPane";
 export const STREKO_VECTOR_PANE = "strelkoVectorPane";
 export const MAPTILER_ATTRIBUTION =
   '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> ' +
-  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>';
+/** Hardcoded string injected by @maptiler/leaflet-maptilersdk on layer add. */
+export const MAPTILER_SDK_ATTRIBUTION =
+  '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
+  '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
 export const SATELLITE_ATTRIBUTION =
   '&copy; <a href="https://www.esri.com/">Esri</a>';
+
+export function syncStrikeMapAttribution(map: L.Map): void {
+  const ctrl = map.attributionControl;
+  if (!ctrl) return;
+
+  ctrl.setPrefix("");
+  for (let i = 0; i < 6; i += 1) {
+    ctrl.removeAttribution(MAPTILER_SDK_ATTRIBUTION);
+    ctrl.removeAttribution(MAPTILER_ATTRIBUTION);
+  }
+
+  let hasMaptilerLayer = false;
+  map.eachLayer((layer) => {
+    if (isMaptilerSdkLayer(layer)) hasMaptilerLayer = true;
+  });
+
+  if (hasMaptilerLayer) {
+    ctrl.addAttribution(MAPTILER_ATTRIBUTION);
+  }
+}
 
 export function removeInjectedMapControls(container: HTMLElement | null): void {
   if (!container) return;

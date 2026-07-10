@@ -236,6 +236,7 @@ export function createStrikeMap(
 
   (el as HTMLElement & { _leafletMap?: L.Map })._leafletMap = map;
 
+  map.attributionControl.setPrefix("");
   map.setView([lat, lon], mobile ? 10 : 11, { animate: false });
 
   const unbindGestures = bindStreleMapZoomGestures(map, el);

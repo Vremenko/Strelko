@@ -4,7 +4,6 @@ import "@maptiler/sdk/dist/maptiler-sdk.css";
 import {
   LAYER_NAME_MAP,
   LAYER_NAME_SATELLITE,
-  MAPTILER_ATTRIBUTION,
   MAPTILER_KEY,
   MAPTILER_OVERLAY_PANE,
   MAP_LAYERS_STORAGE_KEY,
@@ -16,6 +15,7 @@ import {
   STYLE_KRAJI_LIGHT,
   isMaptilerSdkLayer,
   removeInjectedMapControls,
+  syncStrikeMapAttribution,
 } from "./strike-map-labels";
 type MapTheme = "dark" | "light";
 type BaseLayerName = typeof LAYER_NAME_MAP | typeof LAYER_NAME_SATELLITE;
@@ -138,7 +138,6 @@ function createMaptilerBaseLayer(styleId: string): ReturnType<typeof maptilerLay
   const layer = maptilerLayer({
     apiKey: MAPTILER_KEY,
     style: maptilerStyleUrl(styleId),
-    attribution: MAPTILER_ATTRIBUTION,
     attributionControl: false,
   } as Parameters<typeof maptilerLayer>[0]);
 
@@ -334,12 +333,22 @@ export function initStrikeMapBasemap(
 
   loadCountryBorders(map, state, mobile);
 
-  map.on("layeradd", () => {
+  const onMaptilerLayerChange = (layer: L.Layer) => {
+    if (!isMaptilerSdkLayer(layer)) return;
+    syncStrikeMapAttribution(map);
+  };
+
+  map.on("layeradd", (event) => {
     removeInjectedMapControls(container);
+    onMaptilerLayerChange(event.layer);
+  });
+  map.on("layerremove", (event) => {
+    onMaptilerLayerChange(event.layer);
   });
 
   applyMapThemeAttributes(container, state._layersPanel, state);
   removeInjectedMapControls(container);
+  syncStrikeMapAttribution(map);
 
   return state;
 }

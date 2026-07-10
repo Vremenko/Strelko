@@ -14,6 +14,7 @@ export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElemen
   }
 
   const hintMsg = "Ctrl + kolesce ali vlečenje miške";
+  const HINT_HIDE_MS = 700;
   let hintTimer: ReturnType<typeof setTimeout> | null = null;
   let hintEl: HTMLDivElement | null = null;
 
@@ -28,14 +29,16 @@ export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElemen
     hintEl = null;
   };
 
-  const showHint = () => {
-    hideHint();
+  const scheduleHint = () => {
     if (!container.isConnected) return;
-    hintEl = document.createElement("div");
-    hintEl.className = "strele-map-wheel-hint";
-    hintEl.textContent = hintMsg;
-    container.appendChild(hintEl);
-    hintTimer = setTimeout(hideHint, 2800);
+    if (!hintEl) {
+      hintEl = document.createElement("div");
+      hintEl.className = "strele-map-wheel-hint";
+      hintEl.textContent = hintMsg;
+      container.appendChild(hintEl);
+    }
+    if (hintTimer) clearTimeout(hintTimer);
+    hintTimer = setTimeout(hideHint, HINT_HIDE_MS);
   };
 
   const mapContainer = map.getContainer();
@@ -68,10 +71,12 @@ export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElemen
   };
   const onBlur = () => {
     ctrlDown = false;
+    hideHint();
   };
   const onMouseDown = (ev: MouseEvent) => {
-    if (ctrlZoom(ev) && ev.button === 0) {
-      hideHint();
+    if (ev.button !== 0) return;
+    hideHint();
+    if (ctrlZoom(ev)) {
       panning = true;
       lastX = ev.clientX;
       lastY = ev.clientY;
@@ -99,24 +104,30 @@ export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElemen
         { animate: false }
       );
     } else {
-      showHint();
+      scheduleHint();
     }
   };
 
+  map.on("movestart", hideHint);
+  map.on("zoomstart", hideHint);
   window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("keyup", onKeyUp, true);
   window.addEventListener("blur", onBlur);
   mapContainer.addEventListener("mousedown", onMouseDown);
+  mapContainer.addEventListener("mouseleave", hideHint);
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", endPan);
   mapContainer.addEventListener("wheel", onWheel, { passive: false, capture: true });
 
   return () => {
     hideHint();
+    map.off("movestart", hideHint);
+    map.off("zoomstart", hideHint);
     window.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("keyup", onKeyUp, true);
     window.removeEventListener("blur", onBlur);
     mapContainer.removeEventListener("mousedown", onMouseDown);
+    mapContainer.removeEventListener("mouseleave", hideHint);
     window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("mouseup", endPan);
     mapContainer.removeEventListener("wheel", onWheel, true);

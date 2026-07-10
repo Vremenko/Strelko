@@ -525,8 +525,19 @@ label.field-labeled > span {
   line-height: 1.5;
 }
 
+.zavarovalnica-page .suggestions {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .zavarovalnica-page .suggestions li {
   margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: default;
 }
 
 .zavarovalnica-page .suggestions button {
@@ -538,16 +549,32 @@ label.field-labeled > span {
   margin: 0;
   padding: 0.65rem 0.85rem;
   border: 0;
+  border-radius: 0;
   background: transparent;
   color: var(--text);
   font: inherit;
   text-align: left;
   cursor: pointer;
+  outline: none;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.zavarovalnica-page .suggestions li:hover button,
-.zavarovalnica-page .suggestions button:focus-visible {
-  background: rgba(5, 165, 206, 0.16);
+#app .zavarovalnica-page .suggestions > li:hover,
+#app .zavarovalnica-page .suggestions > li.active,
+#app .zavarovalnica-page .suggestions > li:has(> button:focus),
+#app .zavarovalnica-page .suggestions > li:has(> button:focus-visible) {
+  background: #e4e4e4;
+  color: #1a1a1a;
+}
+
+#app .zavarovalnica-page .suggestions > li:hover > button,
+#app .zavarovalnica-page .suggestions > li.active > button,
+#app .zavarovalnica-page .suggestions button.active,
+#app .zavarovalnica-page .suggestions button:focus,
+#app .zavarovalnica-page .suggestions button:focus-visible {
+  background: transparent;
+  color: #1a1a1a;
 }
 
 .results-panel--zavarovalnica {
@@ -690,6 +717,10 @@ label.field-labeled > span {
   .results-panel .stat .value,
   .results-hourly-panel .stat .value {
     font-size: 0.85rem;
+  }
+
+  .zavarovalnica-page .results-panel .stat .value {
+    margin-top: 1.5px;
   }
 
   .results-hourly-panel .chart-wrap,
@@ -1111,6 +1142,16 @@ label.field-labeled > span {
 .strike-map-canvas.leaflet-container,
 #strike-map.leaflet-container {
   background: #1a1a1a;
+}
+
+#strike-map.leaflet-container .leaflet-control-attribution {
+  background: rgba(26, 26, 26, 0.82) !important;
+  color: var(--muted) !important;
+  font-size: 10px !important;
+}
+
+#strike-map.leaflet-container .leaflet-control-attribution a {
+  color: var(--blue) !important;
 }
 
 .strele-map-wheel-hint {
@@ -1990,6 +2031,57 @@ body.site-nav-open {
 }
 
 /* —— search date picker fix —— */
+/* —— custom suggestion / dropdown lists —— */
+#app .suggestions li {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: default;
+}
+
+#app .suggestions li:hover,
+#app .suggestions li.active {
+  background: transparent;
+  color: inherit;
+}
+
+#app .suggestions > li:not(:has(> button)):hover,
+#app .suggestions > li:not(:has(> button)).active,
+#app .suggestions > li:not(:has(> button)):focus-visible {
+  background: rgba(5, 165, 206, 0.16);
+  color: var(--text);
+}
+
+#app .suggestions button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app .suggestions li:hover > button,
+#app .suggestions li.active > button,
+#app .suggestions button.active,
+#app .suggestions button:focus-visible,
+#app .suggestions button:focus {
+  background: rgba(5, 165, 206, 0.16);
+  color: var(--text);
+}
+
 .location-field {
   position: relative;
   z-index: auto;

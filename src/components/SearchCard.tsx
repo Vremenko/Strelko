@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult } from "../types";
 import { SearchScanBolt } from "./icons";
@@ -43,6 +43,28 @@ export function SearchCard({
   } = useStrelko();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const locationFieldRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSuggestions) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const root = locationFieldRef.current;
+      if (!root || root.contains(event.target as Node)) return;
+      setShowSuggestions(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowSuggestions(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [showSuggestions]);
 
   const onInput = (value: string) => {
     setLocationQuery(value);
@@ -116,7 +138,7 @@ export function SearchCard({
             {label}
           </label>
         )}
-        <div className="location-field">
+        <div className="location-field" ref={locationFieldRef}>
           <input
             id="location-input"
             className="search-input"
