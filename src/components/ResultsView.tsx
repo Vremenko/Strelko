@@ -25,7 +25,7 @@ function dayKey(datum: string): string {
 }
 
 export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean }) {
-  const { searchResult, downloadPdf, clearSearch } = useStrelko();
+  const { searchResult, downloadPdf, clearSearch, pdfDownloading } = useStrelko();
   const [selectedMapDay, setSelectedMapDay] = useState<string | null>(null);
   const [mapStrikes, setMapStrikes] = useState<StrikePoint[]>([]);
   const [hourlyChartDay, setHourlyChartDay] = useState<string | null>(null);
@@ -253,8 +253,14 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
         )}
       </div>
       <div className="results-actions">
-        <button type="button" className="btn btn-primary" onClick={() => void downloadPdf()}>
-          Prenesi PDF poročilo
+        <button
+          type="button"
+          className={`btn btn-primary${pdfDownloading ? " btn-primary--loading" : ""}`}
+          onClick={() => void downloadPdf()}
+          disabled={pdfDownloading}
+          aria-busy={pdfDownloading}
+        >
+          {pdfDownloading ? "Pripravljam PDF poročilo" : "Prenesi PDF poročilo"}
         </button>
         <Link to={backTo} className="btn btn-ghost" onClick={clearSearch}>
           Nova preiskava

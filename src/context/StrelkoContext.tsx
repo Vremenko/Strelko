@@ -83,6 +83,7 @@ interface StrelkoState {
   searchDateFrom: string;
   searchDateTo: string;
   loading: boolean;
+  pdfDownloading: boolean;
   statistikaTab: StatTab;
   widget: {
     publicWidgetObMid: number | null;
@@ -199,6 +200,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [searchDateFrom, setSearchDateFrom] = useState(defaultRange.from);
   const [searchDateTo, setSearchDateTo] = useState(defaultRange.to);
   const [loading, setLoading] = useState(false);
+  const [pdfDownloading, setPdfDownloading] = useState(false);
   const [statistikaTab, setStatistikaTab] = useState<StatTab>("grafi");
   const [widget, setWidgetState] = useState(initialWidget);
   const [userWidget, setUserWidget] = useState<UserWidgetConfig | null>(null);
@@ -482,6 +484,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       searchDateFrom,
       searchDateTo,
       loading,
+      pdfDownloading,
       statistikaTab,
       widget,
       userWidget,
@@ -597,7 +600,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         await runFullSearchInner();
       },
       downloadPdf: async () => {
-        if (!searchResult) return;
+        if (!searchResult || pdfDownloading) return;
+        setPdfDownloading(true);
         try {
           const blob = await api.downloadReportPdf({
             lat: searchResult.lat,
@@ -615,6 +619,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           URL.revokeObjectURL(url);
         } catch (e) {
           alert((e as Error).message || "PDF ni na voljo.");
+        } finally {
+          setPdfDownloading(false);
         }
       },
       openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
@@ -722,6 +728,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       searchDateFrom,
       searchDateTo,
       loading,
+      pdfDownloading,
       statistikaTab,
       widget,
       userWidget,

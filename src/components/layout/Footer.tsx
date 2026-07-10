@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { COMPANY, LEGAL_PAGES } from "../../lib/legal";
+import { COMPANY, DISCLAIMER_TEXT, LEGAL_PAGES } from "../../lib/legal";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -11,7 +11,7 @@ export function Footer() {
 
   return (
     <footer className="site-footer">
-      <div className="site-footer-row site-footer-row--top">
+      <div className="site-footer-grid">
         <p className="site-footer-copy">
           &copy; {year} <strong>{COMPANY.shortName}</strong> · Strelko
         </p>
@@ -21,13 +21,30 @@ export function Footer() {
           </a>{" "}
           · <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
         </p>
-      </div>
-      <nav className="legal-footer-nav" aria-label="Pravne informacije">
-        {legalLinks}
-        <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
-          Politika zasebnosti Meteoinfo
+        <a
+          href={COMPANY.website}
+          className="site-footer-meteoinfo-brand"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Meteoinfo"
+        >
+          <img
+            src="/assets/meteoinfo-logo.png?v=3"
+            alt="Meteoinfo"
+            className="site-footer-meteoinfo-logo"
+            width={180}
+            height={33}
+            loading="lazy"
+            decoding="async"
+          />
         </a>
-      </nav>
+        <nav className="legal-footer-nav" aria-label="Pravne informacije">
+          {legalLinks}
+          <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
+            Politika zasebnosti Meteoinfo
+          </a>
+        </nav>
+      </div>
     </footer>
   );
 }
@@ -35,10 +52,7 @@ export function Footer() {
 export function Disclaimer() {
   return (
     <aside className="disclaimer" role="note" aria-label="Opozorilo">
-      <strong>Opozorilo:</strong> Prikazani podatki so izključno informativne narave in se lahko
-      razlikujejo od uradnih evidenc. Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve
-      zavarovalnic ali točnost podatkov v posameznem primeru. Za uradne postopke se obrnite na
-      pristojne institucije in zavarovalnico.
+      <strong>Opozorilo:</strong> {DISCLAIMER_TEXT}
     </aside>
   );
 }
