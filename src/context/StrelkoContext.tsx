@@ -196,6 +196,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     setSelected(null);
     setLocationQueryState("");
   }, []);
+  const clearSearchDisplayState = useCallback(() => {
+    writeSearchResultToStorage(null);
+    setPreview(null);
+    setPreviewScreen(null);
+    setSearchResultState(null);
+  }, []);
   const [searchRadiusKm, setSearchRadiusKm] = useState(DEFAULT_SEARCH_RADIUS_KM);
   const [searchDateFrom, setSearchDateFrom] = useState(defaultRange.from);
   const [searchDateTo, setSearchDateTo] = useState(defaultRange.to);
@@ -344,6 +350,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     void loadPlans();
     void refreshUser();
   }, [loadPlans, refreshUser]);
+
+  useEffect(() => {
+    if (location.pathname !== "/") return;
+    clearSearchDisplayState();
+  }, [location.pathname, clearSearchDisplayState]);
 
   useEffect(() => {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
