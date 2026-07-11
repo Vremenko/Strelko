@@ -1,3 +1,4 @@
+import { ObSkodiTokenPurchase } from "../components/pricing/ObSkodiTokenPurchase";
 import { PricingPlanCard } from "../components/pricing/PricingPlanCard";
 import { PricingPurchaseInfo } from "../components/pricing/PricingPurchaseInfo";
 import { TokenUsageExplainer } from "../components/pricing/TokenUsageExplainer";
@@ -8,35 +9,37 @@ import {
   setAuthReturn,
   setCheckoutPlanId,
 } from "../lib/auth-intent";
-import {
-  PRICING_OB_SKODI,
-  PRICING_PODPORNIST,
-  PRICING_VAT_RATE_NOTE,
-} from "../lib/pricing-offers";
+import { isObSkodiPurchaseAllowed } from "../lib/ob-skodi-tokens";
+import { PRICING_PODPORNIST, PRICING_VAT_RATE_NOTE } from "../lib/pricing-offers";
 
 export function CenikPage() {
   const { user, openAuth, paymentsEnabled, setSelectedPlan, checkout } = useStrelko();
 
-  const handleOfferCta = (tab: "zetoni" | "narocnina") => {
-    if (!paymentsEnabled) {
-      return;
-    }
-    const planId = checkoutPlanForTab(tab);
+  const handlePodpornikCta = () => {
+    if (!paymentsEnabled) return;
+    const planId = checkoutPlanForTab("narocnina");
     if (user) {
       setSelectedPlan(planId);
       void checkout();
       return;
     }
-    setAuthReturn(portalTabPath(tab));
+    setAuthReturn(portalTabPath("narocnina"));
     setCheckoutPlanId(planId);
     openAuth("register");
   };
 
-  const obSkodiCtaLabel = !paymentsEnabled
-    ? "Nakup bo kmalu na voljo"
-    : user
-      ? "Kupite žetone"
-      : "Kupite žetone — prijava";
+  const handleObSkodiPurchase = (_quantity: number) => {
+    if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
+    const planId = checkoutPlanForTab("zetoni");
+    if (user) {
+      setSelectedPlan(planId);
+      void checkout();
+      return;
+    }
+    setAuthReturn(portalTabPath("narocnina"));
+    setCheckoutPlanId(planId);
+    openAuth("register");
+  };
 
   const podpornikCtaLabel = !paymentsEnabled
     ? "Naročnina bo kmalu na voljo"
@@ -44,7 +47,7 @@ export function CenikPage() {
       ? "Postanite podpornik"
       : "Postanite podpornik — prijava";
 
-  const ctaDisabled = !paymentsEnabled;
+  const podpornikDisabled = !paymentsEnabled;
 
   return (
     <article className="pricing-page page--standard">
@@ -62,24 +65,23 @@ export function CenikPage() {
 
       <section className="pricing-plans" aria-label="Paketi">
         <div className="plan-grid plan-grid--2 pricing-plan-grid">
-          <PricingPlanCard offer={PRICING_OB_SKODI}>
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
-              onClick={() => handleOfferCta("zetoni")}
-              disabled={ctaDisabled}
-              aria-disabled={ctaDisabled}
-            >
-              {obSkodiCtaLabel}
-            </button>
-          </PricingPlanCard>
+          <article className="plan-card pricing-plan-card">
+            <div className="portal-card__head">
+              <h3 className="pricing-plan-card__title">Ob škodi – žetoni</h3>
+              <span className="portal-card__tag">Enkratno</span>
+            </div>
+            <ObSkodiTokenPurchase
+              paymentsEnabled={paymentsEnabled}
+              onPurchase={handleObSkodiPurchase}
+            />
+          </article>
           <PricingPlanCard offer={PRICING_PODPORNIST}>
             <button
               type="button"
               className="btn btn-primary btn-block"
-              onClick={() => handleOfferCta("narocnina")}
-              disabled={ctaDisabled}
-              aria-disabled={ctaDisabled}
+              onClick={handlePodpornikCta}
+              disabled={podpornikDisabled}
+              aria-disabled={podpornikDisabled}
             >
               {podpornikCtaLabel}
             </button>

@@ -1,5 +1,11 @@
 /** Skupni vir podatkov za ponudbi Ob škodi in Podpornik (cenik + portal). */
 
+import {
+  OB_SKODI_MIN_QUANTITY,
+  OB_SKODI_PER_TOKEN_GROSS_LABEL,
+  OB_SKODI_PER_TOKEN_NET_APPROX_LABEL,
+} from "./ob-skodi-tokens";
+
 export type PricingOfferId = "ob_skodi" | "podpornik";
 
 export interface TokenUsageRule {
@@ -26,12 +32,12 @@ export const PRICING_VAT_RATE_NOTE =
 export const PRICING_OB_SKODI: PricingOffer = {
   id: "ob_skodi",
   name: "Ob škodi",
-  priceEur: "4,50 €",
-  priceLabel: "enkratno plačilo",
-  priceExVat: "(3,69 € brez DDV)",
+  priceEur: OB_SKODI_PER_TOKEN_GROSS_LABEL,
+  priceLabel: "na žeton · DDV je vključen",
+  priceExVat: `približno ${OB_SKODI_PER_TOKEN_NET_APPROX_LABEL} brez DDV`,
   vatNote: PRICING_VAT_NOTE,
   features: [
-    "4 žetoni",
+    `Najmanjši nakup so ${OB_SKODI_MIN_QUANTITY} žetoni`,
     "do 10 dni: 1 žeton",
     "11–20 dni: 2 žetona",
     "21–30 dni: 3 žetoni",
@@ -110,7 +116,3 @@ export const PURCHASE_STEPS = [
   "Plačilo prek varnega plačilnega sistema (kmalu na voljo).",
   "Za žetone izvedite poizvedbo na strani Pomoč pri zavarovalnici; za Podpornika odprite arhiv in widget.",
 ] as const;
-
-export function tokensPackLabel(): string {
-  return `Kupite 4 žetone za ${PRICING_OB_SKODI.priceEur}`;
-}

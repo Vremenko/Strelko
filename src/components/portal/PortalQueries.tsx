@@ -1,4 +1,5 @@
 import { TOKEN_USAGE_RULES } from "../../lib/pricing-offers";
+import { tokenWord } from "../../lib/ob-skodi-tokens";
 import { PortalEmptyState } from "./PortalEmptyState";
 
 /** Shranjene poizvedbe — en glavni panel. */
@@ -17,7 +18,7 @@ export function PortalQueries() {
         <ul className="plan-features">
           {TOKEN_USAGE_RULES.map((r) => (
             <li key={r.daysLabel}>
-              {r.daysLabel}: <strong>{r.tokens}</strong> {r.tokens === 1 ? "žeton" : "žetona"}
+              {r.daysLabel}: <strong>{r.tokens}</strong> {tokenWord(r.tokens)}
             </li>
           ))}
           <li>Prva izdelava PDF-ja: <strong>+1 žeton</strong></li>

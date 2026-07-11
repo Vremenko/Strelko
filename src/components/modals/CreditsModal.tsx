@@ -22,8 +22,8 @@ function InsufficientCreditsUpsell({ plans }: { plans: Plan[] }) {
         <div className="plan-compare-col">
           <span className="plan-compare-name">{skoda.name_sl}</span>
           <span className="plan-compare-price">
-            {formatPlanGrossLabel(skoda, "4,50 €")}
-            {skoda.price_suffix_sl || "/mesec"}
+            {formatPlanGrossLabel(skoda, "1,40 €")}
+            {" / žeton"}
           </span>
           <span>
             {skoda.monthly_credits} pregledov · PDF
