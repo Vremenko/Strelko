@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useStrelko } from "../context/StrelkoContext";
 import { archiveEmbedUrl, archiveMapEmbedUrl } from "../lib/archive-embed";
 import {
@@ -9,8 +10,8 @@ import {
 } from "../lib/archive-embed-interaction";
 import {
   attachMapPeriodGate,
-  getMapStageOverlayBox,
-  isMapPeriodLockedInIframe,
+  ensureMapLockPortal,
+  setMapLockPortalActive,
 } from "../lib/map-period-access";
 import { isPodpornikActive } from "../lib/portal-account";
 import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
@@ -219,33 +220,21 @@ function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
 
 function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
   const src = archiveMapEmbedUrl(7);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const detachGateRef = useRef<(() => void) | null>(null);
   const mountedRef = useRef(false);
   const [mounted, setMounted] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [overlayBox, setOverlayBox] = useState<{
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  } | null>(null);
+  const [lockMount, setLockMount] = useState<HTMLElement | null>(null);
   const mapHeight = window.matchMedia("(max-width:899px)").matches ? "480" : "560";
 
-  const updateOverlay = useCallback(() => {
-    const iframe = iframeRef.current;
-    const wrap = wrapRef.current;
-    if (!iframe || !wrap) return;
-    const lockedNow = iframe.contentDocument
-      ? isMapPeriodLockedInIframe(iframe.contentDocument)
-      : false;
+  const syncLockPortal = useCallback((iframe: HTMLIFrameElement, lockedNow: boolean) => {
+    const doc = iframe.contentDocument;
+    if (!doc) return;
+    const mount = ensureMapLockPortal(doc);
+    setMapLockPortalActive(mount, lockedNow);
+    setLockMount(mount);
     setLocked(lockedNow);
-    if (!lockedNow) {
-      setOverlayBox(null);
-      return;
-    }
-    setOverlayBox(getMapStageOverlayBox(iframe, wrap));
   }, []);
 
   const ensureMounted = () => {
@@ -257,12 +246,12 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
   const wirePeriodGate = useCallback(
     (iframe: HTMLIFrameElement) => {
       detachGateRef.current?.();
-      detachGateRef.current = attachMapPeriodGate(iframe, {
-        onLockedChange: () => updateOverlay(),
-        onLayoutChange: () => updateOverlay(),
+      detachGateRef.current = attachMapPeriodGate(iframe, (lockedNow, mount) => {
+        setLocked(lockedNow);
+        setLockMount(mount);
       });
     },
-    [updateOverlay]
+    []
   );
 
   useEffect(() => {
@@ -301,23 +290,6 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
     iframeRef.current?.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
   }, [visible, mounted]);
 
-  useEffect(() => {
-    updateOverlay();
-  }, [updateOverlay, mounted, visible]);
-
-  useEffect(() => {
-    const onResize = () => updateOverlay();
-    window.addEventListener("resize", onResize);
-    const onMessage = (ev: MessageEvent) => {
-      if (ev.data?.type === "strele-embed-resize") updateOverlay();
-    };
-    window.addEventListener("message", onMessage);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("message", onMessage);
-    };
-  }, [updateOverlay]);
-
   useEffect(() => () => detachGateRef.current?.(), []);
 
   useLayoutEffect(() => {
@@ -329,12 +301,11 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
   const notifyMapVisible = (iframe: HTMLIFrameElement) => {
     iframe.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
     wirePeriodGate(iframe);
-    updateOverlay();
+    syncLockPortal(iframe, false);
   };
 
   return (
     <div
-      ref={wrapRef}
       className={`archive-map-wrap archive-map-wrap--gated${visible ? "" : " stat-panel--hidden"}`}
       id="archive-map-wrap"
       data-map-src={src}
@@ -358,19 +329,12 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
           Nalagam zemljevid …
         </p>
       )}
-      {locked && overlayBox ? (
-        <div
-          className="archive-map-lock-overlay"
-          style={{
-            top: overlayBox.top,
-            left: overlayBox.left,
-            width: overlayBox.width,
-            height: overlayBox.height,
-          }}
-        >
-          <LockedContent mode="supporter" className="archive-map-locked" />
-        </div>
-      ) : null}
+      {locked && lockMount
+        ? createPortal(
+            <LockedContent mode="supporter" className="archive-map-locked" />,
+            lockMount
+          )
+        : null}
     </div>
   );
 }
