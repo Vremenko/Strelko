@@ -11,7 +11,7 @@ export type LockedContentMode = "supporter" | "tokens";
 
 const SUPPORTER_TITLE = "Ta vsebina je na voljo s paketom Podpornik";
 const SUPPORTER_TEXT =
-  "Z aktivacijo paketa Podpornik pridobite dostop do dodatnih prikazov in funkcij, hkrati pa neposredno podprete ekipo Meteoinfo pri razvoju novih aplikacij, meteoroloških produktov ter nadaljnjih izboljšav storitve Strelko.";
+  "Z aktivacijo paketa Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov ter nadaljnjem izboljševanju Strelka.";
 
 interface LockedContentProps {
   mode: LockedContentMode;
