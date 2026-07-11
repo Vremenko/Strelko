@@ -27,7 +27,7 @@ export function archiveEmbedUrl(
 
 export function archiveMapEmbedUrl(
   days = 30,
-  opts?: { hideChrome?: boolean; day?: string }
+  opts?: { hideChrome?: boolean; day?: string; defaultRangeDays?: number }
 ): string {
   const params = new URLSearchParams({
     api: "/arhiv",
@@ -38,6 +38,9 @@ export function archiveMapEmbedUrl(
     params.set("day", opts.day);
   } else {
     params.set("days", String(days));
+  }
+  if (opts?.defaultRangeDays != null) {
+    params.set("default_range_days", String(opts.defaultRangeDays));
   }
   if (opts?.hideChrome) params.set("chrome", "0");
   return `/arhiv/public/map-embed.html?${params}`;

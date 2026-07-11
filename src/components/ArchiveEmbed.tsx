@@ -219,7 +219,7 @@ function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
 }
 
 function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
-  const src = archiveMapEmbedUrl(7);
+  const src = archiveMapEmbedUrl(30, { defaultRangeDays: 7 });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const detachGateRef = useRef<(() => void) | null>(null);
   const mountedRef = useRef(false);
