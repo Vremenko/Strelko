@@ -123,6 +123,88 @@ export function isMapPeriodLockedInIframe(doc: Document): boolean {
   return isMapSelectValueLocked(sel.value);
 }
 
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function subtractDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() - days + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function fmtFull(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("sl-SI", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function fmtDay(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("sl-SI", { day: "numeric" });
+}
+
+function fmtDayMonth(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("sl-SI", { day: "numeric", month: "long" });
+}
+
+function fmtMonthYear(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("sl-SI", { month: "long", year: "numeric" });
+}
+
+function formatSlDateRange(fromIso: string, toIso: string): string {
+  const from = new Date(`${fromIso}T12:00:00`);
+  const to = new Date(`${toIso}T12:00:00`);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return "—";
+  if (from.getFullYear() === to.getFullYear()) {
+    if (from.getMonth() === to.getMonth()) {
+      return `${fmtDay(fromIso)} – ${fmtDay(toIso)} ${fmtMonthYear(toIso)}`;
+    }
+    return `${fmtDayMonth(fromIso)} – ${fmtDayMonth(toIso)} ${from.getFullYear()}`;
+  }
+  return `${fmtFull(fromIso)} – ${fmtFull(toIso)}`;
+}
+
+/** Posodobi toolbar ob zaklenjenem obdobju brez reload(). */
+function syncLockedToolbarUI(doc: Document): void {
+  const sel = doc.getElementById("daysSelect") as HTMLSelectElement | null;
+  const dayPickWrap = doc.getElementById("mapDayPickWrap");
+  const dayPick = doc.getElementById("mapDayPick") as HTMLInputElement | null;
+  const dniBtn = doc.getElementById("mapModeBtnDni");
+  const periodLabel = doc.getElementById("periodLabel");
+  if (!sel) return;
+
+  const value = sel.value;
+  if (value === "pick") {
+    dayPickWrap?.classList.remove("hidden");
+    if (dayPick && !dayPick.value) dayPick.value = todayIso();
+    if (periodLabel && dayPick?.value) periodLabel.textContent = fmtFull(dayPick.value);
+    return;
+  }
+
+  dayPickWrap?.classList.add("hidden");
+  const days = parseInt(value, 10);
+  const showDni = (MAP_LOCKED_DAY_OPTIONS as readonly number[]).includes(days);
+  if (dniBtn) dniBtn.hidden = !showDni;
+
+  if (!periodLabel) return;
+  if (value === "1") {
+    periodLabel.textContent = fmtFull(todayIso());
+    return;
+  }
+  if (showDni) {
+    const to = todayIso();
+    periodLabel.textContent = formatSlDateRange(subtractDays(to, days), to);
+  }
+}
+
 function ensureMapLockStyles(doc: Document): void {
   if (doc.getElementById(MAP_LOCK_STYLE_ID)) return;
   const style = doc.createElement("style");
@@ -168,8 +250,10 @@ export function attachMapPeriodGate(
 
   const sel = doc.getElementById("daysSelect") as HTMLSelectElement | null;
   const dayPick = doc.getElementById("mapDayPick") as HTMLInputElement | null;
+  const mapModeTabs = doc.getElementById("mapModeTabs");
 
   const sync = (locked: boolean) => {
+    if (locked) syncLockedToolbarUI(doc);
     const mount = ensureMapLockPortal(doc);
     setMapLockPortalActive(mount, locked);
     onLockedChange(locked, mount);
@@ -186,17 +270,36 @@ export function attachMapPeriodGate(
     sync(false);
   };
 
-  const onDayPickChange = () => {
-    if (sel?.value === "pick") sync(true);
+  const onDayPickChange = (e: Event) => {
+    if (sel?.value !== "pick") return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    sync(true);
+  };
+
+  const onModeTabClick = (e: Event) => {
+    if (!isMapPeriodLockedInIframe(doc)) return;
+    const btn = (e.target as Element | null)?.closest("[data-mode]");
+    if (!btn) return;
+    const mode = (btn as HTMLElement).dataset.mode;
+    if (!mode) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    mapModeTabs?.querySelectorAll(".map-mode-btn").forEach((b) => {
+      b.classList.toggle("map-mode-btn--active", (b as HTMLElement).dataset.mode === mode);
+    });
+    sync(true);
   };
 
   sel?.addEventListener("change", onSelectChange, true);
   dayPick?.addEventListener("change", onDayPickChange, true);
+  mapModeTabs?.addEventListener("click", onModeTabClick, true);
 
   sync(isMapPeriodLockedInIframe(doc));
 
   return () => {
     sel?.removeEventListener("change", onSelectChange, true);
     dayPick?.removeEventListener("change", onDayPickChange, true);
+    mapModeTabs?.removeEventListener("click", onModeTabClick, true);
   };
 }
