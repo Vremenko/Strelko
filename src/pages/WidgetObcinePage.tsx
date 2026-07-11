@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStrelko } from "../context/StrelkoContext";
+import { LockedContent } from "../components/LockedContent";
+import { isPodpornikActive } from "../lib/portal-account";
+import { STRELKO_OPEN_ACCESS } from "../lib/season";
 import {
   copyWidgetEmbedCode,
   ensureWidgetResizeListener,
@@ -14,7 +17,7 @@ const DEFAULT_OB_MID = 11026516;
 const COPY_CONFIRM_MS = 2000;
 
 export function WidgetObcinePage() {
-  const { widget, setWidget, loadWidgetObcine, loadWidgetSelection } = useStrelko();
+  const { widget, setWidget, loadWidgetObcine, loadWidgetSelection, credits } = useStrelko();
   const [copyConfirmed, setCopyConfirmed] = useState(false);
   const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -68,6 +71,7 @@ export function WidgetObcinePage() {
     () => (ready ? widgetEmbedHtml(widget, size, frameIdRef.current.id) : "Izberite občino …"),
     [ready, embedConfigKey, size, widget]
   );
+  const canEmbed = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
 
   return (
     <section className="widget-obcine-page page--standard">
@@ -161,24 +165,30 @@ export function WidgetObcinePage() {
               title="Predogled widgeta"
             />
           </div>
-          <label className="widget-code-label" htmlFor="public-widget-embed-code">
+          <label className="widget-code-label" htmlFor={canEmbed ? "public-widget-embed-code" : undefined}>
             Embed koda
           </label>
-          <textarea
-            id="public-widget-embed-code"
-            className="widget-embed-code widget-obcine-embed-code"
-            readOnly
-            rows={4}
-            value={embedCode}
-          />
-          <button
-            type="button"
-            className={`btn btn-ghost btn-sm widget-copy-btn${copyConfirmed ? " widget-copy-btn--copied" : ""}`}
-            id="public-widget-copy"
-            onClick={() => void handleCopyEmbedCode(embedCode)}
-          >
-            {copyConfirmed ? "Kopirano" : "Kopiraj kodo"}
-          </button>
+          {canEmbed ? (
+            <>
+              <textarea
+                id="public-widget-embed-code"
+                className="widget-embed-code widget-obcine-embed-code"
+                readOnly
+                rows={4}
+                value={embedCode}
+              />
+              <button
+                type="button"
+                className={`btn btn-ghost btn-sm widget-copy-btn${copyConfirmed ? " widget-copy-btn--copied" : ""}`}
+                id="public-widget-copy"
+                onClick={() => void handleCopyEmbedCode(embedCode)}
+              >
+                {copyConfirmed ? "Kopirano" : "Kopiraj kodo"}
+              </button>
+            </>
+          ) : (
+            <LockedContent mode="supporter" className="widget-embed-locked" />
+          )}
         </div>
       </div>
     </section>

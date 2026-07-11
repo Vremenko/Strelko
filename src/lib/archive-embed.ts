@@ -18,17 +18,27 @@ export function archiveEmbedUrl(
     params.set("stats", "0");
   } else {
     params.set("chart", "all");
-    params.set("obcine", "1");
-    if (!archiveFullAccess) params.set("locked", "1");
+    if (archiveFullAccess) {
+      params.set("obcine", "1");
+    }
   }
   return `/arhiv/public/embed?${params}`;
 }
 
-export function archiveMapEmbedUrl(days = 30): string {
-  return `/arhiv/public/map-embed.html?${new URLSearchParams({
+export function archiveMapEmbedUrl(
+  days = 30,
+  opts?: { hideChrome?: boolean; day?: string }
+): string {
+  const params = new URLSearchParams({
     api: "/arhiv",
-    days: String(days),
     refresh_sec: "600",
     v: "5",
-  })}`;
+  });
+  if (opts?.day) {
+    params.set("day", opts.day);
+  } else {
+    params.set("days", String(days));
+  }
+  if (opts?.hideChrome) params.set("chrome", "0");
+  return `/arhiv/public/map-embed.html?${params}`;
 }

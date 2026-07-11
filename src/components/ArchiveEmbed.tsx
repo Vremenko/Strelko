@@ -7,7 +7,10 @@ import {
   initArchiveDaysOverlay,
   initArchiveEmbedTap,
 } from "../lib/archive-embed-interaction";
-import { hasArchiveFullAccess } from "../lib/season";
+import { isMapPeriodLocked, type MapPeriodMode } from "../lib/map-period-access";
+import { isPodpornikActive } from "../lib/portal-account";
+import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
+import { LockedContent } from "./LockedContent";
 import type { StatTab } from "../types";
 
 interface ArchiveChartEmbedProps {
@@ -78,41 +81,112 @@ export function ArchiveChartEmbed({
   }, [visible, show, scope, wrapId, iframeId]);
 
   return (
-    <div
-      ref={wrapRef}
-      className={`archive-charts-embed-wrap${scope === "full" ? " archive-charts-embed-wrap--full" : ""}${visible ? "" : " stat-panel--hidden"}`}
-      id={wrapId}
-      data-embed-src={src}
-      data-embed-scope={scope}
-    >
-      {show ? (
-        <iframe
-          key={src}
-          id={iframeId}
-          className="archive-charts-embed"
-          src={src}
-          title={title}
-          width="100%"
-          height={height}
-          loading={window.matchMedia("(max-width:899px)").matches ? "eager" : "lazy"}
-          scrolling="no"
-          style={{ overflow: "hidden" }}
-          onLoad={() => {
-            if (scope === "full" && visible) {
-              activateStatDaysOverlayForGrafi(wrapId, iframeId);
-            }
-          }}
+    <>
+      <div
+        ref={wrapRef}
+        className={`archive-charts-embed-wrap${scope === "full" ? " archive-charts-embed-wrap--full" : ""}${visible ? "" : " stat-panel--hidden"}`}
+        id={wrapId}
+        data-embed-src={src}
+        data-embed-scope={scope}
+      >
+        {show ? (
+          <iframe
+            key={src}
+            id={iframeId}
+            className="archive-charts-embed"
+            src={src}
+            title={title}
+            width="100%"
+            height={height}
+            loading={window.matchMedia("(max-width:899px)").matches ? "eager" : "lazy"}
+            scrolling="no"
+            style={{ overflow: "hidden" }}
+            onLoad={() => {
+              if (scope === "full" && visible) {
+                activateStatDaysOverlayForGrafi(wrapId, iframeId);
+              }
+            }}
+          />
+        ) : (
+          <p className="archive-charts-placeholder" aria-hidden="true">
+            Nalagam {scope === "preview" ? "statistiko" : "grafe"} …
+          </p>
+        )}
+      </div>
+      {scope === "full" && !fullAccess ? (
+        <div className="archive-locked-charts">
+          <LockedContent mode="supporter" className="archive-locked-charts__panel" />
+          <LockedContent mode="supporter" className="archive-locked-charts__panel" />
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function ArchiveMapToolbar({
+  periodMode,
+  days,
+  mapDay,
+  onPeriodModeChange,
+  onDaysChange,
+  onMapDayChange,
+}: {
+  periodMode: MapPeriodMode;
+  days: number;
+  mapDay: string;
+  onPeriodModeChange: (mode: MapPeriodMode) => void;
+  onDaysChange: (days: number) => void;
+  onMapDayChange: (day: string) => void;
+}) {
+  const selectValue =
+    periodMode === "day" ? "pick" : String(days);
+
+  return (
+    <div className="archive-map-toolbar" role="toolbar" aria-label="Nastavitve zemljevida">
+      <label className="archive-map-toolbar__field" htmlFor="archive-map-period-select">
+        Obdobje
+      </label>
+      <select
+        id="archive-map-period-select"
+        className="archive-map-toolbar__select"
+        value={selectValue}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === "pick") {
+            onPeriodModeChange("day");
+            onMapDayChange(mapDay || todayIso());
+            return;
+          }
+          onPeriodModeChange("range");
+          onDaysChange(parseInt(value, 10) || 7);
+        }}
+      >
+        <option value="1">Danes</option>
+        <option value="7">7 dni</option>
+        <option value="14">14 dni</option>
+        <option value="30">30 dni</option>
+        <option value="90">90 dni</option>
+        <option value="pick">Datum</option>
+      </select>
+      {periodMode === "day" ? (
+        <input
+          type="date"
+          className="archive-map-toolbar__date"
+          aria-label="Datum prikaza"
+          value={mapDay}
+          max={todayIso()}
+          onChange={(e) => onMapDayChange(e.target.value)}
         />
-      ) : (
-        <p className="archive-charts-placeholder" aria-hidden="true">
-          Nalagam {scope === "preview" ? "statistiko" : "grafe"} …
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }
 
-export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
+function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
   const src = archiveMapEmbedUrl(30);
   const wrapRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -200,6 +274,80 @@ export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
       )}
     </div>
   );
+}
+
+function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
+  const [periodMode, setPeriodMode] = useState<MapPeriodMode>("range");
+  const [days, setDays] = useState(7);
+  const [mapDay, setMapDay] = useState(todayIso());
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const mapHeight = window.matchMedia("(max-width:899px)").matches ? "480" : "560";
+  const locked = isMapPeriodLocked(days, periodMode);
+  const mapSrc =
+    !locked && periodMode === "range"
+      ? archiveMapEmbedUrl(days, { hideChrome: true })
+      : !locked && periodMode === "day" && mapDay
+        ? archiveMapEmbedUrl(1, { hideChrome: true, day: mapDay })
+        : null;
+
+  useLayoutEffect(() => {
+    if (visible) {
+      deactivateStatDaysOverlay("archive-embed-full-wrap");
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || locked || !mapSrc || !iframeRef.current) return;
+    iframeRef.current.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+  }, [visible, locked, mapSrc]);
+
+  return (
+    <div
+      className={`archive-map-wrap archive-map-wrap--gated${visible ? "" : " stat-panel--hidden"}`}
+      id="archive-map-wrap"
+    >
+      <ArchiveMapToolbar
+        periodMode={periodMode}
+        days={days}
+        mapDay={mapDay}
+        onPeriodModeChange={setPeriodMode}
+        onDaysChange={setDays}
+        onMapDayChange={setMapDay}
+      />
+      <div className="archive-map-stage">
+        {locked ? (
+          <LockedContent mode="supporter" className="archive-map-locked" />
+        ) : mapSrc ? (
+          <iframe
+            ref={iframeRef}
+            id="archive-map-iframe"
+            className="archive-map-iframe"
+            src={mapSrc}
+            title="Zemljevid strel po občinah — Slovenija"
+            width="100%"
+            height={mapHeight}
+            loading="eager"
+            scrolling="no"
+            style={{ overflow: "hidden" }}
+            onLoad={(e) => {
+              e.currentTarget.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+            }}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
+  const { credits } = useStrelko();
+  const hasSupporter = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
+
+  if (hasSupporter) {
+    return <ArchiveMapEmbedSupporter visible={visible} />;
+  }
+
+  return <ArchiveMapEmbedGated visible={visible} />;
 }
 
 export function ArchiveEmbedHost() {

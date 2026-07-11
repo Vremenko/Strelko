@@ -1009,6 +1009,136 @@ label.field-labeled > span {
   }
 }
 
+.archive-map-wrap--gated {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.archive-map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.archive-map-toolbar__field {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.archive-map-toolbar__select,
+.archive-map-toolbar__date {
+  min-height: 36px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(51, 51, 51, 0.75);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.archive-map-toolbar__select:hover,
+.archive-map-toolbar__date:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.archive-map-toolbar__select:focus-visible,
+.archive-map-toolbar__date:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.archive-map-stage {
+  min-height: 480px;
+}
+
+.archive-map-locked {
+  min-height: 480px;
+}
+
+.archive-locked-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.archive-locked-charts__panel {
+  min-height: 220px;
+}
+
+.locked-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(51, 51, 51, 0.55);
+}
+
+.locked-content__inner {
+  max-width: 42rem;
+  text-align: center;
+}
+
+.locked-content__icon {
+  display: block;
+  font-size: 1.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.locked-content__title {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.locked-content__text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.locked-content__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.locked-content__hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
+.locked-content__hint a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.widget-embed-locked {
+  margin-top: 0.35rem;
+  min-height: 180px;
+}
+
+@media (max-width: 899px) {
+  .archive-map-stage,
+  .archive-map-locked {
+    min-height: 420px;
+  }
+}
+
 @media (max-width: 639px) {
   .chart-wrap,
   .hourly-chart-wrap,
