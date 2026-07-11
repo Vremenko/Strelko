@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArchiveChartEmbed,
@@ -6,22 +5,19 @@ import {
   ArchiveMapEmbed,
   StatistikaTabs,
 } from "../components/ArchiveEmbed";
-import { useStrelko } from "../context/StrelkoContext";
 import type { StatTab } from "../types";
 
+function statTabFromHash(hash: string): StatTab {
+  return hash.replace(/^#/, "") === "zemljevid" ? "zemljevid" : "grafi";
+}
+
 export function StatistikaPage() {
-  const { statistikaTab, setStatTab } = useStrelko();
   const location = useLocation();
   const navigate = useNavigate();
+  const tab = statTabFromHash(location.hash);
 
-  useEffect(() => {
-    const hash = location.hash.replace("#", "");
-    if (hash === "zemljevid" || hash === "grafi") setStatTab(hash);
-  }, [location.hash, setStatTab]);
-
-  const onTab = (tab: StatTab) => {
-    setStatTab(tab);
-    navigate(tab === "grafi" ? "/statistika" : `/statistika#${tab}`, { replace: true });
+  const onTab = (next: StatTab) => {
+    navigate(next === "grafi" ? "/statistika" : "/statistika#zemljevid");
   };
 
   return (
@@ -33,15 +29,15 @@ export function StatistikaPage() {
           <p className="archive-charts-lead">
             Pregled števila strel po dnevih, urah, statističnih regijah in občinah.
           </p>
-          <StatistikaTabs tab={statistikaTab} onChange={onTab} />
+          <StatistikaTabs tab={tab} onChange={onTab} />
         </div>
         <ArchiveChartEmbed
           wrapId="archive-embed-full-wrap"
           iframeId="archive-embed-full"
           scope="full"
-          visible={statistikaTab === "grafi"}
+          visible={tab === "grafi"}
         />
-        <ArchiveMapEmbed visible={statistikaTab === "zemljevid"} />
+        <ArchiveMapEmbed visible={tab === "zemljevid"} />
       </section>
     </>
   );

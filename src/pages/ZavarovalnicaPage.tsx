@@ -57,25 +57,14 @@ export function ZavarovalnicaPage() {
             Vam je <em>strela</em> poškodovala klimatsko napravo, televizijo ali drugo elektroniko?
           </h2>
         </header>
-        <div className="zavarovalnica-intro">
-          <p className="zavarovalnica-lead">
-            Strelko preveri udare strel v bližini vašega naslova in pripravi pregleden izpis, ki vam
-            lahko pomaga pri komunikaciji z zavarovalnico.
-          </p>
-        </div>
+      </div>
+      <div className="zavarovalnica-intro">
+        <p className="zavarovalnica-lead">
+          Strelko preveri udare strel v bližini vašega naslova in pripravi pregleden izpis, ki vam
+          lahko pomaga pri komunikaciji z zavarovalnico.
+        </p>
       </div>
       <div className="zavarovalnica-main-grid">
-        <div className="zavarovalnica-includes">
-          <h3 className="zavarovalnica-includes__title">Kaj vključuje pregled</h3>
-          <ul className="zavarovalnica-includes__list">
-            <li>zaznane strele v okolici izbranega naslova,</li>
-            <li>čas in oddaljenost posamezne strele,</li>
-            <li>pregled rezultatov v tabeli,</li>
-            <li>zemljevid z označeno lokacijo in udari strel,</li>
-            <li>povzetek izbranega radija in obdobja,</li>
-            <li>izvoz pregleda v PDF.</li>
-          </ul>
-        </div>
         <div className="zavarovalnica-main-grid__form">
           <SearchCard
             busy={loading}
@@ -88,6 +77,19 @@ export function ZavarovalnicaPage() {
             showOptions
           />
         </div>
+        <aside className="zavarovalnica-main-grid__aside">
+          <div className="zavarovalnica-includes">
+            <h3 className="zavarovalnica-includes__title">Kaj vključuje pregled</h3>
+            <ul className="zavarovalnica-includes__list">
+              <li>zaznane strele v okolici izbranega naslova,</li>
+              <li>čas in oddaljenost posamezne strele,</li>
+              <li>pregled rezultatov v tabeli,</li>
+              <li>zemljevid z označeno lokacijo in udari strel,</li>
+              <li>povzetek izbranega radija in obdobja,</li>
+              <li>izvoz pregleda v PDF.</li>
+            </ul>
+          </div>
+        </aside>
       </div>
     </section>
   );

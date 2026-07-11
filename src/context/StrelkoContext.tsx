@@ -32,7 +32,6 @@ import type {
   PreviewResult,
   PreviewScreen,
   SearchResult,
-  StatTab,
   User,
   UserWidgetConfig,
   WidgetObcina,
@@ -84,7 +83,6 @@ interface StrelkoState {
   searchDateTo: string;
   loading: boolean;
   pdfDownloading: boolean;
-  statistikaTab: StatTab;
   widget: {
     publicWidgetObMid: number | null;
     publicWidgetObMids: number[];
@@ -132,7 +130,6 @@ interface StrelkoContextValue extends StrelkoState {
   openBillingPortal: () => Promise<void>;
   acceptCookies: () => void;
   clearSearch: () => void;
-  setStatTab: (tab: StatTab) => void;
   setWidget: (patch: Partial<StrelkoState["widget"]>) => void;
   loadWidgetObcine: () => Promise<void>;
   loadWidgetSelection: (value: string | number) => Promise<void>;
@@ -207,7 +204,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [searchDateTo, setSearchDateTo] = useState(defaultRange.to);
   const [loading, setLoading] = useState(false);
   const [pdfDownloading, setPdfDownloading] = useState(false);
-  const [statistikaTab, setStatistikaTab] = useState<StatTab>("grafi");
   const [widget, setWidgetState] = useState(initialWidget);
   const [userWidget, setUserWidget] = useState<UserWidgetConfig | null>(null);
   const [modals, setModals] = useState<ModalState>({
@@ -496,7 +492,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       searchDateTo,
       loading,
       pdfDownloading,
-      statistikaTab,
       widget,
       userWidget,
       modals,
@@ -686,7 +681,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCookieAccepted(true);
       },
       clearSearch: clearSearchState,
-      setStatTab: setStatistikaTab,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
       loadWidgetObcine,
       loadWidgetSelection,
@@ -740,7 +734,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       searchDateTo,
       loading,
       pdfDownloading,
-      statistikaTab,
       widget,
       userWidget,
       modals,
