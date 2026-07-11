@@ -738,6 +738,51 @@ label.field-labeled > span {
   height: min(52vh, 420px);
 }
 
+/* —— zavarovalnica: enoten razmak med glavnimi bloki —— */
+.zavarovalnica-page .results-panel {
+  --results-section-gap: 1.15rem;
+}
+
+@media (min-width: 640px) {
+  .zavarovalnica-page .results-panel {
+    --results-section-gap: 1.25rem;
+  }
+}
+
+.zavarovalnica-page .results-panel .results-period {
+  margin: 0.35rem 0 var(--results-section-gap);
+}
+
+.zavarovalnica-page .results-panel .preview-teaser-lead,
+.zavarovalnica-page .results-panel .preview-teaser-hint {
+  margin-bottom: var(--results-section-gap);
+}
+
+.zavarovalnica-page .results-panel .stats {
+  margin-bottom: var(--results-section-gap);
+}
+
+.zavarovalnica-page .results-panel .preview-blur-block {
+  margin-top: 0;
+}
+
+.zavarovalnica-page .results-panel .strike-map-block {
+  margin: var(--results-section-gap) 0;
+}
+
+.zavarovalnica-page .results-panel .daily-table-hint {
+  margin: var(--results-section-gap) 0 0;
+}
+
+.zavarovalnica-page .results-panel .results-hourly-panel.panel {
+  margin-top: var(--results-section-gap);
+}
+
+.zavarovalnica-page .results-panel .preview-teaser-back,
+.zavarovalnica-page .results-panel .results-actions {
+  margin-top: var(--results-section-gap);
+}
+
 .results-period {
   color: var(--muted);
   font-size: 0.85rem;
