@@ -43,3 +43,16 @@ export function querySubmitButtonLabel(
 export function previewInsufficientTokensNotice(required: number, available: number): string {
   return `Za celoten pregled potrebujete ${tokenCountLabel(required, "accusative")}, na voljo pa imate ${tokenCountLabel(available)}. Zato je prikazan osnovni predogled.`;
 }
+
+/** Kratko pojasnilo pred plačljivim PDF-jem (backend odloča o ceni). */
+export function pdfCostHintMessage(pdfTokensCost: number, available: number): string | null {
+  if (pdfTokensCost <= 0) return null;
+  if (available >= pdfTokensCost) {
+    return `Izdelava PDF-poročila porabi 1 žeton. Na voljo imate ${tokenCountLabel(available)}.`;
+  }
+  return "Za izdelavo PDF-poročila potrebujete 1 žeton.";
+}
+
+export function pdfDownloadDisabled(pdfTokensCost: number, available: number): boolean {
+  return pdfTokensCost > 0 && available < pdfTokensCost;
+}

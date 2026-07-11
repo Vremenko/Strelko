@@ -1,11 +1,10 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
+import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
 import { TOKEN_USAGE_RULES } from "../../lib/pricing-offers";
 import { tokenWord } from "../../lib/ob-skodi-tokens";
-import {
-  formatQueryExecutedAt,
-} from "../../lib/saved-queries";
+import { formatQueryExecutedAt } from "../../lib/saved-queries";
 import { PortalEmptyState } from "./PortalEmptyState";
 
 function formatPeriod(from: string, to: string): string {
@@ -14,6 +13,7 @@ function formatPeriod(from: string, to: string): string {
 
 export function PortalQueries() {
   const {
+    credits,
     savedQueries,
     savedQueriesLoading,
     savedQueriesError,
@@ -22,6 +22,7 @@ export function PortalQueries() {
     generateSavedQueryPdf,
   } = useStrelko();
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
+  const [pdfErrors, setPdfErrors] = useState<Record<string, string | null>>({});
 
   const onOpen = useCallback(
     (queryId: string) => {
@@ -33,14 +34,27 @@ export function PortalQueries() {
   const onPdf = useCallback(
     async (queryId: string) => {
       setPdfBusyId(queryId);
+      setPdfErrors((prev) => ({ ...prev, [queryId]: null }));
       try {
         await generateSavedQueryPdf(queryId);
+      } catch (e) {
+        const err = e as { status?: number; message?: string };
+        if (err.status === 402) {
+          setPdfErrors((prev) => ({
+            ...prev,
+            [queryId]: "Za izdelavo PDF-poročila potrebujete 1 žeton.",
+          }));
+        } else {
+          alert(err.message || "PDF ni mogoče pripraviti.");
+        }
       } finally {
         setPdfBusyId(null);
       }
     },
     [generateSavedQueryPdf]
   );
+
+  const creditsBalance = credits?.credits_balance ?? null;
 
   return (
     <div className="portal-panel">
@@ -111,14 +125,15 @@ export function PortalQueries() {
                     >
                       Odpri
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      disabled={pdfBusy}
-                      onClick={() => void onPdf(q.id)}
-                    >
-                      {pdfBusy ? "Pripravljam PDF …" : q.pdf_button_label}
-                    </button>
+                    <PdfDownloadPanel
+                      compact
+                      pdfTokensCost={q.pdf_tokens_cost}
+                      pdfButtonLabel={q.pdf_button_label}
+                      creditsBalance={creditsBalance}
+                      downloading={pdfBusy}
+                      onDownload={() => void onPdf(q.id)}
+                      errorMessage={pdfErrors[q.id] ?? null}
+                    />
                   </div>
                 </article>
               );

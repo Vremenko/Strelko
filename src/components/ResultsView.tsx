@@ -5,6 +5,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { HourlyChartPanel } from "./HourlyChartPanel";
 import { ResultsWidgetPanel } from "./ResultsWidgetPanel";
 import { StrikeMap } from "./StrikeMap";
+import { PdfDownloadPanel } from "./PdfDownloadPanel";
 import { useStrelko } from "../context/StrelkoContext";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
 import { formatSlDate, formatSlDecimal, formatSlTime } from "../lib/dates";
@@ -25,7 +26,16 @@ function dayKey(datum: string): string {
 }
 
 export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean }) {
-  const { searchResult, downloadPdf, clearSearch, pdfDownloading } = useStrelko();
+  const {
+    searchResult,
+    savedQueryId,
+    activeQueryPdf,
+    credits,
+    downloadPdf,
+    clearSearch,
+    pdfDownloading,
+    pdfDownloadError,
+  } = useStrelko();
   const [selectedMapDay, setSelectedMapDay] = useState<string | null>(null);
   const [mapStrikes, setMapStrikes] = useState<StrikePoint[]>([]);
   const [hourlyChartDay, setHourlyChartDay] = useState<string | null>(null);
@@ -130,6 +140,10 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
     date_from: r.date_from,
     date_to: r.date_to,
   });
+  const showPdf =
+    Boolean(savedQueryId) &&
+    activeQueryPdf != null &&
+    activeQueryPdf.queryId === savedQueryId;
 
   return (
     <section className={`results-panel${panelClass}`}>
@@ -253,15 +267,16 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
         )}
       </div>
       <div className="results-actions">
-        <button
-          type="button"
-          className={`btn btn-primary${pdfDownloading ? " btn-primary--loading" : ""}`}
-          onClick={() => void downloadPdf()}
-          disabled={pdfDownloading}
-          aria-busy={pdfDownloading}
-        >
-          {pdfDownloading ? "Pripravljam PDF poročilo" : "Prenesi PDF poročilo"}
-        </button>
+        {showPdf && activeQueryPdf && (
+          <PdfDownloadPanel
+            pdfTokensCost={activeQueryPdf.pdf_tokens_cost}
+            pdfButtonLabel={activeQueryPdf.pdf_button_label}
+            creditsBalance={credits?.credits_balance ?? null}
+            downloading={pdfDownloading}
+            onDownload={() => void downloadPdf()}
+            errorMessage={pdfDownloadError}
+          />
+        )}
         <Link to={backTo} className="btn btn-ghost" onClick={clearSearch}>
           Nova preiskava
         </Link>

@@ -62,12 +62,19 @@ export const api = {
     );
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      const err = new Error(
-        typeof (data as { detail?: string }).detail === "string"
-          ? (data as { detail: string }).detail
-          : res.statusText
-      ) as import("../types").ApiError;
+      const detail = (data as { detail?: unknown }).detail;
+      let message = res.statusText;
+      if (typeof detail === "string") {
+        message = detail;
+      } else if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+        const structured = detail as { message?: string };
+        if (typeof structured.message === "string") {
+          message = structured.message;
+        }
+      }
+      const err = new Error(message) as import("../types").ApiError;
       err.status = res.status;
+      err.data = data;
       throw err;
     }
     return res.blob();

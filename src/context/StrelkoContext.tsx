@@ -40,6 +40,7 @@ import type {
   PlansMeta,
   PreviewResult,
   PreviewScreen,
+  SavedQueryOut,
   SavedQuerySummary,
   SearchResult,
   User,
@@ -90,6 +91,12 @@ interface StrelkoState {
   previewTokenNotice: InsufficientTokensDetail | null;
   searchResult: SearchResult | null;
   savedQueryId: string | null;
+  activeQueryPdf: {
+    queryId: string;
+    pdf_tokens_cost: number;
+    pdf_button_label: string;
+  } | null;
+  pdfDownloadError: string | null;
   savedQueries: SavedQuerySummary[];
   savedQueriesLoading: boolean;
   savedQueriesError: string | null;
@@ -207,6 +214,42 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       ? readSavedQueryIdFromStorage()
       : null
   );
+  const [activeQueryPdf, setActiveQueryPdf] = useState<{
+    queryId: string;
+    pdf_tokens_cost: number;
+    pdf_button_label: string;
+  } | null>(null);
+  const [pdfDownloadError, setPdfDownloadError] = useState<string | null>(null);
+  const applyQueryPdfMeta = useCallback(
+    (out: Pick<SavedQueryOut, "id" | "pdf_tokens_cost" | "pdf_button_label">) => {
+      setActiveQueryPdf({
+        queryId: out.id,
+        pdf_tokens_cost: out.pdf_tokens_cost,
+        pdf_button_label: out.pdf_button_label,
+      });
+    },
+    []
+  );
+
+  const refreshQueryPdfMeta = useCallback(
+    async (queryId: string) => {
+      const refreshed = await api.getQuery(queryId);
+      applyQueryPdfMeta(refreshed);
+      setCredits((c) => ({ ...(c || {}), credits_balance: refreshed.token_balance }));
+      return refreshed;
+    },
+    [applyQueryPdfMeta]
+  );
+
+  const triggerPdfDownload = useCallback((blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
+
   const setSavedQueryId = useCallback((id: string | null) => {
     writeSavedQueryIdToStorage(id);
     setSavedQueryIdState(id);
@@ -224,6 +267,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     setPreview(null);
     setPreviewScreen(null);
     setPreviewTokenNotice(null);
+    setActiveQueryPdf(null);
+    setPdfDownloadError(null);
     setSearchResultState(null);
     setSavedQueryIdState(null);
     setSelected(null);
@@ -235,6 +280,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     setPreview(null);
     setPreviewScreen(null);
     setPreviewTokenNotice(null);
+    setActiveQueryPdf(null);
+    setPdfDownloadError(null);
     setSearchResultState(null);
     setSavedQueryIdState(null);
   }, []);
@@ -307,6 +354,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         }
         applySearchResult(res);
         setSavedQueryId(out.id);
+        applyQueryPdfMeta(out);
+        setPdfDownloadError(null);
         setSelected({
           lat: out.lat,
           lon: out.lon,
@@ -344,7 +393,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     },
-    [user, applySearchResult, setSavedQueryId, navigate, location.pathname]
+    [user, applySearchResult, setSavedQueryId, applyQueryPdfMeta, navigate, location.pathname]
   );
 
   const refreshUser = useCallback(async () => {
@@ -512,6 +561,14 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   }, [user, loadSavedQueries]);
 
   useEffect(() => {
+    if (!user || !savedQueryId) return;
+    if (activeQueryPdf?.queryId === savedQueryId) return;
+    void refreshQueryPdfMeta(savedQueryId).catch(() => {
+      /* poizvedba morda ni več na voljo */
+    });
+  }, [user, savedQueryId, activeQueryPdf?.queryId, refreshQueryPdfMeta]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get("checkout");
     if (!checkout) return;
@@ -631,6 +688,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       }
       applySearchResult(res);
       setSavedQueryId(out.id);
+      applyQueryPdfMeta(out);
+      setPdfDownloadError(null);
       setPreview(null);
       setPreviewScreen(null);
       setCredits((c) => ({ ...(c || {}), credits_balance: out.token_balance }));
@@ -679,6 +738,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       previewTokenNotice,
       searchResult,
       savedQueryId,
+      activeQueryPdf,
+      pdfDownloadError,
       savedQueries,
       savedQueriesLoading,
       savedQueriesError,
@@ -781,6 +842,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
               }
               applySearchResult(res);
               setSavedQueryId(out.id);
+              applyQueryPdfMeta(out);
+              setPdfDownloadError(null);
               setPreview(null);
               setPreviewScreen(null);
               setPreviewTokenNotice(null);
@@ -858,39 +921,19 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         await runFullSearchInner();
       },
       downloadPdf: async () => {
-        if (!searchResult || pdfDownloading) return;
+        if (!searchResult || !savedQueryId || pdfDownloading) return;
         setPdfDownloading(true);
+        setPdfDownloadError(null);
         try {
-          let blob: Blob;
-          if (savedQueryId) {
-            blob = await api.generateQueryPdf(savedQueryId);
-            void loadSavedQueries();
-            await refreshUser();
-          } else {
-            blob = await api.downloadReportPdf({
-              lat: searchResult.lat,
-              lon: searchResult.lon,
-              radius_km: searchResult.radius_km,
-              label: searchResult.location_label,
-              date_from: searchResult.date_from,
-              date_to: searchResult.date_to,
-            });
-          }
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `strelko-pregled-${searchResult.date_from}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
+          const blob = await api.generateQueryPdf(savedQueryId);
+          triggerPdfDownload(blob, `strelko-pregled-${searchResult.date_from}.pdf`);
+          await refreshQueryPdfMeta(savedQueryId);
+          void loadSavedQueries();
+          await refreshUser();
         } catch (e) {
           const err = e as ApiError;
           if (err.status === 402) {
-            setSelectedPlanState(defaultSelectedPlanId(plans));
-            setModals((m) => ({
-              ...m,
-              credits: true,
-              creditsOptions: { insufficientCredits: true },
-            }));
+            setPdfDownloadError("Za izdelavo PDF-poročila potrebujete 1 žeton.");
           } else {
             alert(err.message || "PDF ni na voljo.");
           }
@@ -901,28 +944,13 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       loadSavedQueries,
       openSavedQuery,
       generateSavedQueryPdf: async (queryId: string) => {
-        try {
-          const blob = await api.generateQueryPdf(queryId);
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `strelko-pregled-${queryId.slice(0, 8)}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
-          await loadSavedQueries();
-          await refreshUser();
-        } catch (e) {
-          const err = e as ApiError;
-          if (err.status === 402) {
-            setSelectedPlanState(defaultSelectedPlanId(plans));
-            setModals((m) => ({
-              ...m,
-              credits: true,
-              creditsOptions: { insufficientCredits: true },
-            }));
-          } else {
-            alert(err.message || "PDF ni mogoče pripraviti.");
-          }
+        const blob = await api.generateQueryPdf(queryId);
+        triggerPdfDownload(blob, `strelko-pregled-${queryId.slice(0, 8)}.pdf`);
+        await refreshQueryPdfMeta(queryId);
+        void loadSavedQueries();
+        await refreshUser();
+        if (savedQueryId === queryId) {
+          setPdfDownloadError(null);
         }
       },
       openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
@@ -1032,6 +1060,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       previewTokenNotice,
       searchResult,
       savedQueryId,
+      activeQueryPdf,
+      pdfDownloadError,
       savedQueries,
       savedQueriesLoading,
       savedQueriesError,
@@ -1057,6 +1087,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       loadSavedQueries,
       openSavedQuery,
       setSavedQueryId,
+      refreshQueryPdfMeta,
+      triggerPdfDownload,
+      applyQueryPdfMeta,
       alerts,
     ]
   );

@@ -2428,6 +2428,58 @@ body.site-nav-open {
 }
 
 /* —— PDF prenos —— */
+.pdf-download-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: 100%;
+}
+
+.pdf-download-panel--compact {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pdf-download-panel__hint,
+.pdf-download-panel__error {
+  margin: 0;
+  max-width: 100%;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.pdf-download-panel__hint {
+  color: var(--text);
+}
+
+.pdf-download-panel__error {
+  color: var(--danger);
+}
+
+.pdf-download-panel__link {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.portal-query-card__actions .pdf-download-panel {
+  flex: 1 1 12rem;
+}
+
+.results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+}
+
+#app .results-actions .pdf-download-panel {
+  flex: 1 1 100%;
+}
+
 #app .results-actions .btn-primary.btn-primary--loading {
   background: var(--blue);
   color: #fff;
