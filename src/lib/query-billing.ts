@@ -1,5 +1,5 @@
-import { tokenCountLabel, tokenWord } from "./ob-skodi-tokens";
-import type { InsufficientTokensDetail } from "../types";
+import { tokenCountLabel } from "./ob-skodi-tokens";
+import type { InsufficientTokensDetail, QueryQuoteOut } from "../types";
 
 export type { InsufficientTokensDetail };
 
@@ -18,39 +18,39 @@ export function parseInsufficientTokensDetail(data: unknown): InsufficientTokens
   };
 }
 
-export function queryCostHintMessage(cost: number, available: number): string | null {
-  if (cost < 1) return null;
-  if (available >= cost) {
-    return `Nova poizvedba bo porabila ${tokenCountLabel(cost, "accusative")}. Na voljo imate ${tokenCountLabel(available)}.`;
-  }
+export function queryInsufficientHintMessage(cost: number, available: number): string {
   return `Poizvedba zahteva ${tokenCountLabel(cost, "accusative")}, na voljo pa imate ${tokenCountLabel(available)}. Prikazan bo osnovni predogled.`;
 }
 
-export function querySubmitButtonLabel(
-  cost: number,
+export function queryCostHintFromQuote(
+  quote: QueryQuoteOut | null,
+  available: number
+): string | null {
+  if (!quote) return null;
+  if (quote.query_tokens_cost > 0 && available < quote.query_tokens_cost) {
+    return queryInsufficientHintMessage(quote.query_tokens_cost, available);
+  }
+  return quote.query_cost_hint;
+}
+
+export function querySubmitButtonLabelFromQuote(
+  quote: QueryQuoteOut | null,
   available: number,
   loggedIn: boolean,
-  guestLabel: string
+  guestLabel: string,
+  fallbackLabel: string,
+  quoteReady = true
 ): string {
   if (!loggedIn) return guestLabel;
-  if (cost < 1) return "Preveri";
-  if (available >= cost) {
-    return `Preveri – ${cost} ${tokenWord(cost, "accusative")}`;
+  if (!quoteReady || !quote) return fallbackLabel;
+  if (quote.query_tokens_cost > 0 && available < quote.query_tokens_cost) {
+    return "Prikaži osnovni predogled";
   }
-  return "Prikaži osnovni predogled";
+  return quote.query_button_label;
 }
 
 export function previewInsufficientTokensNotice(required: number, available: number): string {
   return `Za celoten pregled potrebujete ${tokenCountLabel(required, "accusative")}, na voljo pa imate ${tokenCountLabel(available)}. Zato je prikazan osnovni predogled.`;
-}
-
-/** Kratko pojasnilo pred plačljivim PDF-jem (backend odloča o ceni). */
-export function pdfCostHintMessage(pdfTokensCost: number, available: number): string | null {
-  if (pdfTokensCost <= 0) return null;
-  if (available >= pdfTokensCost) {
-    return `Izdelava PDF-poročila porabi 1 žeton. Na voljo imate ${tokenCountLabel(available)}.`;
-  }
-  return "Za izdelavo PDF-poročila potrebujete 1 žeton.";
 }
 
 export function pdfDownloadDisabled(pdfTokensCost: number, available: number): boolean {

@@ -52,6 +52,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  queryQuote: (body: object) =>
+    request<import("../types").QueryQuoteOut>("/strelko/queries/quote", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   generateQueryPdf: async (queryId: string) => {
     const res = await fetch(
       `${API_BASE}/strelko/queries/${encodeURIComponent(queryId)}/pdf`,

@@ -95,6 +95,7 @@ interface StrelkoState {
     queryId: string;
     pdf_tokens_cost: number;
     pdf_button_label: string;
+    pdf_cost_hint: string;
   } | null;
   pdfDownloadError: string | null;
   savedQueries: SavedQuerySummary[];
@@ -218,14 +219,16 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     queryId: string;
     pdf_tokens_cost: number;
     pdf_button_label: string;
+    pdf_cost_hint: string;
   } | null>(null);
   const [pdfDownloadError, setPdfDownloadError] = useState<string | null>(null);
   const applyQueryPdfMeta = useCallback(
-    (out: Pick<SavedQueryOut, "id" | "pdf_tokens_cost" | "pdf_button_label">) => {
+    (out: Pick<SavedQueryOut, "id" | "pdf_tokens_cost" | "pdf_button_label" | "pdf_cost_hint">) => {
       setActiveQueryPdf({
         queryId: out.id,
         pdf_tokens_cost: out.pdf_tokens_cost,
         pdf_button_label: out.pdf_button_label,
+        pdf_cost_hint: out.pdf_cost_hint,
       });
     },
     []

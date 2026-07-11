@@ -109,7 +109,9 @@ export function PortalQueries() {
                     <div>
                       <dt>Porabljeni žetoni</dt>
                       <dd>
-                        {q.tokens_spent} {tokenWord(q.tokens_spent)}
+                        {q.tokens_spent === 0
+                          ? "Brezplačno"
+                          : `${q.tokens_spent} ${tokenWord(q.tokens_spent)}`}
                       </dd>
                     </div>
                     <div>
@@ -129,6 +131,7 @@ export function PortalQueries() {
                       compact
                       pdfTokensCost={q.pdf_tokens_cost}
                       pdfButtonLabel={q.pdf_button_label}
+                      pdfCostHint={q.pdf_cost_hint}
                       creditsBalance={creditsBalance}
                       downloading={pdfBusy}
                       onDownload={() => void onPdf(q.id)}

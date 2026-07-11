@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { portalTabPath } from "../lib/auth-intent";
-import { pdfCostHintMessage, pdfDownloadDisabled } from "../lib/query-billing";
+import { pdfDownloadDisabled } from "../lib/query-billing";
 
 interface PdfDownloadPanelProps {
   pdfTokensCost: number;
   pdfButtonLabel: string;
+  pdfCostHint?: string | null;
   creditsBalance: number | null;
   downloading: boolean;
   onDownload: () => void;
@@ -15,6 +16,7 @@ interface PdfDownloadPanelProps {
 export function PdfDownloadPanel({
   pdfTokensCost,
   pdfButtonLabel,
+  pdfCostHint = null,
   creditsBalance,
   downloading,
   onDownload,
@@ -22,15 +24,14 @@ export function PdfDownloadPanel({
   errorMessage = null,
 }: PdfDownloadPanelProps) {
   const available = creditsBalance ?? 0;
-  const hint = pdfCostHintMessage(pdfTokensCost, available);
   const disabled = downloading || pdfDownloadDisabled(pdfTokensCost, available);
   const showTokenLink = pdfTokensCost > 0 && available < pdfTokensCost;
 
   return (
     <div className={`pdf-download-panel${compact ? " pdf-download-panel--compact" : ""}`}>
-      {hint && (
+      {pdfCostHint && (
         <p className="pdf-download-panel__hint" role="status">
-          {hint}
+          {pdfCostHint}
           {showTokenLink && (
             <>
               {" "}
@@ -60,5 +61,4 @@ export function PdfDownloadPanel({
       </button>
     </div>
   );
-
 }

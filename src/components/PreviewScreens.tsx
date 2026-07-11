@@ -155,7 +155,7 @@ export function PreviewTeaser() {
         <PreviewBlurUnlock openAuth={openAuth} />
       )}
       <button type="button" className="btn btn-ghost preview-teaser-back" onClick={clearSearch}>
-        Nova preiskava
+        Nova poizvedba
       </button>
     </section>
   );
@@ -204,7 +204,7 @@ export function PreviewNoStrikes() {
         <PreviewBlurUnlock openAuth={openAuth} />
       )}
       <button type="button" className="btn btn-ghost preview-teaser-back" onClick={clearSearch}>
-        Nova preiskava
+        Nova poizvedba
       </button>
     </section>
   );

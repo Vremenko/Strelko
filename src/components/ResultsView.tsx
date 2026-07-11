@@ -271,6 +271,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           <PdfDownloadPanel
             pdfTokensCost={activeQueryPdf.pdf_tokens_cost}
             pdfButtonLabel={activeQueryPdf.pdf_button_label}
+            pdfCostHint={activeQueryPdf.pdf_cost_hint}
             creditsBalance={credits?.credits_balance ?? null}
             downloading={pdfDownloading}
             onDownload={() => void downloadPdf()}
@@ -278,7 +279,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           />
         )}
         <Link to={backTo} className="btn btn-ghost" onClick={clearSearch}>
-          Nova preiskava
+          Nova poizvedba
         </Link>
       </div>
     </section>

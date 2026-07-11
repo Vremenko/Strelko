@@ -165,6 +165,7 @@ export interface SavedQuerySummary {
   total_strikes: number;
   pdf_tokens_cost: number;
   pdf_button_label: string;
+  pdf_cost_hint: string;
   created_at: string;
 }
 
@@ -176,6 +177,13 @@ export interface SavedQueryOut extends SavedQuerySummary {
 
 export interface SavedQueryListOut {
   queries: SavedQuerySummary[];
+  token_balance: number;
+}
+
+export interface QueryQuoteOut {
+  query_tokens_cost: number;
+  query_button_label: string;
+  query_cost_hint: string;
   token_balance: number;
 }
 

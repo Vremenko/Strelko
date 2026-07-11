@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
-import type { GeocodeResult } from "../types";
+import type { GeocodeResult, QueryQuoteOut } from "../types";
+import { isValidGeocodePlace } from "../lib/geocode";
 import {
-  queryCostHintMessage,
-  querySubmitButtonLabel,
+  queryCostHintFromQuote,
+  querySubmitButtonLabelFromQuote,
 } from "../lib/query-billing";
-import { clampSearchRange, queryTokenCost } from "../lib/search-dates";
+import { clampSearchRange } from "../lib/search-dates";
+import { api } from "../api/client";
 import { SearchScanBolt } from "./icons";
 import { SearchOptions } from "./SearchOptions";
 
@@ -37,6 +39,7 @@ export function SearchCard({
     credits,
     searchDateFrom,
     searchDateTo,
+    searchRadiusKm,
     locationQuery,
     setLocationQuery,
     selected,
@@ -51,7 +54,11 @@ export function SearchCard({
     clearSearch,
   } = useStrelko();
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [queryQuote, setQueryQuote] = useState<QueryQuoteOut | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const quoteDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const quoteRequestSeq = useRef(0);
   const locationFieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,6 +82,56 @@ export function SearchCard({
     };
   }, [showSuggestions]);
 
+  const searchRange = useMemo(
+    () => clampSearchRange({ from: searchDateFrom, to: searchDateTo }),
+    [searchDateFrom, searchDateTo]
+  );
+
+  useEffect(() => {
+    clearTimeout(quoteDebounce.current);
+    if (!showOptions || !user || !isValidGeocodePlace(selected)) {
+      quoteRequestSeq.current += 1;
+      setQueryQuote(null);
+      setQuoteLoading(false);
+      return;
+    }
+
+    const requestId = ++quoteRequestSeq.current;
+    setQueryQuote(null);
+    setQuoteLoading(true);
+    quoteDebounce.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const quote = await api.queryQuote({
+            lat: selected.lat,
+            lon: selected.lon,
+            radius_km: searchRadiusKm,
+            date_from: searchRange.from,
+            date_to: searchRange.to,
+          });
+          if (requestId !== quoteRequestSeq.current) return;
+          setQueryQuote(quote);
+        } catch {
+          if (requestId !== quoteRequestSeq.current) return;
+          setQueryQuote(null);
+        } finally {
+          if (requestId === quoteRequestSeq.current) {
+            setQuoteLoading(false);
+          }
+        }
+      })();
+    }, 250);
+
+    return () => clearTimeout(quoteDebounce.current);
+  }, [
+    showOptions,
+    user,
+    selected,
+    searchRadiusKm,
+    searchRange.from,
+    searchRange.to,
+  ]);
+
   const onInput = (value: string) => {
     setLocationQuery(value);
     if (selected && selected.label.trim() !== value.trim()) selectPlace(null);
@@ -96,21 +153,17 @@ export function SearchCard({
 
   const overlayActive = (loading || (preview && showOverlay)) && !previewScreen;
 
-  const searchRange = useMemo(
-    () => clampSearchRange({ from: searchDateFrom, to: searchDateTo }),
-    [searchDateFrom, searchDateTo]
-  );
-  const queryCost = showOptions ? queryTokenCost(searchRange.from, searchRange.to) : 0;
-  const availableTokens = credits?.credits_balance ?? 0;
+  const availableTokens = credits?.credits_balance ?? queryQuote?.token_balance ?? 0;
+  const quoteReady = Boolean(user && showOptions && !quoteLoading && queryQuote);
   const costHint =
-    showOptions && user && queryCost > 0
-      ? queryCostHintMessage(queryCost, availableTokens)
-      : null;
-  const submitLabel = querySubmitButtonLabel(
-    queryCost,
+    quoteReady ? queryCostHintFromQuote(queryQuote, availableTokens) : null;
+  const submitLabel = querySubmitButtonLabelFromQuote(
+    queryQuote,
     availableTokens,
     Boolean(user),
-    buttonText
+    buttonText,
+    buttonText,
+    quoteReady
   );
 
   return (
