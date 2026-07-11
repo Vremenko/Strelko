@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { useStrelko } from "../../context/StrelkoContext";
-import { isPodpornikActive, tokenBalanceLabel } from "../../lib/portal-account";
 
 function MenuIcon() {
   return (
@@ -22,11 +21,8 @@ function CloseIcon() {
 export function Header() {
   const {
     user,
-    credits,
     openAuth,
     logout,
-    openCredits,
-    openBillingPortal,
   } = useStrelko();
   const navigate = useNavigate();
   const logged = !!user;
@@ -108,31 +104,10 @@ export function Header() {
             <div className="site-nav__auth nav-actions">
               {logged ? (
                 <>
-                  <Link to="/moj-strelko" className="btn btn-ghost">
+                  <Link to="/moj-strelko" className="btn btn-moj-strelko">
                     Moj Strelko
                   </Link>
-                  <span className="credits-badge">
-                    Žetoni: <strong>{tokenBalanceLabel(credits)}</strong>
-                    {isPodpornikActive(credits) ? (
-                      <>
-                        {" · "}
-                        <span className="plan-badge">Podpornik</span>
-                      </>
-                    ) : null}
-                  </span>
-                  <button type="button" className="btn btn-ghost" onClick={() => openCredits()}>
-                    Paketi
-                  </button>
-                  {credits?.billing_portal_available && (
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      onClick={() => void openBillingPortal()}
-                    >
-                      Naročnina
-                    </button>
-                  )}
-                  <button type="button" className="btn btn-ghost" onClick={logout}>
+                  <button type="button" className="btn btn-logout" onClick={logout}>
                     Odjava
                   </button>
                 </>
@@ -194,45 +169,14 @@ export function Header() {
               <>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-block"
+                  className="btn btn-moj-strelko btn-block"
                   onClick={() => go("/moj-strelko")}
                 >
                   Moj Strelko
                 </button>
-                <div className="site-nav-drawer__meta">
-                  Žetoni: <strong>{tokenBalanceLabel(credits)}</strong>
-                  {isPodpornikActive(credits) ? (
-                    <>
-                      {" · "}
-                      <span className="plan-badge">Podpornik</span>
-                    </>
-                  ) : null}
-                </div>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-block"
-                  onClick={() => {
-                    closeDrawer();
-                    openCredits();
-                  }}
-                >
-                  Paketi
-                </button>
-                {credits?.billing_portal_available && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-block"
-                    onClick={() => {
-                      closeDrawer();
-                      void openBillingPortal();
-                    }}
-                  >
-                    Naročnina
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-block"
+                  className="btn btn-logout btn-block"
                   onClick={() => {
                     closeDrawer();
                     logout();

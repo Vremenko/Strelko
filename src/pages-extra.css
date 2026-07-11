@@ -1758,6 +1758,50 @@ label.field-labeled > span {
   box-shadow: 0 2px 12px rgba(5, 165, 206, 0.35);
 }
 
+.btn-moj-strelko {
+  background: var(--accent);
+  color: #1a1508;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+
+.btn-moj-strelko:hover {
+  background: #d99a05;
+  box-shadow: 0 4px 18px var(--accent-glow);
+}
+
+.btn-moj-strelko:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(251, 176, 6, 0.45);
+}
+
+.btn-moj-strelko:active {
+  background: #c48f04;
+  box-shadow: 0 1px 8px var(--accent-glow);
+}
+
+.btn-logout {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(5, 165, 206, 0.35);
+}
+
+.btn-logout:hover {
+  background: #048db0;
+  box-shadow: 0 4px 18px rgba(5, 165, 206, 0.45);
+}
+
+.btn-logout:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(5, 165, 206, 0.45);
+}
+
+.btn-logout:active {
+  background: #047a9c;
+  box-shadow: 0 1px 8px rgba(5, 165, 206, 0.35);
+}
+
 .site-nav-drawer {
   position: fixed;
   inset: 0;
