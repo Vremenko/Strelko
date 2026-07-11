@@ -18,6 +18,26 @@ import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
 import { LockedContent } from "./LockedContent";
 import type { StatTab } from "../types";
 
+const LOCKED_OBCINA_CHARTS = [
+  { id: "obcina", title: "Občine z največ strelami" },
+  { id: "obcinaGostota", title: "Občine z največjo gostoto strel" },
+] as const;
+
+function ArchiveLockedChartPanel({ id, title }: { id: string; title: string }) {
+  return (
+    <section className="panel archive-locked-chart-panel" data-panel={id}>
+      <div className="panel-head">
+        <div className="panel-head-top">
+          <h2 className="panel-head-title">{title}</h2>
+        </div>
+      </div>
+      <div className="chart-wrap tall archive-locked-chart-panel__chart">
+        <LockedContent mode="supporter" className="archive-locked-charts__lock" />
+      </div>
+    </section>
+  );
+}
+
 interface ArchiveChartEmbedProps {
   wrapId: string;
   iframeId: string;
@@ -119,9 +139,10 @@ export function ArchiveChartEmbed({
         )}
       </div>
       {scope === "full" && !fullAccess && visible ? (
-        <div className="archive-locked-charts">
-          <LockedContent mode="supporter" className="archive-locked-charts__panel" />
-          <LockedContent mode="supporter" className="archive-locked-charts__panel" />
+        <div className="archive-locked-charts charts-layout">
+          {LOCKED_OBCINA_CHARTS.map((chart) => (
+            <ArchiveLockedChartPanel key={chart.id} id={chart.id} title={chart.title} />
+          ))}
         </div>
       ) : null}
     </>
