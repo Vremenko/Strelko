@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { StrelkoProvider } from "./context/StrelkoContext";
 import { AppLayout } from "./AppLayout";
+import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { LandingPage } from "./pages/LandingPage";
 import { ZavarovalnicaPage } from "./pages/ZavarovalnicaPage";
 import { StatistikaPage } from "./pages/StatistikaPage";
@@ -15,6 +16,7 @@ import { LEGAL_PAGES, type LegalPageId } from "./lib/legal";
 export function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <StrelkoProvider>
         <Routes>
           <Route path="/verify-email" element={<VerifyEmailPage />} />

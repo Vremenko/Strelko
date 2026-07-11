@@ -169,7 +169,7 @@ function PreviewUnlockBlock({
           Prijava
         </button>
         <Link to="/cenik" className="btn btn-ghost">
-          Cenik in žetoni
+          Cenik
         </Link>
       </div>
     );
@@ -185,7 +185,7 @@ function PreviewUnlockBlock({
           Kupi žetone
         </Link>
         <Link to="/cenik" className="btn btn-ghost">
-          Cenik in žetoni
+          Cenik
         </Link>
       </div>
     );
@@ -201,7 +201,7 @@ function PreviewUnlockBlock({
           {quoteLoading ? "Preračunavam ceno …" : previewUnlockButtonLabel(requiredTokens, quote)}
         </button>
         <Link to="/cenik" className="btn btn-ghost">
-          Cenik in žetoni
+          Cenik
         </Link>
       </div>
     );
@@ -212,7 +212,7 @@ function PreviewUnlockBlock({
           Kupi žetone
         </Link>
         <Link to="/cenik" className="btn btn-ghost">
-          Cenik in žetoni
+          Cenik
         </Link>
       </div>
     );
