@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
 import { formatSlDecimal } from "../lib/dates";
 import { formatPlaceName } from "../lib/utils";
@@ -21,10 +22,8 @@ function previewNoStrikesLead(message: string): string {
 
 function PreviewBlurUnlock({
   openAuth,
-  openPremiumUpsell,
 }: {
   openAuth: (mode: "login" | "register") => void;
-  openPremiumUpsell: () => void;
 }) {
   return (
     <div className="preview-blur-block">
@@ -62,9 +61,9 @@ function PreviewBlurUnlock({
           <button type="button" className="btn btn-ghost" onClick={() => openAuth("login")}>
             Prijava
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => openPremiumUpsell()}>
-            Paketi od 4,50 € (vklj. DDV)
-          </button>
+          <Link to="/cenik" className="btn btn-ghost">
+            Cenik in žetoni
+          </Link>
         </div>
       </div>
     </div>
@@ -72,8 +71,7 @@ function PreviewBlurUnlock({
 }
 
 export function PreviewTeaser() {
-  const { preview, selected, searchRadiusKm, openAuth, openPremiumUpsell, clearSearch } =
-    useStrelko();
+  const { preview, selected, searchRadiusKm, openAuth, clearSearch } = useStrelko();
   if (!preview) return null;
 
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
@@ -97,7 +95,7 @@ export function PreviewTeaser() {
       <p className="preview-teaser-hint">
         Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo.
       </p>
-      <PreviewBlurUnlock openAuth={openAuth} openPremiumUpsell={openPremiumUpsell} />
+      <PreviewBlurUnlock openAuth={openAuth} />
       <button type="button" className="btn btn-ghost preview-teaser-back" onClick={clearSearch}>
         Nova preiskava
       </button>
@@ -106,8 +104,7 @@ export function PreviewTeaser() {
 }
 
 export function PreviewNoStrikes() {
-  const { preview, selected, searchRadiusKm, openAuth, openPremiumUpsell, clearSearch } =
-    useStrelko();
+  const { preview, selected, searchRadiusKm, openAuth, clearSearch } = useStrelko();
   if (!preview) return null;
 
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
@@ -129,7 +126,7 @@ export function PreviewNoStrikes() {
       <p className="preview-teaser-hint">
         Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo.
       </p>
-      <PreviewBlurUnlock openAuth={openAuth} openPremiumUpsell={openPremiumUpsell} />
+      <PreviewBlurUnlock openAuth={openAuth} />
       <button type="button" className="btn btn-ghost preview-teaser-back" onClick={clearSearch}>
         Nova preiskava
       </button>

@@ -129,6 +129,9 @@ export function AuthModal() {
             {isLogin ? "Registracija" : "Prijava"}
           </button>
         </p>
+        <p className="auth-cenik-link">
+          <Link to="/cenik">Cenik in paketi</Link>
+        </p>
       </div>
     </div>
   );
