@@ -3079,6 +3079,12 @@ body.site-nav-open {
   gap: 0.5rem;
 }
 
+.portal-queries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .btn-sm.is-disabled,
 button:disabled.btn-primary {
   opacity: 0.55;

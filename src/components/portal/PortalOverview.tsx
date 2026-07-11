@@ -5,12 +5,24 @@ import {
   getPodpornikStatus,
   tokenBalanceLabel,
 } from "../../lib/portal-account";
+import { tokenWord } from "../../lib/ob-skodi-tokens";
 
 export function PortalOverview() {
-  const { credits } = useStrelko();
+  const { credits, savedQueries, savedQueriesLoading } = useStrelko();
 
   const tokenBalance = tokenBalanceLabel(credits);
   const podpornik = getPodpornikStatus(credits);
+  const queryCount = savedQueries.length;
+  const queriesValue =
+    savedQueriesLoading && queryCount === 0
+      ? "Nalagam …"
+      : queryCount === 0
+        ? "Ni shranjenih"
+        : `${queryCount} ${queryCount === 1 ? "poizvedba" : queryCount === 2 ? "poizvedbi" : queryCount <= 4 ? "poizvedbe" : "poizvedb"}`;
+  const queriesHint =
+    queryCount === 0
+      ? "Ko izvedete podrobno iskanje, se poizvedba samodejno shrani tukaj."
+      : "Odprite poizvedbo za ponovni ogled brez dodatne porabe žetonov.";
 
   return (
     <div className="portal-panel">
@@ -37,10 +49,17 @@ export function PortalOverview() {
 
         <article className="portal-card">
           <h2 className="portal-card__title">Poizvedbe</h2>
-          <p className="portal-card__value portal-card__value--text">Ni shranjenih</p>
-          <p className="portal-card__hint">
-            Shranjene poizvedbe bodo na voljo tukaj, ko bo povezava z API-jem aktivna.
-          </p>
+          <p className="portal-card__value portal-card__value--text">{queriesValue}</p>
+          <p className="portal-card__hint">{queriesHint}</p>
+          {queryCount > 0 ? (
+            <p className="portal-card__hint">
+              Skupaj porabljenih žetonov:{" "}
+              <strong>
+                {savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0)}{" "}
+                {tokenWord(savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0))}
+              </strong>
+            </p>
+          ) : null}
           <p className="portal-card__footer-link">
             <Link to={portalTabPath("poizvedbe")}>Odpri poizvedbe</Link>
           </p>

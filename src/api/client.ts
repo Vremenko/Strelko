@@ -39,6 +39,34 @@ export const api = {
     request("/strelko/preview", { method: "POST", body: JSON.stringify(body) }),
   search: (body: object) =>
     request("/strelko/search", { method: "POST", body: JSON.stringify(body) }),
+  listQueries: () => request<import("../types").SavedQueryListOut>("/strelko/queries"),
+  getQuery: (queryId: string) =>
+    request<import("../types").SavedQueryOut>(`/strelko/queries/${encodeURIComponent(queryId)}`),
+  executeQuery: (body: object) =>
+    request<import("../types").SavedQueryOut>("/strelko/queries", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  generateQueryPdf: async (queryId: string) => {
+    const res = await fetch(
+      `${API_BASE}/strelko/queries/${encodeURIComponent(queryId)}/pdf`,
+      {
+        method: "POST",
+        headers: { ...authHeaders() },
+      }
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const err = new Error(
+        typeof (data as { detail?: string }).detail === "string"
+          ? (data as { detail: string }).detail
+          : res.statusText
+      ) as import("../types").ApiError;
+      err.status = res.status;
+      throw err;
+    }
+    return res.blob();
+  },
   downloadReportPdf: async (body: object) => {
     const res = await fetch(`${API_BASE}/strelko/report/pdf`, {
       method: "POST",

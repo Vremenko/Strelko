@@ -21,6 +21,12 @@ import {
   defaultSearchRange,
 } from "../lib/search-dates";
 import { NATIONAL_WIDGET_SCOPE } from "../lib/widget-obcine";
+import {
+  buildIdempotencyKey,
+  readSavedQueryIdFromStorage,
+  savedQueryOutToSearchResult,
+  writeSavedQueryIdToStorage,
+} from "../lib/saved-queries";
 import type {
   AlertsSettings,
   ApiError,
@@ -32,6 +38,7 @@ import type {
   PlansMeta,
   PreviewResult,
   PreviewScreen,
+  SavedQuerySummary,
   SearchResult,
   User,
   UserWidgetConfig,
@@ -79,6 +86,10 @@ interface StrelkoState {
   preview: PreviewResult | null;
   previewScreen: PreviewScreen;
   searchResult: SearchResult | null;
+  savedQueryId: string | null;
+  savedQueries: SavedQuerySummary[];
+  savedQueriesLoading: boolean;
+  savedQueriesError: string | null;
   searchRadiusKm: number;
   searchDateFrom: string;
   searchDateTo: string;
@@ -109,6 +120,9 @@ interface StrelkoContextValue extends StrelkoState {
   runPreview: () => Promise<void>;
   runFullSearch: () => Promise<void>;
   downloadPdf: () => Promise<void>;
+  loadSavedQueries: () => Promise<void>;
+  openSavedQuery: (queryId: string) => Promise<void>;
+  generateSavedQueryPdf: (queryId: string) => Promise<void>;
   setSearchRadiusKm: (km: number) => void;
   setSearchDateRange: (range: { from: string; to: string }) => void;
   openAuth: (mode: AuthMode) => void;
@@ -182,23 +196,39 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       ? readSearchResultFromStorage()
       : null
   );
+  const [savedQueryId, setSavedQueryIdState] = useState<string | null>(() =>
+    window.location.pathname === "/pomoc-pri-zavarovalnici"
+      ? readSavedQueryIdFromStorage()
+      : null
+  );
+  const setSavedQueryId = useCallback((id: string | null) => {
+    writeSavedQueryIdToStorage(id);
+    setSavedQueryIdState(id);
+  }, []);
+  const [savedQueries, setSavedQueries] = useState<SavedQuerySummary[]>([]);
+  const [savedQueriesLoading, setSavedQueriesLoading] = useState(false);
+  const [savedQueriesError, setSavedQueriesError] = useState<string | null>(null);
   const applySearchResult = useCallback((res: SearchResult | null) => {
     writeSearchResultToStorage(res);
     setSearchResultState(res);
   }, []);
   const clearSearchState = useCallback(() => {
     writeSearchResultToStorage(null);
+    writeSavedQueryIdToStorage(null);
     setPreview(null);
     setPreviewScreen(null);
     setSearchResultState(null);
+    setSavedQueryIdState(null);
     setSelected(null);
     setLocationQueryState("");
   }, []);
   const clearSearchDisplayState = useCallback(() => {
     writeSearchResultToStorage(null);
+    writeSavedQueryIdToStorage(null);
     setPreview(null);
     setPreviewScreen(null);
     setSearchResultState(null);
+    setSavedQueryIdState(null);
   }, []);
   const [searchRadiusKm, setSearchRadiusKm] = useState(DEFAULT_SEARCH_RADIUS_KM);
   const [searchDateFrom, setSearchDateFrom] = useState(defaultRange.from);
@@ -222,6 +252,92 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
 
   const refreshUserInFlightRef = useRef<Promise<void> | null>(null);
   const runPreviewInFlightRef = useRef(false);
+  const openQueryInFlightRef = useRef<string | null>(null);
+
+  const loadSavedQueries = useCallback(async () => {
+    if (!user) {
+      setSavedQueries([]);
+      setSavedQueriesError(null);
+      return;
+    }
+    setSavedQueriesLoading(true);
+    setSavedQueriesError(null);
+    try {
+      const res = await api.listQueries();
+      setSavedQueries(Array.isArray(res.queries) ? res.queries : []);
+      if (typeof res.token_balance === "number") {
+        setCredits((c) => ({ ...(c || {}), credits_balance: res.token_balance }));
+      }
+    } catch (e) {
+      const err = e as ApiError;
+      if (err.status === 401) {
+        setSavedQueries([]);
+        setSavedQueriesError(null);
+        return;
+      }
+      setSavedQueriesError(err.message || "Poizvedb ni mogoče naložiti.");
+    } finally {
+      setSavedQueriesLoading(false);
+    }
+  }, [user]);
+
+  const openSavedQuery = useCallback(
+    async (queryId: string) => {
+      if (!user) {
+        setModals((m) => ({ ...m, auth: "login" }));
+        return;
+      }
+      if (openQueryInFlightRef.current === queryId) return;
+      openQueryInFlightRef.current = queryId;
+      setLoading(true);
+      try {
+        const out = await api.getQuery(queryId);
+        const res = savedQueryOutToSearchResult(out);
+        if (!Array.isArray(res.daily)) {
+          alert("Shranjeni rezultat ni v pričakovani obliki.");
+          return;
+        }
+        applySearchResult(res);
+        setSavedQueryId(out.id);
+        setSelected({
+          lat: out.lat,
+          lon: out.lon,
+          label: out.label ?? "",
+        });
+        setLocationQueryState(out.label ?? "");
+        setSearchRadiusKm(out.radius_km);
+        setSearchDateFrom(out.date_from);
+        setSearchDateTo(out.date_to);
+        setPreview(null);
+        setPreviewScreen(null);
+        setCredits((c) => ({ ...(c || {}), credits_balance: out.token_balance }));
+        if (location.pathname !== "/pomoc-pri-zavarovalnici") {
+          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`);
+        } else {
+          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`, {
+            replace: true,
+          });
+        }
+      } catch (e) {
+        const err = e as ApiError;
+        if (err.status === 401) {
+          setToken(null);
+          setModals((m) => ({ ...m, auth: "login" }));
+        } else if (err.status === 404 || err.status === 403) {
+          alert("Poizvedbe ni mogoče odpreti. Morda ne obstaja ali ne pripada vašemu računu.");
+          if (location.pathname === "/pomoc-pri-zavarovalnici" && location.search.includes("query=")) {
+            navigate("/pomoc-pri-zavarovalnici", { replace: true });
+          }
+        } else {
+          alert(err.message || "Poizvedbe ni mogoče naložiti.");
+        }
+      } finally {
+        openQueryInFlightRef.current = null;
+        setLoading(false);
+      }
+    },
+    [user, applySearchResult, setSavedQueryId, navigate, location.pathname]
+  );
 
   const refreshUser = useCallback(async () => {
     const pending = refreshUserInFlightRef.current;
@@ -359,7 +475,33 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     const stored = readSearchResultFromStorage();
     if (!stored) return;
     applySearchResult(stored);
+    const storedId = readSavedQueryIdFromStorage();
+    if (storedId) setSavedQueryIdState(storedId);
   }, [searchResult, applySearchResult, location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
+    const qid = new URLSearchParams(location.search).get("query");
+    if (!qid || !user) return;
+    if (savedQueryId === qid && searchResult) return;
+    void openSavedQuery(qid);
+  }, [
+    location.pathname,
+    location.search,
+    user,
+    savedQueryId,
+    searchResult,
+    openSavedQuery,
+  ]);
+
+  useEffect(() => {
+    if (!user) {
+      setSavedQueries([]);
+      setSavedQueriesError(null);
+      return;
+    }
+    void loadSavedQueries();
+  }, [user, loadSavedQueries]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -461,7 +603,18 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         date_from: searchRange.from,
         date_to: searchRange.to,
       };
-      const res = (await api.search(body)) as SearchResult;
+      const idempotencyKey = buildIdempotencyKey(
+        target.lat,
+        target.lon,
+        searchRadiusKm,
+        searchRange.from,
+        searchRange.to
+      );
+      const out = await api.executeQuery({
+        ...body,
+        idempotency_key: idempotencyKey,
+      });
+      const res = savedQueryOutToSearchResult(out);
       if (!res || typeof res !== "object" || !Array.isArray(res.daily)) {
         alert(
           "Odgovor strežnika ni v pričakovani obliki. Poskusite znova ali zmanjšajte obdobje/radij."
@@ -469,9 +622,13 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         return;
       }
       applySearchResult(res);
+      setSavedQueryId(out.id);
       setPreview(null);
       setPreviewScreen(null);
-      setCredits((c) => ({ ...(c || {}), credits_balance: res.credits_remaining }));
+      setCredits((c) => ({ ...(c || {}), credits_balance: out.token_balance }));
+      if (!out.replay) {
+        void loadSavedQueries();
+      }
       const stayOn =
         location.pathname === "/pomoc-pri-zavarovalnici"
           ? "/pomoc-pri-zavarovalnici"
@@ -512,6 +669,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       preview,
       previewScreen,
       searchResult,
+      savedQueryId,
+      savedQueries,
+      savedQueriesLoading,
+      savedQueriesError,
       searchRadiusKm,
       searchDateFrom,
       searchDateTo,
@@ -634,14 +795,21 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         if (!searchResult || pdfDownloading) return;
         setPdfDownloading(true);
         try {
-          const blob = await api.downloadReportPdf({
-            lat: searchResult.lat,
-            lon: searchResult.lon,
-            radius_km: searchResult.radius_km,
-            label: searchResult.location_label,
-            date_from: searchResult.date_from,
-            date_to: searchResult.date_to,
-          });
+          let blob: Blob;
+          if (savedQueryId) {
+            blob = await api.generateQueryPdf(savedQueryId);
+            void loadSavedQueries();
+            await refreshUser();
+          } else {
+            blob = await api.downloadReportPdf({
+              lat: searchResult.lat,
+              lon: searchResult.lon,
+              radius_km: searchResult.radius_km,
+              label: searchResult.location_label,
+              date_from: searchResult.date_from,
+              date_to: searchResult.date_to,
+            });
+          }
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -649,9 +817,46 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           a.click();
           URL.revokeObjectURL(url);
         } catch (e) {
-          alert((e as Error).message || "PDF ni na voljo.");
+          const err = e as ApiError;
+          if (err.status === 402) {
+            setSelectedPlanState(defaultSelectedPlanId(plans));
+            setModals((m) => ({
+              ...m,
+              credits: true,
+              creditsOptions: { insufficientCredits: true },
+            }));
+          } else {
+            alert(err.message || "PDF ni na voljo.");
+          }
         } finally {
           setPdfDownloading(false);
+        }
+      },
+      loadSavedQueries,
+      openSavedQuery,
+      generateSavedQueryPdf: async (queryId: string) => {
+        try {
+          const blob = await api.generateQueryPdf(queryId);
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `strelko-pregled-${queryId.slice(0, 8)}.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+          await loadSavedQueries();
+          await refreshUser();
+        } catch (e) {
+          const err = e as ApiError;
+          if (err.status === 402) {
+            setSelectedPlanState(defaultSelectedPlanId(plans));
+            setModals((m) => ({
+              ...m,
+              credits: true,
+              creditsOptions: { insufficientCredits: true },
+            }));
+          } else {
+            alert(err.message || "PDF ni mogoče pripraviti.");
+          }
         }
       },
       openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
@@ -759,6 +964,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       preview,
       previewScreen,
       searchResult,
+      savedQueryId,
+      savedQueries,
+      savedQueriesLoading,
+      savedQueriesError,
       searchRadiusKm,
       searchDateFrom,
       searchDateTo,
@@ -778,6 +987,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       navigate,
       location.pathname,
       clearSearchState,
+      loadSavedQueries,
+      openSavedQuery,
+      setSavedQueryId,
       alerts,
     ]
   );

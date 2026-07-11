@@ -147,6 +147,32 @@ export interface SearchResult {
   period_days?: number;
 }
 
+export interface SavedQuerySummary {
+  id: string;
+  label: string | null;
+  lat: number;
+  lon: number;
+  radius_km: number;
+  date_from: string;
+  date_to: string;
+  tokens_spent: number;
+  total_strikes: number;
+  pdf_tokens_cost: number;
+  pdf_button_label: string;
+  created_at: string;
+}
+
+export interface SavedQueryOut extends SavedQuerySummary {
+  token_balance: number;
+  replay: boolean;
+  result: Record<string, unknown>;
+}
+
+export interface SavedQueryListOut {
+  queries: SavedQuerySummary[];
+  token_balance: number;
+}
+
 export interface WidgetObcina {
   ob_mid: number;
   name: string;
