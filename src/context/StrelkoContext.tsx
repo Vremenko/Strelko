@@ -649,8 +649,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         }));
       }
     }
-    if (preview?.requires_login) await runFullSearchInner();
-  }, [preview, refreshUser, runFullSearchInner]);
+  }, [refreshUser]);
 
   async function runFullSearchInner(place?: GeocodeResult) {
     const target = place ?? selected;

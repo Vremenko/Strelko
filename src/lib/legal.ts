@@ -98,7 +98,7 @@ export const LEGAL_PAGES = {
           <ul>
             <li>Mesečna naročnina se samodejno podaljša, dokler jo uporabnik ne prekliče v portalu za naročnino.</li>
             <li>Ne porabljeni krediti se ne prenašajo v naslednji mesec, razen če je drugače izrecno navedeno ob nakupu.</li>
-            <li>Ob registraciji lahko uporabnik prejme en brezplačen dobrodošel kredit za preizkus storitve.</li>
+            <li>Registracija sama ne vključuje žetonov. Za dostop do plačljivih pregledov mora uporabnik kupiti ustrezno število žetonov.</li>
           </ul>
           <p>Podrobnosti o pravicah potrošnikov (odstop od pogodbe, reklamacije) so na strani
           <a href="/pravice-potrosnikov" data-legal="consumer">Pravice potrošnikov</a>.</p>`,
