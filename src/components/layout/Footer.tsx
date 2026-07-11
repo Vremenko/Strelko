@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
+import { useStrelko } from "../../context/StrelkoContext";
 import { COMPANY, DISCLAIMER_TEXT, LEGAL_PAGES } from "../../lib/legal";
 
 export function Footer() {
+  const { user } = useStrelko();
+  const logged = !!user;
   const year = new Date().getFullYear();
   const legalLinks = Object.entries(LEGAL_PAGES).map(([id, page]) => (
     <Link key={id} to={page.path}>
@@ -39,6 +42,8 @@ export function Footer() {
           />
         </a>
         <nav className="legal-footer-nav" aria-label="Pravne informacije">
+          <Link to="/cenik">Cenik</Link>
+          {logged ? <Link to="/moj-strelko">Moj Strelko</Link> : null}
           {legalLinks}
           <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
             Politika zasebnosti Meteoinfo

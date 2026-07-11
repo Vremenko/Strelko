@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { useStrelko } from "../../context/StrelkoContext";
+import { isPodpornikActive, tokenBalanceLabel } from "../../lib/portal-account";
 
 function MenuIcon() {
   return (
@@ -100,16 +101,24 @@ export function Header() {
               <Link to="/widget-obcine" className="nav-link">
                 Widget
               </Link>
+              <Link to="/cenik" className="nav-link">
+                Cenik
+              </Link>
             </div>
             <div className="site-nav__auth nav-actions">
               {logged ? (
                 <>
+                  <Link to="/moj-strelko" className="btn btn-ghost">
+                    Moj Strelko
+                  </Link>
                   <span className="credits-badge">
-                    {credits?.plan_name_sl && (
-                      <span className="plan-badge">{credits.plan_name_sl}</span>
-                    )}
-                    {credits?.plan_name_sl && " · "}Krediti:{" "}
-                    <strong>{credits?.credits_balance ?? "—"}</strong>
+                    Žetoni: <strong>{tokenBalanceLabel(credits)}</strong>
+                    {isPodpornikActive(credits) ? (
+                      <>
+                        {" · "}
+                        <span className="plan-badge">Podpornik</span>
+                      </>
+                    ) : null}
                   </span>
                   <button type="button" className="btn btn-ghost" onClick={() => openCredits()}>
                     Paketi
@@ -176,16 +185,29 @@ export function Header() {
             <button type="button" className="nav-link nav-link--drawer" onClick={() => go("/widget-obcine")}>
               Widget
             </button>
+            <button type="button" className="nav-link nav-link--drawer" onClick={() => go("/cenik")}>
+              Cenik
+            </button>
           </nav>
           <div className="site-nav-drawer__auth">
             {logged ? (
               <>
-                {credits?.plan_name_sl && (
-                  <div className="site-nav-drawer__meta">
-                    {credits.plan_name_sl} · Krediti:{" "}
-                    <strong>{credits.credits_balance ?? "—"}</strong>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-block"
+                  onClick={() => go("/moj-strelko")}
+                >
+                  Moj Strelko
+                </button>
+                <div className="site-nav-drawer__meta">
+                  Žetoni: <strong>{tokenBalanceLabel(credits)}</strong>
+                  {isPodpornikActive(credits) ? (
+                    <>
+                      {" · "}
+                      <span className="plan-badge">Podpornik</span>
+                    </>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   className="btn btn-ghost btn-block"
