@@ -255,7 +255,6 @@ export function PreviewTeaser() {
     <section className="results-panel preview-teaser">
       <p className="preview-teaser-badge">Osnovni predogled</p>
       <h3 className="results-panel-title">⚡ Strele zaznane — {place}</h3>
-      <p className="preview-teaser-lead">{preview.message_sl}</p>
       <ResultsPeriod label={periodLabel} />
       <ResultsStats
         items={[
@@ -264,7 +263,6 @@ export function PreviewTeaser() {
           { label: "Najbližja strela", value: <LockedStatValue /> },
         ]}
       />
-      <p className="preview-teaser-hint">{PREVIEW_BASIC_HINT}</p>
       <PreviewUnlockBlock
         openAuth={openAuth}
         onUnlock={() => void runFullSearch()}
