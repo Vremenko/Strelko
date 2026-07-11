@@ -113,12 +113,12 @@ export function Header() {
                 </>
               ) : (
                 <>
-                  <button type="button" className="btn btn-ghost" onClick={() => openAuth("login")}>
+                  <button type="button" className="btn btn-primary" onClick={() => openAuth("login")}>
                     Prijava
                   </button>
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-register"
                     onClick={() => openAuth("register")}
                   >
                     Registracija

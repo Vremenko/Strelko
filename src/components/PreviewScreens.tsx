@@ -34,12 +34,14 @@ const FAKE_ROWS = Array.from({ length: 6 }, (_, i) => (
 const NO_STRIKES_METEO_ALARM_SUFFIX =
   /\s*Prijavite se za MeteoAlarm SMS ob nevihtah v vaši okolici\.?\s*$/;
 
+const PREVIEW_UNLOCK_INTRO =
+  "Za dostop do natančnih podatkov o strelah se prijavite in kupite žetone. Z odklepom pridobite celoten pregled izbranega območja in obdobja.";
+
 const PREVIEW_UNLOCK_PERKS = [
-  "Interaktivni zemljevid vseh zaznanih udarov",
+  "Interaktivni zemljevid vseh zaznanih udarov strel",
   "Datum, natančen čas in oddaljenost vsake strele",
-  "Razdalja do najbližje strele",
   "Dnevni pregled aktivnosti strel",
-  "Podlaga za nadaljnjo obravnavo škodnega primera",
+  "Izdelava PDF-poročila za zavarovalnico",
 ] as const;
 
 const PREVIEW_BASIC_HINT =
@@ -163,10 +165,7 @@ function PreviewUnlockBlock({
   if (!loggedIn) {
     actions = (
       <div className="preview-blur-actions">
-        <button type="button" className="btn btn-primary" onClick={() => openAuth("register")}>
-          Registracija
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={() => openAuth("login")}>
+        <button type="button" className="btn btn-primary" onClick={() => openAuth("login")}>
           Prijava
         </button>
         <Link to="/cenik" className="btn btn-ghost">
@@ -223,11 +222,8 @@ function PreviewUnlockBlock({
     <div className="preview-blur-block">
       <PreviewUnlockBackdrop />
       <div className="preview-blur-cta">
-        <h4>Odklenite celoten pregled z žetoni</h4>
-        <p>
-          Za dostop do natančnih podatkov se registrirajte oziroma prijavite in kupite žetone. Z
-          odklepom pridobite celoten pregled izbranega območja in obdobja.
-        </p>
+        <h4>Odklenite celoten pregled</h4>
+        <p>{PREVIEW_UNLOCK_INTRO}</p>
         <ul className="preview-blur-perks">
           {PREVIEW_UNLOCK_PERKS.map((item) => (
             <li key={item}>{item}</li>
