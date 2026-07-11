@@ -7,8 +7,10 @@ import { AlertsModal } from "./components/modals/AlertsModal";
 import { CreditsModal, CheckoutSuccessModal } from "./components/modals/CreditsModal";
 import { WidgetSetupModal } from "./components/modals/WidgetSetupModal";
 import { ForgotPasswordModal } from "./components/modals/ForgotPasswordModal";
+import { useAuthReturn } from "./hooks/useAuthReturn";
 
 export function AppLayout() {
+  useAuthReturn();
   return (
     <>
       <div className="hero-bg" />

@@ -26,7 +26,11 @@ export interface Credits {
   credits_balance?: number;
   plan_id?: string;
   plan_name_sl?: string;
+  has_subscription?: boolean;
   billing_portal_available?: boolean;
+  subscription_cancel_at_period_end?: boolean;
+  subscription_current_period_end?: string;
+  season_pass_expires_at?: string;
   pdf_reports_available?: boolean;
   archive_full_access?: boolean;
   payments_enabled?: boolean;

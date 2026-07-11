@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { geocodeAddress, isValidGeocodePlace } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
+import { clearCheckoutPlanId, consumeCheckoutPlanId, peekCheckoutPlanId } from "../lib/auth-intent";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
 import {
   DEFAULT_SEARCH_RADIUS_KM,
@@ -364,7 +365,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get("checkout");
     if (!checkout) return;
-    window.history.replaceState({}, "", window.location.pathname);
+    const tab = params.get("tab");
+    const cleanUrl = tab
+      ? `${window.location.pathname}?tab=${encodeURIComponent(tab)}`
+      : window.location.pathname;
+    window.history.replaceState({}, "", cleanUrl);
     if (checkout === "cancel") {
       setModals((m) => ({
         ...m,
@@ -413,8 +418,28 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const afterAuth = useCallback(async () => {
     await refreshUser();
     setModals((m) => ({ ...m, auth: null }));
+    const pendingPlan = peekCheckoutPlanId();
+    if (pendingPlan) {
+      setSelectedPlanState(pendingPlan);
+      try {
+        const { checkout_url } = await api.checkout(pendingPlan);
+        consumeCheckoutPlanId();
+        window.location.href = checkout_url;
+        return;
+      } catch (e) {
+        clearCheckoutPlanId();
+        const err = e as ApiError;
+        setModals((m) => ({
+          ...m,
+          credits: true,
+          creditsOptions: {
+            checkoutError: err.message || "Checkout trenutno ni na voljo.",
+          },
+        }));
+      }
+    }
     if (preview?.requires_login) await runFullSearchInner();
-  }, [preview, refreshUser]);
+  }, [preview, refreshUser, runFullSearchInner]);
 
   async function runFullSearchInner(place?: GeocodeResult) {
     const target = place ?? selected;
@@ -630,7 +655,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         }
       },
       openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
-      closeAuth: () => setModals((m) => ({ ...m, auth: null })),
+      closeAuth: () => {
+        clearCheckoutPlanId();
+        setModals((m) => ({ ...m, auth: null }));
+      },
       openForgotPassword: () =>
         setModals((m) => ({ ...m, auth: null, forgotPassword: true })),
       closeForgotPassword: () => setModals((m) => ({ ...m, forgotPassword: false })),
@@ -650,6 +678,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         await afterAuth();
       },
       logout: () => {
+        clearCheckoutPlanId();
         setToken(null);
         setUser(null);
         setCredits(null);
@@ -669,6 +698,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setModals((m) => ({ ...m, alerts: false }));
       },
       checkout: async () => {
+        clearCheckoutPlanId();
         const { checkout_url } = await api.checkout(selectedPlan);
         window.location.href = checkout_url;
       },

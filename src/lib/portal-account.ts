@@ -1,0 +1,75 @@
+import type { Credits } from "../types";
+
+export function formatPeriodEnd(isoDate: string): string {
+  const parsed = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return isoDate;
+  return parsed.toLocaleDateString("sl-SI", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** Ali je naročnina Podpornik aktivna (neodvisno od žetonov Ob škodi). */
+export function isPodpornikActive(credits?: Credits | null): boolean {
+  if (!credits || credits.plan_id !== "podpornik") return false;
+  if (credits.has_subscription) return true;
+  const exp = credits.season_pass_expires_at;
+  if (exp) {
+    const parsed = new Date(`${exp}T12:00:00`);
+    if (!Number.isNaN(parsed.getTime()) && parsed >= new Date()) return true;
+  }
+  return false;
+}
+
+export function getPodpornikStatus(credits?: Credits | null): {
+  active: boolean;
+  label: string;
+  hint: string;
+} {
+  if (!isPodpornikActive(credits)) {
+    return {
+      active: false,
+      label: "Ni aktiven",
+      hint: "Podpornik omogoča polni arhiv, napredne statistike in widget.",
+    };
+  }
+
+  const cancelScheduled = Boolean(credits?.subscription_cancel_at_period_end);
+  const periodEnd = credits?.subscription_current_period_end;
+  const seasonEnd = credits?.season_pass_expires_at;
+
+  if (cancelScheduled && periodEnd) {
+    return {
+      active: true,
+      label: "Aktiven",
+      hint: `Preklicana, aktivna do ${formatPeriodEnd(periodEnd)}`,
+    };
+  }
+
+  if (periodEnd) {
+    return {
+      active: true,
+      label: "Aktiven",
+      hint: `Velja do ${formatPeriodEnd(periodEnd)}`,
+    };
+  }
+
+  if (seasonEnd) {
+    return {
+      active: true,
+      label: "Aktiven",
+      hint: `Velja do ${formatPeriodEnd(seasonEnd)}`,
+    };
+  }
+
+  return {
+    active: true,
+    label: "Aktiven",
+    hint: "Aktivna naročnina Podpornik",
+  };
+}
+
+export function tokenBalanceLabel(credits?: Credits | null): string {
+  return credits?.credits_balance != null ? String(credits.credits_balance) : "—";
+}
