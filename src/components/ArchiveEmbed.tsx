@@ -113,7 +113,7 @@ export function ArchiveChartEmbed({
           </p>
         )}
       </div>
-      {scope === "full" && !fullAccess ? (
+      {scope === "full" && !fullAccess && visible ? (
         <div className="archive-locked-charts">
           <LockedContent mode="supporter" className="archive-locked-charts__panel" />
           <LockedContent mode="supporter" className="archive-locked-charts__panel" />
