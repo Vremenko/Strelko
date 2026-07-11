@@ -119,6 +119,12 @@ export interface PreviewResult {
   teaser_daily?: { datum: string; stevilo_strel: number }[];
 }
 
+export interface InsufficientTokensDetail {
+  message?: string;
+  required_tokens: number;
+  available_tokens: number;
+}
+
 export interface DailyStrike {
   datum: string;
   stevilo_strel: number;
@@ -192,7 +198,7 @@ export interface WidgetState {
 
 export interface ApiError extends Error {
   status?: number;
-  data?: { detail?: string };
+  data?: unknown;
 }
 
 export interface ModalState {

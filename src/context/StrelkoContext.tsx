@@ -27,12 +27,14 @@ import {
   savedQueryOutToSearchResult,
   writeSavedQueryIdToStorage,
 } from "../lib/saved-queries";
+import { parseInsufficientTokensDetail } from "../lib/query-billing";
 import type {
   AlertsSettings,
   ApiError,
   AuthMode,
   Credits,
   GeocodeResult,
+  InsufficientTokensDetail,
   ModalState,
   Plan,
   PlansMeta,
@@ -85,6 +87,7 @@ interface StrelkoState {
   suggestions: GeocodeResult[];
   preview: PreviewResult | null;
   previewScreen: PreviewScreen;
+  previewTokenNotice: InsufficientTokensDetail | null;
   searchResult: SearchResult | null;
   savedQueryId: string | null;
   savedQueries: SavedQuerySummary[];
@@ -191,6 +194,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen>(null);
+  const [previewTokenNotice, setPreviewTokenNotice] = useState<InsufficientTokensDetail | null>(
+    null
+  );
   const [searchResult, setSearchResultState] = useState<SearchResult | null>(() =>
     window.location.pathname === "/pomoc-pri-zavarovalnici"
       ? readSearchResultFromStorage()
@@ -217,6 +223,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     writeSavedQueryIdToStorage(null);
     setPreview(null);
     setPreviewScreen(null);
+    setPreviewTokenNotice(null);
     setSearchResultState(null);
     setSavedQueryIdState(null);
     setSelected(null);
@@ -227,6 +234,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     writeSavedQueryIdToStorage(null);
     setPreview(null);
     setPreviewScreen(null);
+    setPreviewTokenNotice(null);
     setSearchResultState(null);
     setSavedQueryIdState(null);
   }, []);
@@ -668,6 +676,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       suggestions,
       preview,
       previewScreen,
+      previewTokenNotice,
       searchResult,
       savedQueryId,
       savedQueries,
@@ -711,6 +720,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         setPreview(null);
         setPreviewScreen(null);
+        setPreviewTokenNotice(null);
         try {
           let place = selected;
           if (!isValidGeocodePlace(place) || place.label.trim() !== q) {
@@ -723,32 +733,88 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             alert("Lokacija ni veljavna. Izberite naslov s seznama predlogov.");
             return;
           }
-          const previewRange = clampSearchRange({
+          const searchRange = clampSearchRange({
             from: searchDateFrom,
             to: searchDateTo,
           });
           if (
-            previewRange.from !== searchDateFrom ||
-            previewRange.to !== searchDateTo
+            searchRange.from !== searchDateFrom ||
+            searchRange.to !== searchDateTo
           ) {
-            setSearchDateFrom(previewRange.from);
-            setSearchDateTo(previewRange.to);
+            setSearchDateFrom(searchRange.from);
+            setSearchDateTo(searchRange.to);
           }
-          const res = (await api.preview(
-            buildPreviewRequestBody({
-              lat: place.lat,
-              lon: place.lon,
-              radius_km: searchRadiusKm,
-              label: place.label,
-              date_from: previewRange.from,
-              date_to: previewRange.to,
-            })
-          )) as PreviewResult;
+          const previewBody = buildPreviewRequestBody({
+            lat: place.lat,
+            lon: place.lon,
+            radius_km: searchRadiusKm,
+            label: place.label,
+            date_from: searchRange.from,
+            date_to: searchRange.to,
+          });
+
           if (getToken()) {
             await refreshUser();
-            await runFullSearchInner(place);
-            return;
+            const idempotencyKey = buildIdempotencyKey(
+              place.lat,
+              place.lon,
+              searchRadiusKm,
+              searchRange.from,
+              searchRange.to
+            );
+            try {
+              const out = await api.executeQuery({
+                lat: place.lat,
+                lon: place.lon,
+                radius_km: searchRadiusKm,
+                label: place.label,
+                date_from: searchRange.from,
+                date_to: searchRange.to,
+                idempotency_key: idempotencyKey,
+              });
+              const res = savedQueryOutToSearchResult(out);
+              if (!res || typeof res !== "object" || !Array.isArray(res.daily)) {
+                alert(
+                  "Odgovor strežnika ni v pričakovani obliki. Poskusite znova ali zmanjšajte obdobje/radij."
+                );
+                return;
+              }
+              applySearchResult(res);
+              setSavedQueryId(out.id);
+              setPreview(null);
+              setPreviewScreen(null);
+              setPreviewTokenNotice(null);
+              setCredits((c) => ({ ...(c || {}), credits_balance: out.token_balance }));
+              if (!out.replay) {
+                void loadSavedQueries();
+              }
+              const stayOn =
+                location.pathname === "/pomoc-pri-zavarovalnici"
+                  ? "/pomoc-pri-zavarovalnici"
+                  : "/";
+              if (location.pathname !== stayOn) navigate(stayOn);
+              return;
+            } catch (e) {
+              const err = e as ApiError;
+              if (err.status === 402) {
+                const tokenDetail = parseInsufficientTokensDetail(err.data);
+                const res = (await api.preview(previewBody)) as PreviewResult;
+                setPreview(res);
+                setPreviewTokenNotice(tokenDetail);
+                setPreviewScreen(res.has_nearby_strikes ? "teaser" : "no-strikes");
+                return;
+              }
+              if (err.status === 401) {
+                setToken(null);
+                setModals((m) => ({ ...m, auth: "login" }));
+                return;
+              }
+              alert(err.message || "Napaka pri iskanju.");
+              return;
+            }
           }
+
+          const res = (await api.preview(previewBody)) as PreviewResult;
           setPreview(res);
           if (!getToken() && res.has_nearby_strikes) {
             setPreviewScreen("teaser");
@@ -963,6 +1029,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       suggestions,
       preview,
       previewScreen,
+      previewTokenNotice,
       searchResult,
       savedQueryId,
       savedQueries,

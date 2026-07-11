@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
 import { formatSlDecimal } from "../lib/dates";
+import { portalTabPath } from "../lib/auth-intent";
+import { previewInsufficientTokensNotice } from "../lib/query-billing";
 import { formatPlaceName } from "../lib/utils";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
 
@@ -70,10 +72,50 @@ function PreviewBlurUnlock({
   );
 }
 
+function PreviewTokensUnlock() {
+  return (
+    <div className="preview-blur-block">
+      <div className="preview-blur-content" aria-hidden="true">
+        <div className="preview-fake-map">
+          <span className="preview-fake-pin" style={{ left: "22%", top: "35%" }} />
+          <span className="preview-fake-pin" style={{ left: "58%", top: "48%" }} />
+          <span className="preview-fake-pin" style={{ left: "41%", top: "62%" }} />
+          <span className="preview-fake-radius" />
+        </div>
+        <table className="daily-table preview-fake-table">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Št. strel</th>
+              <th>Najbližje</th>
+              <th>Čas</th>
+            </tr>
+          </thead>
+          <tbody>{FAKE_ROWS}</tbody>
+        </table>
+      </div>
+      <div className="preview-blur-cta">
+        <h4>Odklenite celoten pregled</h4>
+        <p>Zemljevid udarov, natančni časi, dnevni pregled in podlaga za zavarovalnico.</p>
+        <div className="preview-blur-actions">
+          <Link to={portalTabPath("narocnina")} className="btn btn-primary">
+            Pridobite žetone
+          </Link>
+          <Link to="/cenik" className="btn btn-ghost">
+            Cenik in žetoni
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PreviewTeaser() {
-  const { preview, selected, searchRadiusKm, openAuth, clearSearch } = useStrelko();
+  const { preview, previewTokenNotice, selected, searchRadiusKm, openAuth, clearSearch } =
+    useStrelko();
   if (!preview) return null;
 
+  const limitedPreview = Boolean(previewTokenNotice);
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
   const nearest =
     preview.nearest_km != null ? `${formatSlDecimal(preview.nearest_km)} km` : "—";
@@ -81,8 +123,18 @@ export function PreviewTeaser() {
 
   return (
     <section className="results-panel preview-teaser">
-      <p className="preview-teaser-badge">Brezplačen predogled</p>
+      <p className="preview-teaser-badge">
+        {limitedPreview ? "Osnovni predogled" : "Brezplačen predogled"}
+      </p>
       <h3 className="results-panel-title">⚡ Strele zaznane — {place}</h3>
+      {limitedPreview && previewTokenNotice && (
+        <p className="preview-token-notice" role="status">
+          {previewInsufficientTokensNotice(
+            previewTokenNotice.required_tokens,
+            previewTokenNotice.available_tokens
+          )}
+        </p>
+      )}
       <p className="preview-teaser-lead">{preview.message_sl}</p>
       <ResultsPeriod label={periodLabel} />
       <ResultsStats
@@ -93,9 +145,15 @@ export function PreviewTeaser() {
         ]}
       />
       <p className="preview-teaser-hint">
-        Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo.
+        {limitedPreview
+          ? "Datumi, natančen čas in lokacije posameznih udarov niso prikazani v osnovnem predogledu."
+          : "Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo."}
       </p>
-      <PreviewBlurUnlock openAuth={openAuth} />
+      {limitedPreview ? (
+        <PreviewTokensUnlock />
+      ) : (
+        <PreviewBlurUnlock openAuth={openAuth} />
+      )}
       <button type="button" className="btn btn-ghost preview-teaser-back" onClick={clearSearch}>
         Nova preiskava
       </button>
@@ -104,16 +162,28 @@ export function PreviewTeaser() {
 }
 
 export function PreviewNoStrikes() {
-  const { preview, selected, searchRadiusKm, openAuth, clearSearch } = useStrelko();
+  const { preview, previewTokenNotice, selected, searchRadiusKm, openAuth, clearSearch } =
+    useStrelko();
   if (!preview) return null;
 
+  const limitedPreview = Boolean(previewTokenNotice);
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
   const periodLabel = formatResultsPeriodLabel(searchRadiusKm, preview);
 
   return (
     <section className="results-panel preview-teaser preview-no-strikes">
-      <p className="preview-teaser-badge preview-teaser-badge--ok">Brez udarov v radiju</p>
+      <p className="preview-teaser-badge preview-teaser-badge--ok">
+        {limitedPreview ? "Osnovni predogled" : "Brez udarov v radiju"}
+      </p>
       <h3 className="results-panel-title">✓ Brez strel — {place}</h3>
+      {limitedPreview && previewTokenNotice && (
+        <p className="preview-token-notice" role="status">
+          {previewInsufficientTokensNotice(
+            previewTokenNotice.required_tokens,
+            previewTokenNotice.available_tokens
+          )}
+        </p>
+      )}
       <p className="preview-teaser-lead">{previewNoStrikesLead(preview.message_sl)}</p>
       <ResultsPeriod label={periodLabel} />
       <ResultsStats
@@ -124,9 +194,15 @@ export function PreviewNoStrikes() {
         ]}
       />
       <p className="preview-teaser-hint">
-        Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo.
+        {limitedPreview
+          ? "Datumi, natančen čas in lokacije posameznih udarov niso prikazani v osnovnem predogledu."
+          : "Datumi, natančen čas in lokacije posameznih udarov so skriti — odklenite jih s prijavo."}
       </p>
-      <PreviewBlurUnlock openAuth={openAuth} />
+      {limitedPreview ? (
+        <PreviewTokensUnlock />
+      ) : (
+        <PreviewBlurUnlock openAuth={openAuth} />
+      )}
       <button type="button" className="btn btn-ghost preview-teaser-back" onClick={clearSearch}>
         Nova preiskava
       </button>

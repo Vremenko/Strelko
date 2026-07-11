@@ -20,6 +20,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     let message = res.statusText;
     if (typeof detail === "string") {
       message = detail;
+    } else if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+      const structured = detail as { message?: string };
+      if (typeof structured.message === "string") {
+        message = structured.message;
+      }
     } else if (Array.isArray(detail) && detail.length) {
       message = detail
         .map((item) => (typeof item?.msg === "string" ? item.msg : ""))

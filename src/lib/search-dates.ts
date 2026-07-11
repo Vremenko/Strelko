@@ -35,6 +35,13 @@ export function inclusivePeriodDays(fromIso: string, toIso: string): number {
   return diff + 1;
 }
 
+/** Cena poizvedbe: ceil(koledarski dnevi / 10), največ 3 (usklajeno z backendom). */
+export function queryTokenCost(fromIso: string, toIso: string): number {
+  const days = inclusivePeriodDays(fromIso, toIso);
+  if (days < 1) return 0;
+  return Math.min(Math.ceil(days / 10), 3);
+}
+
 /** Najzgodnejši dovoljeni datum v zadnjih SEARCH_HISTORY_CALENDAR_DAYS koledarskih dneh. */
 export function rollingWindowMin(today = todayIso()): string {
   return addDays(today, -(SEARCH_HISTORY_CALENDAR_DAYS - 1));

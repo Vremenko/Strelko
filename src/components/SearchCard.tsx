@@ -1,6 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult } from "../types";
+import {
+  queryCostHintMessage,
+  querySubmitButtonLabel,
+} from "../lib/query-billing";
+import { clampSearchRange, queryTokenCost } from "../lib/search-dates";
 import { SearchScanBolt } from "./icons";
 import { SearchOptions } from "./SearchOptions";
 
@@ -28,6 +33,10 @@ export function SearchCard({
   intro,
 }: SearchCardProps) {
   const {
+    user,
+    credits,
+    searchDateFrom,
+    searchDateTo,
     locationQuery,
     setLocationQuery,
     selected,
@@ -86,6 +95,23 @@ export function SearchCard({
   };
 
   const overlayActive = (loading || (preview && showOverlay)) && !previewScreen;
+
+  const searchRange = useMemo(
+    () => clampSearchRange({ from: searchDateFrom, to: searchDateTo }),
+    [searchDateFrom, searchDateTo]
+  );
+  const queryCost = showOptions ? queryTokenCost(searchRange.from, searchRange.to) : 0;
+  const availableTokens = credits?.credits_balance ?? 0;
+  const costHint =
+    showOptions && user && queryCost > 0
+      ? queryCostHintMessage(queryCost, availableTokens)
+      : null;
+  const submitLabel = querySubmitButtonLabel(
+    queryCost,
+    availableTokens,
+    Boolean(user),
+    buttonText
+  );
 
   return (
     <div
@@ -165,13 +191,18 @@ export function SearchCard({
           </ul>
         </div>
         {showOptions && <SearchOptions />}
+        {costHint && (
+          <p className="search-cost-hint" role="status">
+            {costHint}
+          </p>
+        )}
         <button
           type="submit"
           className="btn btn-primary btn-search-full"
           id="btn-search"
           disabled={loading}
         >
-          {buttonText}
+          {submitLabel}
         </button>
       </form>
     </div>
