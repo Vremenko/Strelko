@@ -5,7 +5,7 @@ import {
   getPodpornikStatus,
   tokenBalanceLabel,
 } from "../../lib/portal-account";
-import { tokenWord } from "../../lib/ob-skodi-tokens";
+import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
 
 export function PortalOverview() {
   const { credits, savedQueries, savedQueriesLoading } = useStrelko();
@@ -53,10 +53,9 @@ export function PortalOverview() {
           <p className="portal-card__hint">{queriesHint}</p>
           {queryCount > 0 ? (
             <p className="portal-card__hint">
-              Skupaj porabljenih žetonov:{" "}
+              Skupna poraba:{" "}
               <strong>
-                {savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0)}{" "}
-                {tokenWord(savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0))}
+                {tokenCountLabel(savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0))}
               </strong>
             </p>
           ) : null}

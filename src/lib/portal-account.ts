@@ -1,4 +1,5 @@
 import type { Credits } from "../types";
+import { tokenCountLabel } from "./ob-skodi-tokens";
 
 export function formatPeriodEnd(isoDate: string): string {
   const parsed = new Date(`${isoDate}T12:00:00`);
@@ -71,5 +72,6 @@ export function getPodpornikStatus(credits?: Credits | null): {
 }
 
 export function tokenBalanceLabel(credits?: Credits | null): string {
-  return credits?.credits_balance != null ? String(credits.credits_balance) : "—";
+  if (credits?.credits_balance == null) return "—";
+  return tokenCountLabel(credits.credits_balance);
 }

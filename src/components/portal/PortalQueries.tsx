@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
 import { TOKEN_USAGE_RULES } from "../../lib/pricing-offers";
-import { tokenWord } from "../../lib/ob-skodi-tokens";
+import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
 import { formatQueryExecutedAt } from "../../lib/saved-queries";
 import { PortalEmptyState } from "./PortalEmptyState";
 
@@ -42,7 +42,7 @@ export function PortalQueries() {
         if (err.status === 402) {
           setPdfErrors((prev) => ({
             ...prev,
-            [queryId]: "Za izdelavo PDF-poročila potrebujete 1 žeton.",
+            [queryId]: `Za izdelavo PDF-poročila potrebujete ${tokenCountLabel(1, "accusative")}.`,
           }));
         } else {
           alert(err.message || "PDF ni mogoče pripraviti.");
@@ -111,7 +111,7 @@ export function PortalQueries() {
                       <dd>
                         {q.tokens_spent === 0
                           ? "Brezplačno"
-                          : `${q.tokens_spent} ${tokenWord(q.tokens_spent)}`}
+                          : tokenCountLabel(q.tokens_spent)}
                       </dd>
                     </div>
                     <div>
@@ -150,7 +150,7 @@ export function PortalQueries() {
         <ul className="plan-features">
           {TOKEN_USAGE_RULES.map((r) => (
             <li key={r.daysLabel}>
-              {r.daysLabel}: <strong>{r.tokens}</strong> {tokenWord(r.tokens)}
+              {r.daysLabel}: <strong>{tokenCountLabel(r.tokens)}</strong>
             </li>
           ))}
           <li>

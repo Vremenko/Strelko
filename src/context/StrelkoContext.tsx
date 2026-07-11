@@ -28,6 +28,7 @@ import {
   writeSavedQueryIdToStorage,
 } from "../lib/saved-queries";
 import { parseInsufficientTokensDetail } from "../lib/query-billing";
+import { tokenCountLabel } from "../lib/ob-skodi-tokens";
 import type {
   AlertsSettings,
   ApiError,
@@ -936,7 +937,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           const err = e as ApiError;
           if (err.status === 402) {
-            setPdfDownloadError("Za izdelavo PDF-poročila potrebujete 1 žeton.");
+            setPdfDownloadError(
+              `Za izdelavo PDF-poročila potrebujete ${tokenCountLabel(1, "accusative")}.`
+            );
           } else {
             alert(err.message || "PDF ni na voljo.");
           }
