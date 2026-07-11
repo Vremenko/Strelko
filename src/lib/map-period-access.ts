@@ -67,6 +67,17 @@ const MAP_LOCK_PORTAL_CSS = `
   justify-content: center;
   gap: 0.5rem;
 }
+.strelko-map-lock-root .locked-content__actions--stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.6rem;
+  width: min(100%, 320px);
+  margin-inline: auto;
+}
+.strelko-map-lock-root .locked-content__actions--stacked .btn {
+  width: 100%;
+}
 .strelko-map-lock-root .locked-content__hint {
   margin: 0.75rem 0 0;
   font-size: 0.85rem;

@@ -1158,33 +1158,27 @@ label.field-labeled > span {
   color: var(--text);
 }
 
-.archive-locked-chart-panel .chart-wrap.tall {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  height: 360px;
-  min-height: 280px;
-  display: flex;
-  align-items: stretch;
-}
-
-.archive-locked-chart-panel__chart .archive-locked-charts__lock.locked-content {
-  flex: 1 1 auto;
+.locked-content-surface {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 0;
-  margin: 0;
-  padding: 1.25rem 1rem;
-  border: none;
-  border-radius: 0;
-  background: transparent;
+  box-sizing: border-box;
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: auto;
 }
 
-.archive-locked-chart-panel__chart .locked-content__inner {
-  max-width: 42rem;
-  text-align: center;
+.locked-content-surface--widget-embed {
+  min-height: 10.75rem;
+}
+
+.archive-locked-chart-panel .chart-wrap.tall.locked-content-surface {
+  position: relative;
+  min-width: 0;
+  height: 360px;
+  min-height: 280px;
 }
 
 @media (min-width: 640px) {
@@ -1226,6 +1220,19 @@ label.field-labeled > span {
   background: rgba(51, 51, 51, 0.55);
 }
 
+.locked-content.locked-content--inset,
+.locked-content.archive-map-locked {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-sizing: border-box;
+}
+
 .locked-content__inner {
   max-width: 42rem;
   text-align: center;
@@ -1259,6 +1266,19 @@ label.field-labeled > span {
   gap: 0.5rem;
 }
 
+.locked-content__actions--stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.6rem;
+  width: min(100%, 320px);
+  margin-inline: auto;
+}
+
+.locked-content__actions--stacked .btn {
+  width: 100%;
+}
+
 .locked-content__hint {
   margin: 0.75rem 0 0;
   font-size: 0.85rem;
@@ -1269,11 +1289,6 @@ label.field-labeled > span {
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-.widget-embed-locked {
-  margin-top: 0.35rem;
-  min-height: 180px;
 }
 
 @media (max-width: 639px) {

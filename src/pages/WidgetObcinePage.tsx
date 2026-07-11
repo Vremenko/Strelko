@@ -187,7 +187,9 @@ export function WidgetObcinePage() {
               </button>
             </>
           ) : (
-            <LockedContent mode="supporter" className="widget-embed-locked" />
+            <div className="locked-content-surface locked-content-surface--widget-embed">
+              <LockedContent mode="supporter" inset />
+            </div>
           )}
         </div>
       </div>

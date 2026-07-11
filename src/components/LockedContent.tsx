@@ -16,9 +16,11 @@ const SUPPORTER_TEXT =
 interface LockedContentProps {
   mode: LockedContentMode;
   className?: string;
+  /** Transparent centered content inside a dark `.locked-content-surface` pane. */
+  inset?: boolean;
 }
 
-export function LockedContent({ mode, className }: LockedContentProps) {
+export function LockedContent({ mode, className, inset }: LockedContentProps) {
   const { user, openAuth, openCredits, paymentsEnabled, setSelectedPlan, checkout } =
     useStrelko();
   const location = useLocation();
@@ -31,14 +33,6 @@ export function LockedContent({ mode, className }: LockedContentProps) {
     setSelectedPlan(planId);
     void checkout();
   }, [checkout, paymentsEnabled, setSelectedPlan]);
-
-  const choosePodpornik = useCallback(() => {
-    if (!paymentsEnabled) return;
-    const planId = checkoutPlanForTab("narocnina");
-    setAuthReturn(returnPath);
-    setCheckoutPlanId(planId);
-    openAuth("register");
-  }, [openAuth, paymentsEnabled, returnPath]);
 
   const login = useCallback(() => {
     setAuthReturn(returnPath);
@@ -60,8 +54,16 @@ export function LockedContent({ mode, className }: LockedContentProps) {
     ? "Za ogled potrebujete žeton."
     : "Za ogled se prijavite in kupite žetone.";
 
+  const rootClass = [
+    "locked-content",
+    inset ? "locked-content--inset" : "",
+    className ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`locked-content${className ? ` ${className}` : ""}`}>
+    <div className={rootClass}>
       <div className="locked-content__inner">
         <span className="locked-content__icon" aria-hidden="true">
           🔒
@@ -70,7 +72,11 @@ export function LockedContent({ mode, className }: LockedContentProps) {
           {isSupporter ? SUPPORTER_TITLE : tokenLead}
         </h3>
         {isSupporter ? <p className="locked-content__text">{SUPPORTER_TEXT}</p> : null}
-        <div className="locked-content__actions">
+        <div
+          className={`locked-content__actions${
+            isSupporter && !user ? " locked-content__actions--stacked" : ""
+          }`}
+        >
           {isSupporter ? (
             user ? (
               <button
@@ -84,18 +90,12 @@ export function LockedContent({ mode, className }: LockedContentProps) {
               </button>
             ) : (
               <>
-                <button type="button" className="btn btn-ghost" onClick={login}>
+                <button type="button" className="btn btn-primary" onClick={login}>
                   Prijava
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={choosePodpornik}
-                  disabled={!paymentsEnabled}
-                  aria-disabled={!paymentsEnabled}
-                >
-                  {paymentsEnabled ? "Izberi paket Podpornik" : "Naročnina bo kmalu na voljo"}
-                </button>
+                <Link to="/cenik" className="btn btn-ghost">
+                  Cenik
+                </Link>
               </>
             )
           ) : user ? (
@@ -113,11 +113,6 @@ export function LockedContent({ mode, className }: LockedContentProps) {
             </>
           )}
         </div>
-        {isSupporter && !paymentsEnabled ? (
-          <p className="locked-content__hint">
-            <Link to="/cenik">Več o paketu Podpornik</Link>
-          </p>
-        ) : null}
       </div>
     </div>
   );

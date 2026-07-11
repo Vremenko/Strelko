@@ -31,8 +31,8 @@ function ArchiveLockedChartPanel({ id, title }: { id: string; title: string }) {
           <h2 className="panel-head-title">{title}</h2>
         </div>
       </div>
-      <div className="chart-wrap tall archive-locked-chart-panel__chart">
-        <LockedContent mode="supporter" className="archive-locked-charts__lock" />
+      <div className="chart-wrap tall archive-locked-chart-panel__chart locked-content-surface">
+        <LockedContent mode="supporter" inset />
       </div>
     </section>
   );
