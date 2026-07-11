@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import { archiveEmbedUrl, archiveMapEmbedUrl } from "../lib/archive-embed";
 import {
@@ -7,7 +7,11 @@ import {
   initArchiveDaysOverlay,
   initArchiveEmbedTap,
 } from "../lib/archive-embed-interaction";
-import { isMapPeriodLocked, type MapPeriodMode } from "../lib/map-period-access";
+import {
+  attachMapPeriodGate,
+  getMapStageOverlayBox,
+  isMapPeriodLockedInIframe,
+} from "../lib/map-period-access";
 import { isPodpornikActive } from "../lib/portal-account";
 import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
 import { LockedContent } from "./LockedContent";
@@ -123,69 +127,6 @@ export function ArchiveChartEmbed({
   );
 }
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function ArchiveMapToolbar({
-  periodMode,
-  days,
-  mapDay,
-  onPeriodModeChange,
-  onDaysChange,
-  onMapDayChange,
-}: {
-  periodMode: MapPeriodMode;
-  days: number;
-  mapDay: string;
-  onPeriodModeChange: (mode: MapPeriodMode) => void;
-  onDaysChange: (days: number) => void;
-  onMapDayChange: (day: string) => void;
-}) {
-  const selectValue =
-    periodMode === "day" ? "pick" : String(days);
-
-  return (
-    <div className="archive-map-toolbar" role="toolbar" aria-label="Nastavitve zemljevida">
-      <label className="archive-map-toolbar__field" htmlFor="archive-map-period-select">
-        Obdobje
-      </label>
-      <select
-        id="archive-map-period-select"
-        className="archive-map-toolbar__select"
-        value={selectValue}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value === "pick") {
-            onPeriodModeChange("day");
-            onMapDayChange(mapDay || todayIso());
-            return;
-          }
-          onPeriodModeChange("range");
-          onDaysChange(parseInt(value, 10) || 7);
-        }}
-      >
-        <option value="1">Danes</option>
-        <option value="7">7 dni</option>
-        <option value="14">14 dni</option>
-        <option value="30">30 dni</option>
-        <option value="90">90 dni</option>
-        <option value="pick">Datum</option>
-      </select>
-      {periodMode === "day" ? (
-        <input
-          type="date"
-          className="archive-map-toolbar__date"
-          aria-label="Datum prikaza"
-          value={mapDay}
-          max={todayIso()}
-          onChange={(e) => onMapDayChange(e.target.value)}
-        />
-      ) : null}
-    </div>
-  );
-}
-
 function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
   const src = archiveMapEmbedUrl(30);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -277,18 +218,107 @@ function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
 }
 
 function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
-  const [periodMode, setPeriodMode] = useState<MapPeriodMode>("range");
-  const [days, setDays] = useState(7);
-  const [mapDay, setMapDay] = useState(todayIso());
+  const src = archiveMapEmbedUrl(7);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const detachGateRef = useRef<(() => void) | null>(null);
+  const mountedRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [overlayBox, setOverlayBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const mapHeight = window.matchMedia("(max-width:899px)").matches ? "480" : "560";
-  const locked = isMapPeriodLocked(days, periodMode);
-  const mapSrc =
-    !locked && periodMode === "range"
-      ? archiveMapEmbedUrl(days, { hideChrome: true })
-      : !locked && periodMode === "day" && mapDay
-        ? archiveMapEmbedUrl(1, { hideChrome: true, day: mapDay })
-        : null;
+
+  const updateOverlay = useCallback(() => {
+    const iframe = iframeRef.current;
+    const wrap = wrapRef.current;
+    if (!iframe || !wrap) return;
+    const lockedNow = iframe.contentDocument
+      ? isMapPeriodLockedInIframe(iframe.contentDocument)
+      : false;
+    setLocked(lockedNow);
+    if (!lockedNow) {
+      setOverlayBox(null);
+      return;
+    }
+    setOverlayBox(getMapStageOverlayBox(iframe, wrap));
+  }, []);
+
+  const ensureMounted = () => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+    setMounted(true);
+  };
+
+  const wirePeriodGate = useCallback(
+    (iframe: HTMLIFrameElement) => {
+      detachGateRef.current?.();
+      detachGateRef.current = attachMapPeriodGate(iframe, {
+        onLockedChange: () => updateOverlay(),
+        onLayoutChange: () => updateOverlay(),
+      });
+    },
+    [updateOverlay]
+  );
+
+  useEffect(() => {
+    if (mountedRef.current) return;
+
+    let cancelled = false;
+    let idleId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const run = () => {
+      if (cancelled || mountedRef.current) return;
+      ensureMounted();
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      idleId = requestIdleCallback(run, { timeout: 800 });
+    } else {
+      timeoutId = setTimeout(run, 800);
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleId !== undefined && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (visible) ensureMounted();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !mounted) return;
+    iframeRef.current?.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+  }, [visible, mounted]);
+
+  useEffect(() => {
+    updateOverlay();
+  }, [updateOverlay, mounted, visible]);
+
+  useEffect(() => {
+    const onResize = () => updateOverlay();
+    window.addEventListener("resize", onResize);
+    const onMessage = (ev: MessageEvent) => {
+      if (ev.data?.type === "strele-embed-resize") updateOverlay();
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [updateOverlay]);
+
+  useEffect(() => () => detachGateRef.current?.(), []);
 
   useLayoutEffect(() => {
     if (visible) {
@@ -296,45 +326,51 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
     }
   }, [visible]);
 
-  useEffect(() => {
-    if (!visible || locked || !mapSrc || !iframeRef.current) return;
-    iframeRef.current.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
-  }, [visible, locked, mapSrc]);
+  const notifyMapVisible = (iframe: HTMLIFrameElement) => {
+    iframe.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+    wirePeriodGate(iframe);
+    updateOverlay();
+  };
 
   return (
     <div
+      ref={wrapRef}
       className={`archive-map-wrap archive-map-wrap--gated${visible ? "" : " stat-panel--hidden"}`}
       id="archive-map-wrap"
+      data-map-src={src}
     >
-      <ArchiveMapToolbar
-        periodMode={periodMode}
-        days={days}
-        mapDay={mapDay}
-        onPeriodModeChange={setPeriodMode}
-        onDaysChange={setDays}
-        onMapDayChange={setMapDay}
-      />
-      <div className="archive-map-stage">
-        {locked ? (
+      {mounted ? (
+        <iframe
+          ref={iframeRef}
+          id="archive-map-iframe"
+          className="archive-map-iframe"
+          src={src}
+          title="Zemljevid strel po občinah — Slovenija"
+          width="100%"
+          height={mapHeight}
+          loading="eager"
+          scrolling="no"
+          style={{ overflow: "hidden" }}
+          onLoad={(e) => notifyMapVisible(e.currentTarget)}
+        />
+      ) : (
+        <p className="archive-charts-placeholder" aria-hidden="true">
+          Nalagam zemljevid …
+        </p>
+      )}
+      {locked && overlayBox ? (
+        <div
+          className="archive-map-lock-overlay"
+          style={{
+            top: overlayBox.top,
+            left: overlayBox.left,
+            width: overlayBox.width,
+            height: overlayBox.height,
+          }}
+        >
           <LockedContent mode="supporter" className="archive-map-locked" />
-        ) : mapSrc ? (
-          <iframe
-            ref={iframeRef}
-            id="archive-map-iframe"
-            className="archive-map-iframe"
-            src={mapSrc}
-            title="Zemljevid strel po občinah — Slovenija"
-            width="100%"
-            height={mapHeight}
-            loading="eager"
-            scrolling="no"
-            style={{ overflow: "hidden" }}
-            onLoad={(e) => {
-              e.currentTarget.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
-            }}
-          />
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }
