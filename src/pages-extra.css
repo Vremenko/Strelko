@@ -2510,7 +2510,24 @@ body.site-nav-open {
 }
 
 .portal-query-card__actions .pdf-download-panel {
-  flex: 1 1 12rem;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.portal-query-card__actions .pdf-download-panel--compact {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.portal-query-card__actions .pdf-download-panel--compact .btn {
+  white-space: normal;
+  text-align: center;
+}
+
+.portal-query-card__btn {
+  flex-shrink: 0;
 }
 
 .results-actions {
@@ -3190,7 +3207,26 @@ body.site-nav-open {
 .portal-query-card__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.portal-queries-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.portal-queries-pagination__status {
+  font-size: 0.88rem;
+  color: var(--muted);
+  min-width: 8.5rem;
+  text-align: center;
 }
 
 .portal-queries-list {

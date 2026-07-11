@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
@@ -10,6 +10,8 @@ import { PortalEmptyState } from "./PortalEmptyState";
 function formatPeriod(from: string, to: string): string {
   return `${from} – ${to}`;
 }
+
+const QUERIES_PER_PAGE = 5;
 
 export function PortalQueries() {
   const {
@@ -23,6 +25,27 @@ export function PortalQueries() {
   } = useStrelko();
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
   const [pdfErrors, setPdfErrors] = useState<Record<string, string | null>>({});
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    setPage(0);
+  }, [savedQueries.length]);
+
+  const totalPages = Math.max(1, Math.ceil(savedQueries.length / QUERIES_PER_PAGE));
+  const safePage = Math.min(page, totalPages - 1);
+
+  useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
+
+  const pageQueries = useMemo(
+    () =>
+      savedQueries.slice(
+        safePage * QUERIES_PER_PAGE,
+        safePage * QUERIES_PER_PAGE + QUERIES_PER_PAGE
+      ),
+    [savedQueries, safePage]
+  );
 
   const onOpen = useCallback(
     (queryId: string) => {
@@ -86,7 +109,7 @@ export function PortalQueries() {
           </PortalEmptyState>
         ) : (
           <div className="portal-queries-list">
-            {savedQueries.map((q) => {
+            {pageQueries.map((q) => {
               const locationLabel = q.label?.trim() || `${q.lat.toFixed(4)}, ${q.lon.toFixed(4)}`;
               const pdfBusy = pdfBusyId === q.id;
               return (
@@ -122,7 +145,7 @@ export function PortalQueries() {
                   <div className="portal-query-card__actions">
                     <button
                       type="button"
-                      className="btn btn-primary btn-sm"
+                      className="btn btn-ghost btn-sm portal-query-card__btn"
                       onClick={() => onOpen(q.id)}
                     >
                       Odpri
@@ -131,7 +154,6 @@ export function PortalQueries() {
                       compact
                       pdfTokensCost={q.pdf_tokens_cost}
                       pdfButtonLabel={q.pdf_button_label}
-                      pdfCostHint={q.pdf_cost_hint}
                       creditsBalance={creditsBalance}
                       downloading={pdfBusy}
                       onDownload={() => void onPdf(q.id)}
@@ -141,6 +163,29 @@ export function PortalQueries() {
                 </article>
               );
             })}
+            {savedQueries.length > QUERIES_PER_PAGE ? (
+              <nav className="portal-queries-pagination" aria-label="Strani poizvedb">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  disabled={safePage === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  Prejšnja
+                </button>
+                <span className="portal-queries-pagination__status">
+                  Stran {safePage + 1} od {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  disabled={safePage >= totalPages - 1}
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                >
+                  Naslednja
+                </button>
+              </nav>
+            ) : null}
           </div>
         )}
       </article>
