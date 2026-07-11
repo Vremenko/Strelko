@@ -733,6 +733,22 @@ label.field-labeled > span {
   word-break: break-word;
 }
 
+.stat-value-locked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: clamp(1rem, 3.5vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.stat-value-locked__icon {
+  font-size: 1em;
+  line-height: 1;
+}
+
 .results-hourly-panel.panel {
   margin-top: 1rem;
   padding: 0.9rem 0.85rem 1rem;

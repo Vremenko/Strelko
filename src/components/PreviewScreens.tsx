@@ -1,10 +1,20 @@
 import { Link } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
-import { formatSlDecimal } from "../lib/dates";
 import { portalTabPath } from "../lib/auth-intent";
 import { previewInsufficientTokensNotice } from "../lib/query-billing";
 import { formatPlaceName } from "../lib/utils";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
+
+function LockedStatValue() {
+  return (
+    <span className="stat-value-locked">
+      <span className="stat-value-locked__icon" aria-hidden="true">
+        🔒
+      </span>
+      <span className="stat-value-locked__text">Zaklenjeno</span>
+    </span>
+  );
+}
 
 const FAKE_ROWS = Array.from({ length: 6 }, (_, i) => (
   <tr key={i}>
@@ -117,8 +127,6 @@ export function PreviewTeaser() {
 
   const limitedPreview = Boolean(previewTokenNotice);
   const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
-  const nearest =
-    preview.nearest_km != null ? `${formatSlDecimal(preview.nearest_km)} km` : "—";
   const periodLabel = formatResultsPeriodLabel(searchRadiusKm, preview);
 
   return (
@@ -141,7 +149,7 @@ export function PreviewTeaser() {
         items={[
           { label: "Št. strel", value: preview.total_strikes ?? 0 },
           { label: "Št. dni s strelami", value: preview.days_with_strikes ?? 0 },
-          { label: "Najbližja strela", value: nearest },
+          { label: "Najbližja strela", value: <LockedStatValue /> },
         ]}
       />
       <p className="preview-teaser-hint">
