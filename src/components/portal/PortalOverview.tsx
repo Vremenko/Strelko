@@ -8,7 +8,7 @@ import {
 import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
 
 export function PortalOverview() {
-  const { credits, savedQueries, savedQueriesLoading } = useStrelko();
+  const { credits, savedQueries, savedQueriesLoading, openBillingPortal } = useStrelko();
 
   const tokenBalance = tokenBalanceLabel(credits);
   const podpornik = getPodpornikStatus(credits);
@@ -27,35 +27,52 @@ export function PortalOverview() {
   return (
     <div className="portal-panel">
       <div className="portal-overview-grid">
-        <article className="portal-card">
-          <h2 className="portal-card__title">Žetoni</h2>
-          <p className="portal-card__value">{tokenBalance}</p>
-          <p className="portal-card__hint">
-            Kupljeni žetoni ne potečejo in ostanejo na vašem računu, dokler jih ne porabite.
-          </p>
+        <article className="portal-card portal-card--overview">
+          <div className="portal-card__overview-main">
+            <h2 className="portal-card__title">Žetoni</h2>
+            <p className="portal-card__value">{tokenBalance}</p>
+            <p className="portal-card__hint">
+              Kupljeni žetoni ne potečejo in ostanejo na vašem računu, dokler jih ne porabite.
+            </p>
+          </div>
           <p className="portal-card__footer-link">
             <Link to="/cenik">Kupite dodatne žetone</Link>
           </p>
         </article>
 
-        <article className="portal-card">
-          <h2 className="portal-card__title">Podpornik</h2>
-          <p className="portal-card__value portal-card__value--text">{podpornik.label}</p>
-          <p className="portal-card__hint">{podpornik.hint}</p>
-        </article>
-
-        <article className="portal-card">
-          <h2 className="portal-card__title">Poizvedbe</h2>
-          <p className="portal-card__value portal-card__value--text">{queriesValue}</p>
-          <p className="portal-card__hint">{queriesHint}</p>
-          {queryCount > 0 ? (
-            <p className="portal-card__hint">
-              Skupna poraba:{" "}
-              <strong>
-                {tokenCountLabel(savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0))}
-              </strong>
+        <article className="portal-card portal-card--overview">
+          <div className="portal-card__overview-main">
+            <h2 className="portal-card__title">Podpornik</h2>
+            <p className="portal-card__value portal-card__value--text">{podpornik.label}</p>
+            {podpornik.hint ? <p className="portal-card__hint">{podpornik.hint}</p> : null}
+          </div>
+          {podpornik.canCancel ? (
+            <p className="portal-card__footer-link">
+              <button
+                type="button"
+                className="btn-link"
+                onClick={() => void openBillingPortal()}
+              >
+                Prekliči naročnino
+              </button>
             </p>
           ) : null}
+        </article>
+
+        <article className="portal-card portal-card--overview">
+          <div className="portal-card__overview-main">
+            <h2 className="portal-card__title">Poizvedbe</h2>
+            <p className="portal-card__value portal-card__value--text">{queriesValue}</p>
+            <p className="portal-card__hint">{queriesHint}</p>
+            {queryCount > 0 ? (
+              <p className="portal-card__hint">
+                Skupna poraba:{" "}
+                <strong>
+                  {tokenCountLabel(savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0))}
+                </strong>
+              </p>
+            ) : null}
+          </div>
           <p className="portal-card__footer-link">
             <Link to={portalTabPath("poizvedbe")}>Odpri poizvedbe</Link>
           </p>

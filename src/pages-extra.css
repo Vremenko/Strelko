@@ -3787,10 +3787,32 @@ body.site-nav-open {
   color: var(--blue);
 }
 
+.portal-card--overview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.portal-card__overview-main {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.portal-card--overview .portal-card__footer-link {
+  margin-top: auto;
+  padding-top: 0.85rem;
+}
+
+.portal-card--overview .portal-card__footer-link .btn-link {
+  color: var(--blue);
+  font-size: inherit;
+}
+
 .portal-overview-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: clamp(1rem, 0.75rem + 0.75vw, 1.35rem);
+  align-items: stretch;
 }
 
 @media (min-width: 720px) {

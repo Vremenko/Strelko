@@ -27,40 +27,40 @@ export function getPodpornikStatus(credits?: Credits | null): {
   active: boolean;
   label: string;
   hint: string;
+  canCancel: boolean;
 } {
   if (!isPodpornikActive(credits)) {
     return {
       active: false,
       label: "Ni aktiven",
       hint: "Podpornik omogoča polni arhiv, napredne statistike in widget.",
+      canCancel: false,
     };
   }
 
   const cancelScheduled = Boolean(credits?.subscription_cancel_at_period_end);
+  /** Datum poteka iz API (30-dnevno obdobje določa backend ob plačilu/podaljšanju). */
   const periodEnd = credits?.subscription_current_period_end;
   const seasonEnd = credits?.season_pass_expires_at;
+  const expiryRaw = periodEnd || seasonEnd;
+  const expiryFormatted = expiryRaw ? formatPeriodEnd(expiryRaw) : null;
+  const canCancel = Boolean(credits?.billing_portal_available) && !cancelScheduled;
 
-  if (cancelScheduled && periodEnd) {
+  if (cancelScheduled && expiryFormatted) {
     return {
       active: true,
-      label: "Aktiven",
-      hint: `Preklicana, aktivna do ${formatPeriodEnd(periodEnd)}`,
+      label: `Velja do ${expiryFormatted}`,
+      hint: "Naročnina je preklicana.",
+      canCancel: false,
     };
   }
 
-  if (periodEnd) {
+  if (expiryFormatted) {
     return {
       active: true,
-      label: "Aktiven",
-      hint: `Velja do ${formatPeriodEnd(periodEnd)}`,
-    };
-  }
-
-  if (seasonEnd) {
-    return {
-      active: true,
-      label: "Aktiven",
-      hint: `Velja do ${formatPeriodEnd(seasonEnd)}`,
+      label: `Velja do ${expiryFormatted}`,
+      hint: "",
+      canCancel,
     };
   }
 
@@ -68,6 +68,7 @@ export function getPodpornikStatus(credits?: Credits | null): {
     active: true,
     label: "Aktiven",
     hint: "Aktivna naročnina Podpornik",
+    canCancel,
   };
 }
 
