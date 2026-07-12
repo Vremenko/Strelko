@@ -4181,6 +4181,10 @@ body.site-nav-open {
   cursor: not-allowed;
 }
 
+.portal-pagination__status {
+  display: none;
+}
+
 .portal-pagination__pages {
   display: flex;
   flex-wrap: wrap;
@@ -4224,6 +4228,36 @@ body.site-nav-open {
   font-size: 0.88rem;
   line-height: 1.35;
   user-select: none;
+}
+
+@media (max-width: 719px) {
+  .portal-queries-pagination {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem 0.5rem;
+    justify-items: stretch;
+  }
+
+  .portal-pagination__pages {
+    display: none;
+  }
+
+  .portal-pagination__status {
+    display: block;
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 0.1rem 0;
+    text-align: center;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .portal-pagination__nav {
+    width: 100%;
+    padding: 0.35rem 0.25rem;
+    text-align: center;
+  }
 }
 
 .portal-queries-list-wrap {

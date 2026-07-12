@@ -35,6 +35,9 @@ export function PortalQueriesPagination({
       >
         ‹ Nazaj
       </button>
+      <span className="portal-pagination__status" aria-live="polite">
+        Stran {currentPage + 1} od {totalPages}
+      </span>
       <ol className="portal-pagination__pages">
         {items.map((item, index) =>
           item.type === "ellipsis" ? (
