@@ -14,11 +14,10 @@ import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./Results
 
 function LockedStatValue() {
   return (
-    <span className="stat-value-locked">
+    <span className="stat-value-locked" aria-label="Zaklenjeno">
       <span className="stat-value-locked__icon" aria-hidden="true">
         🔒
       </span>
-      <span className="stat-value-locked__text">Zaklenjeno</span>
     </span>
   );
 }
