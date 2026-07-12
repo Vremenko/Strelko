@@ -5,8 +5,8 @@ import { useStrelko } from "../context/StrelkoContext";
 import { portalTabPath } from "../lib/auth-intent";
 import { isValidGeocodePlace } from "../lib/geocode";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
-import { previewInsufficientTokensNotice } from "../lib/query-billing";
-import { clampSearchRange } from "../lib/search-dates";
+import { previewInsufficientTokensNotice, previewUnlockTokenRequirementMessage } from "../lib/query-billing";
+import { clampSearchRange, queryTokenCost } from "../lib/search-dates";
 import { resultLocationTitle } from "../lib/pick-location-map";
 import { formatPlaceName } from "../lib/utils";
 import type { InsufficientTokensDetail, QueryQuoteOut } from "../types";
@@ -155,10 +155,17 @@ function PreviewUnlockBlock({
   onUnlock: () => void;
   unlockBusy: boolean;
 }) {
-  const { user, previewTokenNotice } = useStrelko();
+  const { user, previewTokenNotice, searchDateFrom, searchDateTo } = useStrelko();
   const loggedIn = Boolean(user);
   const { quote, quoteLoading, requiredTokens, canUnlock, needsTokens, availableTokens } =
     usePreviewUnlockQuote(loggedIn, previewTokenNotice);
+  const searchRange = clampSearchRange({
+    from: searchDateFrom,
+    to: searchDateTo,
+  });
+  const periodTokenCost = queryTokenCost(searchRange.from, searchRange.to);
+  const unlockTokenCost =
+    loggedIn && !quoteLoading && requiredTokens > 0 ? requiredTokens : periodTokenCost;
 
   let notice: ReactNode = null;
   let actions: ReactNode = null;
@@ -224,6 +231,11 @@ function PreviewUnlockBlock({
       <PreviewUnlockBackdrop />
       <div className="preview-blur-cta">
         <h4>Odklenite celoten pregled</h4>
+        {unlockTokenCost > 0 ? (
+          <p className="preview-blur-token-cost">
+            {previewUnlockTokenRequirementMessage(unlockTokenCost)}
+          </p>
+        ) : null}
         <p>{PREVIEW_UNLOCK_INTRO}</p>
         <ul className="preview-blur-perks">
           {PREVIEW_UNLOCK_PERKS.map((item) => (

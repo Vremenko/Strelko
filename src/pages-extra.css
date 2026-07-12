@@ -649,6 +649,11 @@ label.field-labeled > span {
   line-height: 1.5;
 }
 
+.preview-blur-token-cost {
+  font-weight: 600;
+  color: var(--text);
+}
+
 .preview-blur-perks {
   margin: 0 0 1rem;
   padding: 0;

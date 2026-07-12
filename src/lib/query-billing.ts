@@ -53,6 +53,10 @@ export function previewInsufficientTokensNotice(required: number, available: num
   return `Za celoten pregled potrebujete ${tokenCountLabel(required, "accusative")}, na voljo pa imate ${tokenCountLabel(available)}. Zato je prikazan osnovni predogled.`;
 }
 
+export function previewUnlockTokenRequirementMessage(requiredTokens: number): string {
+  return `Za odklep tega pregleda potrebujete ${tokenCountLabel(requiredTokens, "accusative")}.`;
+}
+
 export function pdfDownloadDisabled(pdfTokensCost: number, available: number): boolean {
   return pdfTokensCost > 0 && available < pdfTokensCost;
 }
