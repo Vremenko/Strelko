@@ -2,7 +2,7 @@ import type { GeocodeResult } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 const SUGGEST_MIN_LENGTH = 3;
-const SUGGEST_LIMIT = 10;
+const SUGGEST_LIMIT = 50;
 
 /** Končna hišna številka na prvem delu naslova (pred vejico). */
 const HOUSE_NUMBER_SUFFIX =
