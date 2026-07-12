@@ -1,6 +1,7 @@
 import Chart from "chart.js/auto";
 
 const HOURLY_Y_MAX = 300;
+const HOURLY_Y_MIN_AUTO = 50;
 const fmt = new Intl.NumberFormat("sl-SI");
 
 let hourlyChartInstance: Chart | null = null;
@@ -24,6 +25,7 @@ function hourIntervalLabel(ura: number) {
 
 function hourlyYMax(values: number[]) {
   const peak = values.length ? Math.max(...values) : 0;
+  if (peak < HOURLY_Y_MIN_AUTO) return HOURLY_Y_MIN_AUTO;
   if (peak <= HOURLY_Y_MAX) return HOURLY_Y_MAX;
   return Math.ceil((peak * 1.08) / 100) * 100;
 }
