@@ -67,7 +67,7 @@ export const PRICING_PODPORNIST: PricingOffer = {
 export const CENIK_PODPORNIST_PRICE_EX_VAT = "(3,69 € brez DDV)";
 
 export const CENIK_PODPORNIST_DESCRIPTION =
-  "Z aktivacijo paketa Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov ter nadaljnjem izboljševanju Strelka.";
+  "S paketom Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov ter nadaljnjem izboljševanju Strelka.";
 
 export const CENIK_PODPORNIST_FEATURES = [
   "Celoten arhiv strel po dnevih, urah, statističnih regijah in občinah",
