@@ -3787,54 +3787,140 @@ body.site-nav-open {
   color: var(--blue);
 }
 
-.portal-card--overview {
+.portal-overview-section__title {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.portal-overview-section + .portal-overview-section {
+  margin-top: clamp(1.5rem, 1rem + 1vw, 2rem);
+  padding-top: clamp(1.25rem, 1rem + 0.75vw, 1.75rem);
+  border-top: 1px solid var(--border);
+}
+
+.portal-services-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 0.75rem + 0.75vw, 1.35rem);
+  align-items: stretch;
+}
+
+@media (min-width: 720px) {
+  .portal-services-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.portal-card--service {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.portal-card__overview-main {
+.portal-card__service-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.portal-card__service-body {
   flex: 1 1 auto;
   min-height: 0;
+  margin-top: 0.35rem;
 }
 
-.portal-card--overview .portal-card__title {
-  font-size: 1.15rem;
-  font-weight: 700;
+.portal-card__service-footer {
+  margin-top: auto;
+  padding-top: 0.85rem;
 }
 
-.portal-card--overview .portal-card__value {
-  margin-top: 0;
-  font-size: clamp(1.15rem, 1.05rem + 0.35vw, 1.45rem);
+.portal-card__status-title {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
   color: var(--text);
+}
+
+.portal-overview-stat {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.75rem, 1.5rem + 0.5vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--accent);
   overflow-wrap: break-word;
   hyphens: auto;
 }
 
-.portal-card--overview .portal-card__value--accent {
-  color: var(--accent);
+.portal-overview-stat-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
-.portal-card--overview .portal-card__hint {
+.portal-card--service .portal-card__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.portal-card--service .portal-card__hint {
   margin: 0.5rem 0 0;
   font-size: 0.9rem;
   line-height: 1.55;
   color: var(--muted);
 }
 
-.portal-card__overview-footer {
-  margin-top: auto;
-  padding-top: 0.85rem;
-}
-
-.portal-card--overview .portal-card__footer-link {
+.portal-card--service .portal-card__footer-link {
   margin: 0;
   font-size: 0.9rem;
 }
 
-.portal-card--overview .portal-card__footer-link a {
+.portal-card--service .portal-card__footer-link a {
+  color: var(--blue);
+}
+
+.portal-card__cancel-notice {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.portal-card--usage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.portal-card--usage__main {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.portal-card--usage__action {
+  flex: 0 0 auto;
+}
+
+.portal-card--usage .portal-card__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.portal-card--usage .portal-card__footer-link {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.portal-card--usage .portal-card__footer-link a {
   color: var(--blue);
 }
 
@@ -3854,17 +3940,13 @@ body.site-nav-open {
   outline-offset: 2px;
 }
 
-.portal-overview-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(1rem, 0.75rem + 0.75vw, 1.35rem);
-  align-items: stretch;
+.portal-quick-actions .btn-primary {
+  box-shadow: none;
 }
 
-@media (min-width: 720px) {
-  .portal-overview-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.portal-quick-actions .btn-primary:hover,
+.portal-quick-actions .btn-primary:focus-visible {
+  box-shadow: none;
 }
 
 .portal-narocnina-grid {

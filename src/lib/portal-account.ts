@@ -11,6 +11,31 @@ export function formatPeriodEnd(isoDate: string): string {
   });
 }
 
+const SL_MONTHS_GENITIVE = [
+  "januarja",
+  "februarja",
+  "marca",
+  "aprila",
+  "maja",
+  "junija",
+  "julija",
+  "avgusta",
+  "septembra",
+  "oktobra",
+  "novembra",
+  "decembra",
+] as const;
+
+/** npr. 31. oktobra 2026 — za prikaz veljavnosti paketa Podpornik. */
+export function formatPeriodEndGenitive(isoDate: string): string {
+  const parsed = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return isoDate;
+  const day = parsed.getDate();
+  const month = SL_MONTHS_GENITIVE[parsed.getMonth()];
+  const year = parsed.getFullYear();
+  return `${day}. ${month} ${year}`;
+}
+
 /** Ali je naročnina Podpornik aktivna (neodvisno od žetonov Ob škodi). */
 export function isPodpornikActive(credits?: Credits | null): boolean {
   if (!credits || credits.plan_id !== "podpornik") return false;
@@ -23,52 +48,36 @@ export function isPodpornikActive(credits?: Credits | null): boolean {
   return false;
 }
 
-export function getPodpornikStatus(credits?: Credits | null): {
+export function getPodpornikOverview(credits?: Credits | null): {
   active: boolean;
-  label: string;
-  hint: string;
+  cancelScheduled: boolean;
   canCancel: boolean;
+  expiryLabel: string | null;
+  cancelNotice: string | null;
 } {
   if (!isPodpornikActive(credits)) {
     return {
       active: false,
-      label: "Ni aktiven",
-      hint: "Podpornik omogoča polni arhiv, napredne statistike in widget.",
+      cancelScheduled: false,
       canCancel: false,
+      expiryLabel: null,
+      cancelNotice: null,
     };
   }
 
   const cancelScheduled = Boolean(credits?.subscription_cancel_at_period_end);
-  /** Datum poteka iz API (30-dnevno obdobje določa backend ob plačilu/podaljšanju). */
   const periodEnd = credits?.subscription_current_period_end;
   const seasonEnd = credits?.season_pass_expires_at;
   const expiryRaw = periodEnd || seasonEnd;
-  const expiryFormatted = expiryRaw ? formatPeriodEnd(expiryRaw) : null;
+  const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
   const canCancel = Boolean(credits?.billing_portal_available) && !cancelScheduled;
-
-  if (cancelScheduled && expiryFormatted) {
-    return {
-      active: true,
-      label: `Velja do ${expiryFormatted}`,
-      hint: "Naročnina je preklicana.",
-      canCancel: false,
-    };
-  }
-
-  if (expiryFormatted) {
-    return {
-      active: true,
-      label: `Velja do ${expiryFormatted}`,
-      hint: "",
-      canCancel,
-    };
-  }
 
   return {
     active: true,
-    label: "Aktiven",
-    hint: "Aktivna naročnina Podpornik",
+    cancelScheduled,
     canCancel,
+    expiryLabel: expiryFormatted ? `Velja do ${expiryFormatted}` : null,
+    cancelNotice: cancelScheduled ? "Naročnina se ne podaljša samodejno." : null,
   };
 }
 
