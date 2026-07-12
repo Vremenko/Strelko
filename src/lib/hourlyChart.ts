@@ -2,6 +2,7 @@ import Chart from "chart.js/auto";
 
 const HOURLY_Y_MAX = 300;
 const HOURLY_Y_MIN_AUTO = 50;
+const HOURLY_Y_TICK_COUNT = 6;
 const fmt = new Intl.NumberFormat("sl-SI");
 
 let hourlyChartInstance: Chart | null = null;
@@ -23,11 +24,48 @@ function hourIntervalLabel(ura: number) {
   return `${formatHour(ura)} - ${end}`;
 }
 
-function hourlyYMax(values: number[]) {
-  const peak = values.length ? Math.max(...values) : 0;
-  if (peak < HOURLY_Y_MIN_AUTO) return HOURLY_Y_MIN_AUTO;
-  if (peak <= HOURLY_Y_MAX) return HOURLY_Y_MAX;
-  return Math.ceil((peak * 1.08) / 100) * 100;
+/** Zaokroži korak na „lep“ interval (1, 2, 5 × potenca 10). */
+function niceStep(roughStep: number): number {
+  if (!Number.isFinite(roughStep) || roughStep <= 0) return 1;
+  const exp = Math.floor(Math.log10(roughStep));
+  const f = roughStep / 10 ** exp;
+  const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+  return nf * 10 ** exp;
+}
+
+/** Enakomerna Y os: yMin=0, lepo zaokrožen yMax in fiksen tickStep. */
+function computeHourlyYAxis(values: number[]): {
+  yMin: number;
+  yMax: number;
+  tickStep: number;
+} {
+  const peak = values.length ? Math.max(0, ...values) : 0;
+  const yMin = 0;
+
+  if (peak < HOURLY_Y_MIN_AUTO) {
+    return { yMin, yMax: HOURLY_Y_MIN_AUTO, tickStep: 10 };
+  }
+
+  if (peak <= HOURLY_Y_MAX) {
+    return { yMin, yMax: HOURLY_Y_MAX, tickStep: HOURLY_Y_MAX / HOURLY_Y_TICK_COUNT };
+  }
+
+  const paddedPeak = peak * 1.08;
+  for (const tickCount of [HOURLY_Y_TICK_COUNT, HOURLY_Y_TICK_COUNT - 1]) {
+    const tickStep = niceStep(paddedPeak / tickCount);
+    const yMax = tickStep * tickCount;
+    if (yMax >= paddedPeak) {
+      return { yMin, yMax, tickStep };
+    }
+  }
+
+  let tickStep = niceStep(paddedPeak / HOURLY_Y_TICK_COUNT);
+  let yMax = tickStep * HOURLY_Y_TICK_COUNT;
+  while (yMax < paddedPeak) {
+    tickStep = niceStep(tickStep * 1.5);
+    yMax = tickStep * HOURLY_Y_TICK_COUNT;
+  }
+  return { yMin, yMax, tickStep };
 }
 
 function applyChartTheme() {
@@ -74,6 +112,7 @@ export function mountHourlyChart({
   const data = normalizeHours(hours);
   const values = data.map((d) => d.count);
   const mobile = isMobile();
+  const yAxis = computeHourlyYAxis(values);
 
   if (wrapEl) wrapEl.style.height = mobile ? "210px" : "240px";
 
@@ -115,11 +154,16 @@ export function mountHourlyChart({
       },
       scales: {
         y: {
-          min: 0,
-          max: hourlyYMax(values),
+          min: yAxis.yMin,
+          max: yAxis.yMax,
           beginAtZero: true,
           grid: { color: "#4d4d4d" },
-          ticks: { precision: 0, font: { size: mobile ? 10 : 12 }, color: "#999999" },
+          ticks: {
+            stepSize: yAxis.tickStep,
+            precision: 0,
+            font: { size: mobile ? 10 : 12 },
+            color: "#999999",
+          },
         },
         x: {
           grid: { color: "#333333" },
