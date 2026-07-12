@@ -1,11 +1,17 @@
 import { Link } from "react-router-dom";
-import { COMPANY, DISCLAIMER_TEXT, LEGAL_PAGES } from "../../lib/legal";
+import { COMPANY, DISCLAIMER_TEXT, LEGAL_PAGES, type LegalPageId } from "../../lib/legal";
+
+const FOOTER_LEGAL_LABELS: Partial<Record<LegalPageId, string>> = {
+  terms: "Pogoji uporabe",
+  privacy: "Zasebnost",
+  cookies: "Piškotki",
+};
 
 export function Footer() {
   const year = new Date().getFullYear();
   const legalLinks = Object.entries(LEGAL_PAGES).map(([id, page]) => (
     <Link key={id} to={page.path}>
-      {page.title}
+      {FOOTER_LEGAL_LABELS[id as LegalPageId] ?? page.title}
     </Link>
   ));
 
@@ -41,7 +47,7 @@ export function Footer() {
         <nav className="legal-footer-nav" aria-label="Pravne informacije">
           {legalLinks}
           <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
-            Politika zasebnosti Meteoinfo
+            Zasebnost Meteoinfo
           </a>
         </nav>
       </div>
