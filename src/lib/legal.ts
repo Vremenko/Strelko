@@ -31,7 +31,7 @@ export const LEGAL_PAGES = {
         body: `
           <p><strong>${COMPANY.legalName}</strong></p>
           <p>Kratka firma: ${COMPANY.shortName}</p>
-          <p>Sedež in poslovni naslov: ${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
+          <p>Sedež: ${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
           <p>Podjetje zastopata: Amadej Krepek in Rok Nosan</p>
           <ul>
             <li>Matična številka: ${COMPANY.matična}</li>
