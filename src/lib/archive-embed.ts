@@ -32,7 +32,7 @@ export function archiveMapEmbedUrl(
   const params = new URLSearchParams({
     api: "/arhiv",
     refresh_sec: "600",
-    v: "7",
+    v: "8",
   });
   if (opts?.day) {
     params.set("day", opts.day);
