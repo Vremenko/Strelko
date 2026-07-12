@@ -64,24 +64,29 @@ export const PRICING_PODPORNIST: PricingOffer = {
   ],
 };
 
-export const CENIK_PODPORNIST_DESCRIPTION =
-  "Za uporabnike, ki želijo redno spremljati strele in uporabljati dodatne prikaze ter orodja Strelka.";
+export const CENIK_PODPORNIST_PRICE_EX_VAT = "(3,69 € brez DDV)";
 
-export const CENIK_PODPORNIST_FOOTER =
-  "Z naročnino hkrati podprete nadaljnji razvoj Strelka ter novih meteoroloških aplikacij in produktov Meteoinfa.";
+export const CENIK_PODPORNIST_DESCRIPTION =
+  "S paketom Podpornik pridobite dostop do dodatnih prikazov in orodij, hkrati pa podprete nadaljnji razvoj Strelka ter novih meteoroloških aplikacij in produktov Meteoinfa.";
+
+export const CENIK_PODPORNIST_FEATURES = [
+  "Celoten arhiv strel po dnevih, urah, statističnih regijah in občinah",
+  "Napredni statistični prikazi",
+  "Widget za spletno stran",
+] as const;
 
 export const CENIK_PODPORNIST_DISCLAIMER =
-  "Paket Podpornik ne vključuje žetonov ali PDF-poročil za zavarovalnico.";
+  "Žetoni za preverjanje udarov strel ob škodnem dogodku in izdelavo PDF-poročila niso vključeni v naročnino Podpornik, zato jih je treba kupiti posebej.";
 
 export const CENIK_ZETONI_DESCRIPTION =
-  "Za posamezna preverjanja udarov strel in izdelavo PDF-poročila za zavarovalnico.";
+  "Za preverjanje udarov strel pri škodnem dogodku in izdelavo PDF-poročila kot pomoč pri uveljavljanju škode pri zavarovalnici.";
 
 export const CENIK_ZETONI_FEATURES = [
-  "Pregled udarov za izbrano lokacijo, radij in obdobje",
-  "Prikaz udarov na zemljevidu",
-  "Pregled rezultatov in najbližjih zaznanih udarov",
+  "Prikaz udarov strel v okolici izbrane lokacije",
+  "Izbira obdobja in radija iskanja",
+  "Interaktivni zemljevid zaznanih udarov",
+  "Datum, čas in oddaljenost posameznega udara",
   "Izdelava PDF-poročila",
-  "Žetoni ne potečejo",
 ] as const;
 
 export const PRICING_OFFERS: PricingOffer[] = [PRICING_OB_SKODI, PRICING_PODPORNIST];

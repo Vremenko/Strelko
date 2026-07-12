@@ -13,7 +13,8 @@ import { isObSkodiPurchaseAllowed } from "../lib/ob-skodi-tokens";
 import {
   CENIK_PODPORNIST_DESCRIPTION,
   CENIK_PODPORNIST_DISCLAIMER,
-  CENIK_PODPORNIST_FOOTER,
+  CENIK_PODPORNIST_FEATURES,
+  CENIK_PODPORNIST_PRICE_EX_VAT,
   CENIK_ZETONI_DESCRIPTION,
   PRICING_PODPORNIST,
 } from "../lib/pricing-offers";
@@ -76,8 +77,10 @@ export function CenikPage() {
           <PricingPlanCard
             offer={PRICING_PODPORNIST}
             description={CENIK_PODPORNIST_DESCRIPTION}
-            footerNote={CENIK_PODPORNIST_FOOTER}
+            features={CENIK_PODPORNIST_FEATURES}
             disclaimer={CENIK_PODPORNIST_DISCLAIMER}
+            hidePriceLabel
+            priceExVat={CENIK_PODPORNIST_PRICE_EX_VAT}
           >
             <button
               type="button"

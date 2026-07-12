@@ -76,10 +76,11 @@ export function ObSkodiTokenPurchase({
         <span className="pricing-plan-card__amount">{OB_SKODI_PER_TOKEN_GROSS_LABEL}</span>
         <span className="pricing-plan-card__period">na žeton</span>
       </p>
-      <p className="pricing-plan-card__label">DDV je vključen</p>
+      {!isCenik ? <p className="pricing-plan-card__label">DDV je vključen</p> : null}
       <p className="pricing-plan-card__ex-vat">
-        {isCenik ? OB_SKODI_PER_TOKEN_NET_APPROX_LABEL : `približno ${OB_SKODI_PER_TOKEN_NET_APPROX_LABEL}`}{" "}
-        brez DDV
+        {isCenik
+          ? `(${OB_SKODI_PER_TOKEN_NET_APPROX_LABEL} brez DDV)`
+          : `približno ${OB_SKODI_PER_TOKEN_NET_APPROX_LABEL} brez DDV`}
       </p>
 
       {isCenik ? (

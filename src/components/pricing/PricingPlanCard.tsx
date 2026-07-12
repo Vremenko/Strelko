@@ -3,18 +3,26 @@ import type { PricingOffer } from "../../lib/pricing-offers";
 interface PricingPlanCardProps {
   offer: PricingOffer;
   description?: string;
+  features?: readonly string[];
   footerNote?: string;
   disclaimer?: string;
+  hidePriceLabel?: boolean;
+  priceExVat?: string;
   children?: React.ReactNode;
 }
 
 export function PricingPlanCard({
   offer,
   description,
+  features,
   footerNote,
   disclaimer,
+  hidePriceLabel = false,
+  priceExVat,
   children,
 }: PricingPlanCardProps) {
+  const featureItems = features ?? offer.features;
+  const exVatLabel = priceExVat ?? offer.priceExVat;
   return (
     <article className="plan-card pricing-plan-card pricing-surface-card">
       <h3 className="pricing-plan-card__title">{offer.name}</h3>
@@ -25,10 +33,10 @@ export function PricingPlanCard({
           <span className="pricing-plan-card__period">{offer.pricePeriod}</span>
         ) : null}
       </p>
-      <p className="pricing-plan-card__label">{offer.priceLabel}</p>
-      <p className="pricing-plan-card__ex-vat">{offer.priceExVat}</p>
+      {!hidePriceLabel ? <p className="pricing-plan-card__label">{offer.priceLabel}</p> : null}
+      <p className="pricing-plan-card__ex-vat">{exVatLabel}</p>
       <ul className="plan-features pricing-plan-card__features">
-        {offer.features.map((f) => (
+        {featureItems.map((f) => (
           <li key={f}>{f}</li>
         ))}
       </ul>
