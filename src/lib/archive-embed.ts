@@ -1,6 +1,12 @@
+export type ArchiveEmbedAccess = {
+  hourlyAccess?: boolean;
+  member?: boolean;
+};
+
 export function archiveEmbedUrl(
   scope: "preview" | "full" = "full",
-  archiveFullAccess = true
+  archiveFullAccess = true,
+  access: ArchiveEmbedAccess = {}
 ): string {
   const params = new URLSearchParams({
     days: "30",
@@ -20,6 +26,12 @@ export function archiveEmbedUrl(
     params.set("chart", "all");
     if (archiveFullAccess) {
       params.set("obcine", "1");
+    }
+    if (access.hourlyAccess) {
+      params.set("hourly", "1");
+    }
+    if (access.member) {
+      params.set("member", "1");
     }
   }
   return `/arhiv/public/embed?${params}`;

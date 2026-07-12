@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLocation } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
+import { setAuthReturn } from "../lib/auth-intent";
 import { archiveEmbedUrl, archiveMapEmbedUrl } from "../lib/archive-embed";
 import {
   activateStatDaysOverlayForGrafi,
@@ -86,9 +88,13 @@ export function ArchiveChartEmbed({
   scope,
   visible = true,
 }: ArchiveChartEmbedProps) {
-  const { credits, plansMeta } = useStrelko();
+  const { credits, plansMeta, user } = useStrelko();
   const fullAccess = hasArchiveFullAccess(credits, plansMeta);
-  const src = archiveEmbedUrl(scope, fullAccess);
+  const hourlyAccess = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
+  const src = archiveEmbedUrl(scope, fullAccess, {
+    hourlyAccess,
+    member: !!user,
+  });
   const height = scope === "preview" ? "200" : "900";
   const title =
     scope === "preview" ? "Dnevni graf strel — Slovenija" : "Arhiv strel — Slovenija";
@@ -372,10 +378,26 @@ export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
 }
 
 export function ArchiveEmbedHost() {
+  const location = useLocation();
+  const { openAuth } = useStrelko();
+
   useLayoutEffect(() => {
     initArchiveEmbedTap();
     initArchiveDaysOverlay();
   }, []);
+
+  useEffect(() => {
+    const onMessage = (ev: MessageEvent) => {
+      const data = ev.data;
+      if (!data || typeof data !== "object" || data.type !== "strele-embed-auth") return;
+      if (data.action !== "login") return;
+      setAuthReturn(`${location.pathname}${location.search}${location.hash}`);
+      openAuth("login");
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [location.hash, location.pathname, location.search, openAuth]);
+
   return null;
 }
 
