@@ -30,39 +30,41 @@ export function PortalOverview() {
         <article className="portal-card portal-card--overview">
           <div className="portal-card__overview-main">
             <h2 className="portal-card__title">Žetoni</h2>
-            <p className="portal-card__value">{tokenBalance}</p>
+            <p className="portal-card__value portal-card__value--accent">{tokenBalance}</p>
             <p className="portal-card__hint">
               Kupljeni žetoni ne potečejo in ostanejo na vašem računu, dokler jih ne porabite.
             </p>
           </div>
-          <p className="portal-card__footer-link">
-            <Link to="/cenik">Kupite dodatne žetone</Link>
-          </p>
+          <div className="portal-card__overview-footer">
+            <p className="portal-card__footer-link">
+              <Link to="/cenik">Kupite dodatne žetone</Link>
+            </p>
+          </div>
         </article>
 
         <article className="portal-card portal-card--overview">
           <div className="portal-card__overview-main">
             <h2 className="portal-card__title">Podpornik</h2>
-            <p className="portal-card__value portal-card__value--text">{podpornik.label}</p>
+            <p className="portal-card__value">{podpornik.label}</p>
             {podpornik.hint ? <p className="portal-card__hint">{podpornik.hint}</p> : null}
           </div>
           {podpornik.canCancel ? (
-            <p className="portal-card__footer-link">
+            <div className="portal-card__overview-footer">
               <button
                 type="button"
-                className="btn-link"
+                className="btn btn-ghost btn-block portal-card__cancel-btn"
                 onClick={() => void openBillingPortal()}
               >
                 Prekliči naročnino
               </button>
-            </p>
+            </div>
           ) : null}
         </article>
 
         <article className="portal-card portal-card--overview">
           <div className="portal-card__overview-main">
             <h2 className="portal-card__title">Poizvedbe</h2>
-            <p className="portal-card__value portal-card__value--text">{queriesValue}</p>
+            <p className="portal-card__value">{queriesValue}</p>
             <p className="portal-card__hint">{queriesHint}</p>
             {queryCount > 0 ? (
               <p className="portal-card__hint">
@@ -73,9 +75,11 @@ export function PortalOverview() {
               </p>
             ) : null}
           </div>
-          <p className="portal-card__footer-link">
-            <Link to={portalTabPath("poizvedbe")}>Odpri poizvedbe</Link>
-          </p>
+          <div className="portal-card__overview-footer">
+            <p className="portal-card__footer-link">
+              <Link to={portalTabPath("poizvedbe")}>Odpri poizvedbe</Link>
+            </p>
+          </div>
         </article>
       </div>
 
