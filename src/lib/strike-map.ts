@@ -12,6 +12,13 @@ const MI_CYAN = "#05a5ce";
 
 const SLOVENIA_BOUNDS = L.latLngBounds([45.4, 13.35], [46.9, 16.63]);
 
+const MIN_MAP_AXIS_PX = 100;
+const MAP_SIZE_EPS_PX = 2;
+const MAX_PADDING_AXIS_FRAC = 0.28;
+/** Fractional snap used only during programmatic fit (restored after fit). */
+const FIT_ZOOM_SNAP = 0.1;
+const FIT_MARGIN_EPS_PX = 1;
+
 const HOME_ICON = L.divIcon({
   className: "strelko-home-marker",
   html: `<svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" fill="${MI_CYAN}" stroke="#fff" stroke-width="2"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>`,
@@ -56,34 +63,41 @@ function rebuildStrikeLayer(
 }
 
 function computeMinZoom(map: L.Map): number | null {
-  map.invalidateSize(true);
+  map.invalidateSize({ pan: false });
   const size = map.getSize();
-  if (size.x < 20 || size.y < 20) return null;
+  if (size.x < MIN_MAP_AXIS_PX || size.y < MIN_MAP_AXIS_PX) return null;
   let zoom = map.getBoundsZoom(SLOVENIA_BOUNDS, false);
   if (!Number.isFinite(zoom)) zoom = 7;
   return Math.max(7, Math.ceil(zoom));
 }
 
-const MAP_SIZE_EPS_PX = 2;
-
-/** Pixel padding derived from actual map width/height (not viewport alone). */
 function computeCircleFitPadding(map: L.Map): {
   paddingTopLeft: L.PointExpression;
   paddingBottomRight: L.PointExpression;
 } {
-  map.invalidateSize(true);
   const size = map.getSize();
-  const edgeX = Math.round(Math.min(16, Math.max(8, size.x * 0.012))) + 3;
-  const edgeY = Math.round(Math.min(16, Math.max(8, size.y * 0.012))) + 3;
-  return {
-    paddingTopLeft: [edgeX, edgeY],
-    paddingBottomRight: [edgeX + 44, edgeY + 22],
-  };
-}
+  let left = Math.round(Math.min(16, Math.max(8, size.x * 0.012))) + 3;
+  let top = Math.round(Math.min(16, Math.max(8, size.y * 0.012))) + 3;
+  let right = left + 44;
+  let bottom = top + 22;
 
-function getSearchCircleBounds(lat: number, lon: number, radiusKm: number): L.LatLngBounds {
-  const bounds = L.circle([lat, lon], { radius: radiusKm * 1000 }).getBounds();
-  return bounds.pad(0.004);
+  const maxHorizontal = Math.floor(size.x * MAX_PADDING_AXIS_FRAC);
+  const maxVertical = Math.floor(size.y * MAX_PADDING_AXIS_FRAC);
+  if (left + right > maxHorizontal) {
+    const scale = maxHorizontal / (left + right);
+    left = Math.max(6, Math.floor(left * scale));
+    right = Math.max(24, Math.floor(right * scale));
+  }
+  if (top + bottom > maxVertical) {
+    const scale = maxVertical / (top + bottom);
+    top = Math.max(6, Math.floor(top * scale));
+    bottom = Math.max(14, Math.floor(bottom * scale));
+  }
+
+  return {
+    paddingTopLeft: [left, top],
+    paddingBottomRight: [right, bottom],
+  };
 }
 
 function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: number): boolean {
@@ -125,27 +139,100 @@ function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: numbe
   return true;
 }
 
+function circlePixelSpan(
+  map: L.Map,
+  lat: number,
+  lon: number,
+  radiusM: number,
+  zoom: number
+): { width: number; height: number } {
+  const earth = 6378137;
+  const dLat = (radiusM / earth) * (180 / Math.PI);
+  const dLon = (radiusM / (earth * Math.cos((lat * Math.PI) / 180))) * (180 / Math.PI);
+  const center = map.project([lat, lon], zoom);
+  const north = map.project([lat + dLat, lon], zoom);
+  const east = map.project([lat, lon + dLon], zoom);
+  return {
+    width: Math.abs(east.x - center.x) * 2,
+    height: Math.abs(center.y - north.y) * 2,
+  };
+}
+
+function circleFitsAtZoom(
+  map: L.Map,
+  lat: number,
+  lon: number,
+  radiusM: number,
+  zoom: number,
+  availW: number,
+  availH: number
+): boolean {
+  const span = circlePixelSpan(map, lat, lon, radiusM, zoom);
+  return span.width <= availW - FIT_MARGIN_EPS_PX && span.height <= availH - FIT_MARGIN_EPS_PX;
+}
+
+function computeCircleFitZoom(
+  map: L.Map,
+  lat: number,
+  lon: number,
+  radiusM: number,
+  availW: number,
+  availH: number,
+  maxZoom: number
+): number {
+  const minZoom = map.getMinZoom();
+  let lo = minZoom;
+  let hi = maxZoom;
+  for (let i = 0; i < 32; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (circleFitsAtZoom(map, lat, lon, radiusM, mid, availW, availH)) lo = mid;
+    else hi = mid;
+  }
+
+  let zoom = lo;
+  if (FIT_ZOOM_SNAP > 0) {
+    zoom = Math.floor(zoom / FIT_ZOOM_SNAP) * FIT_ZOOM_SNAP;
+    while (zoom > minZoom && !circleFitsAtZoom(map, lat, lon, radiusM, zoom, availW, availH)) {
+      zoom = Math.max(minZoom, zoom - FIT_ZOOM_SNAP);
+    }
+  }
+  return Math.max(minZoom, Math.min(maxZoom, Math.round(zoom * 10) / 10));
+}
+
 function fitSearchRadius(map: L.Map, lat: number, lon: number, radiusKm: number): boolean {
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || radiusKm <= 0) {
     return false;
   }
-  map.invalidateSize(true);
+
+  map.invalidateSize({ pan: false });
   const size = map.getSize();
-  if (size.x < 20 || size.y < 20) return false;
+  if (size.x < MIN_MAP_AXIS_PX || size.y < MIN_MAP_AXIS_PX) return false;
 
   const host = map as L.Map & { _programmaticFit?: boolean };
-  const bounds = getSearchCircleBounds(lat, lon, radiusKm);
   const { paddingTopLeft, paddingBottomRight } = computeCircleFitPadding(map);
+  const paddingTL = L.point(paddingTopLeft);
+  const paddingBR = L.point(paddingBottomRight);
+  const availW = size.x - paddingTL.x - paddingBR.x;
+  const availH = size.y - paddingTL.y - paddingBR.y;
+  if (availW <= 0 || availH <= 0) return false;
+
+  const radiusM = radiusKm * 1000;
+  const zoom = computeCircleFitZoom(map, lat, lon, radiusM, availW, availH, 15);
+  const paddingOffset = paddingBR.subtract(paddingTL).divideBy(2);
+  const centerPoint = map.project([lat, lon], zoom).add(paddingOffset);
+  const center = map.unproject(centerPoint, zoom);
+
+  const prevZoomSnap = map.options.zoomSnap;
+  const prevZoomDelta = map.options.zoomDelta;
+  map.options.zoomSnap = FIT_ZOOM_SNAP;
+  map.options.zoomDelta = FIT_ZOOM_SNAP;
 
   host._programmaticFit = true;
   try {
-    map.fitBounds(bounds, {
-      paddingTopLeft,
-      paddingBottomRight,
-      maxZoom: 15,
-      animate: false,
-    });
+    map.setView(center, zoom, { animate: false });
   } finally {
+    map.options.zoomSnap = prevZoomSnap;
+    map.options.zoomDelta = prevZoomDelta;
     requestAnimationFrame(() => {
       host._programmaticFit = false;
     });
@@ -237,7 +324,6 @@ export function createStrikeMap(
   (el as HTMLElement & { _leafletMap?: L.Map })._leafletMap = map;
 
   map.attributionControl.setPrefix("");
-  map.setView([lat, lon], 7, { animate: false });
 
   const unbindGestures = bindStreleMapZoomGestures(map, el);
   ensureStrikeMapPanes(map);
@@ -283,13 +369,14 @@ export function createStrikeMap(
   mapHost._userAdjustedView = false;
 
   let circleFitSeq = 0;
-  let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+  let fitDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   let lastFitWidth = 0;
   let lastFitHeight = 0;
+  let initialFitDone = false;
 
   const markUserAdjusted = (ev: L.LeafletEvent) => {
     if (mapHost._programmaticFit) return;
-    const original = (ev as L.LeafletEvent & { originalEvent?: Event }).originalEvent;
+    const original = (ev as L.LeafletEvent & { originalEvent?: Event } | undefined)?.originalEvent;
     if (original) mapHost._userAdjustedView = true;
   };
   map.on("movestart", markUserAdjusted);
@@ -299,50 +386,47 @@ export function createStrikeMap(
     Math.abs(width - lastFitWidth) > MAP_SIZE_EPS_PX ||
     Math.abs(height - lastFitHeight) > MAP_SIZE_EPS_PX;
 
-  const runCircleFit = (opts?: { ignoreUserAdjusted?: boolean; requireSizeChange?: boolean }) => {
-    map.invalidateSize(true);
+  const performCircleFit = (opts: { force?: boolean; fromResize?: boolean }): boolean => {
+    map.invalidateSize({ pan: false });
     const size = map.getSize();
-    if (size.x < 20 || size.y < 20) return false;
-    if (opts?.requireSizeChange && !mapSizeChanged(size.x, size.y)) return true;
+    if (size.x < MIN_MAP_AXIS_PX || size.y < MIN_MAP_AXIS_PX) return false;
+
+    if (!opts.force && !opts.fromResize && mapHost._userAdjustedView) return true;
+    if (!opts.force && initialFitDone && !mapSizeChanged(size.x, size.y)) return true;
+
     if (!fitSearchRadius(map, lat, lon, radiusKm)) return false;
+
     lastFitWidth = size.x;
     lastFitHeight = size.y;
-    if (opts?.ignoreUserAdjusted) {
+    initialFitDone = true;
+    if (opts.fromResize) {
       mapHost._userAdjustedView = false;
     }
     return true;
   };
 
-  const scheduleCircleFit = () => {
-    if (mapHost._userAdjustedView) return;
+  const queueCircleFit = (opts?: { force?: boolean; fromResize?: boolean }) => {
     circleFitSeq += 1;
     const seq = circleFitSeq;
 
-    const attempt = () => {
-      if (seq !== circleFitSeq || mapHost._userAdjustedView) return;
-      if (runCircleFit()) return;
-      requestAnimationFrame(attempt);
-    };
-
-    requestAnimationFrame(attempt);
-  };
-
-  const scheduleResizeCircleFit = () => {
-    circleFitSeq += 1;
-    const seq = circleFitSeq;
-
-    const attempt = () => {
+    const runAttempt = (attempt = 0) => {
       if (seq !== circleFitSeq) return;
-      if (runCircleFit({ ignoreUserAdjusted: true, requireSizeChange: true })) return;
-      requestAnimationFrame(attempt);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (seq !== circleFitSeq) return;
+          if (performCircleFit({ force: opts?.force, fromResize: opts?.fromResize })) return;
+          if (attempt < 24) runAttempt(attempt + 1);
+        });
+      });
     };
 
-    requestAnimationFrame(attempt);
+    if (fitDebounceTimer) clearTimeout(fitDebounceTimer);
+    const delay = opts?.fromResize ? 80 : 0;
+    fitDebounceTimer = setTimeout(runAttempt, delay);
   };
 
   const onContainerResize = () => {
-    if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(scheduleResizeCircleFit, 80);
+    queueCircleFit({ fromResize: true });
   };
 
   const resizeObserver =
@@ -357,7 +441,7 @@ export function createStrikeMap(
   };
 
   waitForSearchLimits(map, lat, lon, radiusKm, () => {
-    scheduleCircleFit();
+    queueCircleFit({ force: true });
   });
 
   return {
@@ -367,9 +451,9 @@ export function createStrikeMap(
     destroy() {
       basemapLoadActive = false;
       circleFitSeq += 1;
-      if (resizeTimer) {
-        clearTimeout(resizeTimer);
-        resizeTimer = null;
+      if (fitDebounceTimer) {
+        clearTimeout(fitDebounceTimer);
+        fitDebounceTimer = null;
       }
       resizeObserver?.disconnect();
       window.removeEventListener("resize", onWindowResize);
