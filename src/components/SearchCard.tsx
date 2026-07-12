@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult, QueryQuoteOut } from "../types";
-import { isValidGeocodePlace } from "../lib/geocode";
+import { isSameSuggestBase, isValidGeocodePlace } from "../lib/geocode";
 import {
   queryCostHintFromQuote,
   querySubmitButtonLabelFromQuote,
@@ -62,6 +62,7 @@ export function SearchCard({
   const quoteDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const quoteRequestSeq = useRef(0);
   const locationFieldRef = useRef<HTMLDivElement>(null);
+  const previousInputRef = useRef(locationQuery);
 
   useEffect(() => {
     setActiveSuggestion(-1);
@@ -148,6 +149,8 @@ export function SearchCard({
   ]);
 
   const onInput = (value: string) => {
+    const previousValue = previousInputRef.current;
+    previousInputRef.current = value;
     setLocationQuery(value);
     if (selected && selected.label.trim() !== value.trim()) selectPlace(null);
     clearTimeout(debounce.current);
@@ -160,12 +163,15 @@ export function SearchCard({
       return;
     }
 
-    cancelSuggestions();
-    setShowSuggestions(false);
-    setActiveSuggestion(-1);
+    const baseChanged = !isSameSuggestBase(previousValue, value);
+    if (baseChanged) {
+      cancelSuggestions();
+      setShowSuggestions(false);
+      setActiveSuggestion(-1);
+    }
 
     debounce.current = setTimeout(() => {
-      void fetchSuggestions(value);
+      void fetchSuggestions(value, { sticky: !baseChanged });
     }, 250);
   };
 

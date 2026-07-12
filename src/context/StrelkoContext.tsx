@@ -128,7 +128,7 @@ interface StrelkoContextValue extends StrelkoState {
   setSelectedPlan: (id: string) => void;
   setLocationQuery: (q: string) => void;
   selectPlace: (place: GeocodeResult | null) => void;
-  fetchSuggestions: (q: string) => Promise<void>;
+  fetchSuggestions: (q: string, options?: { sticky?: boolean }) => Promise<void>;
   cancelSuggestions: () => void;
   runPreview: () => Promise<void>;
   runFullSearch: () => Promise<void>;
@@ -314,6 +314,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const runPreviewInFlightRef = useRef(false);
   const openQueryInFlightRef = useRef<string | null>(null);
   const suggestSeqRef = useRef(0);
+  const lastSuggestionsRef = useRef<GeocodeResult[]>([]);
 
   const loadSavedQueries = useCallback(async () => {
     if (!user) {
@@ -728,25 +729,33 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
 
   const cancelSuggestions = useCallback(() => {
     suggestSeqRef.current += 1;
+    lastSuggestionsRef.current = [];
     setSuggestions([]);
   }, []);
 
-  const fetchSuggestions = useCallback(async (q: string) => {
+  const fetchSuggestions = useCallback(async (q: string, options?: { sticky?: boolean }) => {
     const trimmed = q.trim();
     if (trimmed.length < 3) {
       cancelSuggestions();
+      lastSuggestionsRef.current = [];
       return;
     }
 
     const seq = ++suggestSeqRef.current;
 
     try {
-      const results = await geocodeSuggest(trimmed);
+      const results = await geocodeSuggest(trimmed, {
+        previous: options?.sticky ? lastSuggestionsRef.current : undefined,
+      });
       if (seq !== suggestSeqRef.current) return;
+      lastSuggestionsRef.current = results;
       setSuggestions(results);
     } catch {
       if (seq !== suggestSeqRef.current) return;
-      setSuggestions([]);
+      if (!options?.sticky) {
+        lastSuggestionsRef.current = [];
+        setSuggestions([]);
+      }
     }
   }, [cancelSuggestions]);
 
@@ -792,8 +801,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         if (runPreviewInFlightRef.current) {
           return;
         }
-        const q = locationQuery.trim();
-        if (!q && !selected) {
+        const rawQuery = locationQuery;
+        if (!rawQuery.trim() && !selected) {
           alert("Vnesite naslov ali kraj.");
           return;
         }
@@ -804,10 +813,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setPreviewTokenNotice(null);
         try {
           let place = selected;
-          if (!isValidGeocodePlace(place) || place.label.trim() !== q) {
-            place = await resolveGeocodePlace(q);
+          if (!isValidGeocodePlace(place) || place.label.trim() !== rawQuery.trim()) {
+            place = await resolveGeocodePlace(rawQuery);
             setSelected(place);
-            setLocationQueryState(place.label);
           }
           if (!isValidGeocodePlace(place)) {
             alert("Lokacija ni veljavna. Izberite naslov s seznama predlogov.");
