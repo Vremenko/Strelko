@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
-import { geocodeAddress, geocodeSuggest, isValidGeocodePlace } from "../lib/geocode";
+import { geocodeSuggest, isValidGeocodePlace, resolveGeocodePlace } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
 import { clearCheckoutPlanId, consumeCheckoutPlanId, peekCheckoutPlanId } from "../lib/auth-intent";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
@@ -805,8 +805,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         try {
           let place = selected;
           if (!isValidGeocodePlace(place) || place.label.trim() !== q) {
-            const results = await geocodeAddress(q);
-            place = results[0];
+            place = await resolveGeocodePlace(q);
             setSelected(place);
             setLocationQueryState(place.label);
           }

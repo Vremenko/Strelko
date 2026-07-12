@@ -4,6 +4,46 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 const SUGGEST_MIN_LENGTH = 3;
 const SUGGEST_LIMIT = 5;
 
+/** Končna hišna številka na prvem delu naslova (pred vejico). */
+const HOUSE_NUMBER_SUFFIX =
+  /\s+\d+[a-zA-Z]?(?:\/\d+[a-zA-Z]?|-\d+[a-zA-Z]?)?\s*$/;
+
+/** Naslovni del za iskanje predlogov — brez končne hišne številke. */
+export function suggestQueryFromInput(query: string): string {
+  const trimmed = query.trim();
+  if (!trimmed) return trimmed;
+
+  const withCountryHouse = trimmed.match(
+    /^(.+?),\s*Slovenija(\s+\d+[a-zA-Z]?(?:\/\d+[a-zA-Z]?|-\d+[a-zA-Z]?)?)\s*$/i
+  );
+  if (withCountryHouse) {
+    return withCountryHouse[1].trim();
+  }
+
+  const commaIndex = trimmed.indexOf(",");
+  if (commaIndex === -1) {
+    return trimmed.replace(HOUSE_NUMBER_SUFFIX, "").trim() || trimmed;
+  }
+
+  const head = trimmed.slice(0, commaIndex);
+  const tail = trimmed.slice(commaIndex);
+  const headWithoutNumber = head.replace(HOUSE_NUMBER_SUFFIX, "").trim();
+  if (!headWithoutNumber) return trimmed;
+  return `${headWithoutNumber}${tail}`.trim();
+}
+
+/** Poenostavi vnos za končno geokodiranje (npr. »Prigorica, Slovenija 101« → »Prigorica 101«). */
+export function submitGeocodeQuery(query: string): string {
+  const trimmed = query.trim();
+  const match = trimmed.match(
+    /^(.+?),\s*Slovenija(\s+\d+[a-zA-Z]?(?:\/\d+[a-zA-Z]?|-\d+[a-zA-Z]?)?)\s*$/i
+  );
+  if (match) {
+    return `${match[1].trim()}${match[2]}`.replace(/\s+/g, " ").trim();
+  }
+  return trimmed;
+}
+
 /** Produktni bbox (Slovenija + okolica) — usklajeno s StormAPI. */
 const PRODUCT_BBOX = {
   minLat: 45.4,
@@ -65,7 +105,7 @@ function kindRank(kind: PlaceKind): number {
 
 function classifyApiLabel(label: string): PlaceKind {
   const head = placeHead(label);
-  if (/\d/.test(head)) return "street";
+  if (/^\d/.test(head)) return "street";
   if (/\b(ulica|cesta|pot|trg|nas\.|številka)\b/i.test(label)) return "street";
   return "settlement";
 }
@@ -206,13 +246,16 @@ function rankSuggestions(results: SuggestCandidate[], query: string): GeocodeRes
 
   const startsWithMatches = pool.filter((entry) => entry.rank === 0);
   const wordStartMatches = pool.filter((entry) => entry.rank === 1);
-  const picked = (
+  const broaderMatches = pool.filter((entry) => entry.rank <= 2);
+  const pickedSource =
     startsWithMatches.length > 0
       ? startsWithMatches
       : wordStartMatches.length > 0
         ? wordStartMatches
-        : pool.filter((entry) => entry.rank <= 2)
-  ).slice(0, SUGGEST_LIMIT);
+        : broaderMatches.length > 0
+          ? broaderMatches
+          : ranked.slice(0, SUGGEST_LIMIT);
+  const picked = pickedSource.slice(0, SUGGEST_LIMIT);
 
   return picked.map((entry) => ({
     label: entry.result.label,
@@ -250,8 +293,14 @@ function mergeSuggestions(apiResults: SuggestCandidate[], photonResults: Suggest
 
 /** Predlogi za autocomplete — ne vrže napake, vrne [] ob praznem zadetku. */
 export async function geocodeSuggest(query: string): Promise<GeocodeResult[]> {
-  const q = query.trim();
+  const raw = query.trim();
+  if (raw.length < SUGGEST_MIN_LENGTH) return [];
+
+  const q = suggestQueryFromInput(raw);
   if (q.length < SUGGEST_MIN_LENGTH) return [];
+
+  // Med dodajanjem hišne številke ne posodabljaj predlogov; submit uporabi celoten raw vnos.
+  if (q !== raw) return [];
 
   const [apiResults, photonResults] = await Promise.all([
     fetchApiSuggestions(q, SUGGEST_LIMIT),
@@ -281,4 +330,23 @@ export async function geocodeAddress(query: string): Promise<GeocodeResult[]> {
     throw new Error("Lokacija ni bila najdena. Poskusite z drugim naslovom.");
   }
   return results;
+}
+
+/** Končno geokodiranje: najprej surov vnos, nato po potrebi submitGeocodeQuery fallback. */
+export async function resolveGeocodePlace(query: string): Promise<GeocodeResult> {
+  const q = query.trim();
+  const fallback = submitGeocodeQuery(q);
+
+  try {
+    return (await geocodeAddress(q))[0];
+  } catch (firstError) {
+    if (fallback !== q) {
+      try {
+        return (await geocodeAddress(fallback))[0];
+      } catch {
+        /* pokaži napako prvega poskusa */
+      }
+    }
+    throw firstError;
+  }
 }
