@@ -1097,6 +1097,11 @@ label.field-labeled > span {
 }
 
 @media (max-width: 899px) {
+  .archive-map-wrap,
+  .archive-map-iframe {
+    touch-action: pan-y;
+  }
+
   .archive-map-wrap {
     background: transparent;
   }
@@ -1661,7 +1666,7 @@ label.field-labeled > span {
 @media (max-width: 899px) {
   .strike-map-canvas,
   #strike-map {
-    touch-action: pan-x pan-y pinch-zoom;
+    touch-action: pan-y pinch-zoom;
   }
 }
 
