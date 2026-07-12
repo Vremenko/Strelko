@@ -1,4 +1,5 @@
 import type { Plan } from "../types";
+import { OB_SKODI_PER_TOKEN_GROSS_LABEL } from "./ob-skodi-tokens";
 
 export function defaultPlansFallback(): Plan[] {
   return [
@@ -6,7 +7,7 @@ export function defaultPlansFallback(): Plan[] {
       id: "ob_skodi",
       name_sl: "Ob škodi",
       tagline_sl: "Za dokaz pri zavarovalnici",
-      price_eur: "1,40",
+      price_eur: OB_SKODI_PER_TOKEN_GROSS_LABEL.replace(" €", ""),
       price_suffix_sl: " / žeton",
       billing_mode: "subscription",
       monthly_credits: 5,

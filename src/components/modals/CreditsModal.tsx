@@ -5,6 +5,7 @@ import {
   defaultPlansFallback,
   resolvePlansList,
 } from "../../lib/plans-modal";
+import { OB_SKODI_PER_TOKEN_GROSS_LABEL } from "../../lib/ob-skodi-tokens";
 import { formatPlanGrossLabel } from "../../lib/pricing";
 import { seasonLabelSl } from "../../lib/season";
 import type { Plan } from "../../types";
@@ -22,7 +23,7 @@ function InsufficientCreditsUpsell({ plans }: { plans: Plan[] }) {
         <div className="plan-compare-col">
           <span className="plan-compare-name">{skoda.name_sl}</span>
           <span className="plan-compare-price">
-            {formatPlanGrossLabel(skoda, "1,40 €")}
+            {formatPlanGrossLabel(skoda, OB_SKODI_PER_TOKEN_GROSS_LABEL)}
             {" / žeton"}
           </span>
           <span>
