@@ -5,7 +5,7 @@ import { useStrelko } from "../context/StrelkoContext";
 import { portalTabPath } from "../lib/auth-intent";
 import { isValidGeocodePlace } from "../lib/geocode";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
-import { previewInsufficientTokensNotice, previewUnlockTokenRequirementMessage } from "../lib/query-billing";
+import { previewUnlockTokenRequirementMessage } from "../lib/query-billing";
 import { clampSearchRange, queryTokenCost } from "../lib/search-dates";
 import { resultLocationTitle } from "../lib/pick-location-map";
 import { formatPlaceName } from "../lib/utils";
@@ -156,7 +156,7 @@ function PreviewUnlockBlock({
 }) {
   const { user, previewTokenNotice, searchDateFrom, searchDateTo } = useStrelko();
   const loggedIn = Boolean(user);
-  const { quote, quoteLoading, requiredTokens, canUnlock, needsTokens, availableTokens } =
+  const { quote, quoteLoading, requiredTokens, canUnlock, needsTokens } =
     usePreviewUnlockQuote(loggedIn, previewTokenNotice);
   const searchRange = clampSearchRange({
     from: searchDateFrom,
@@ -166,7 +166,6 @@ function PreviewUnlockBlock({
   const unlockTokenCost =
     loggedIn && !quoteLoading && requiredTokens > 0 ? requiredTokens : periodTokenCost;
 
-  let notice: ReactNode = null;
   let actions: ReactNode = null;
 
   if (!loggedIn) {
@@ -181,11 +180,6 @@ function PreviewUnlockBlock({
       </div>
     );
   } else if (needsTokens) {
-    notice = (
-      <p className="preview-blur-notice" role="status">
-        {previewInsufficientTokensNotice(requiredTokens, availableTokens)}
-      </p>
-    );
     actions = (
       <div className="preview-blur-actions">
         <Link to={portalTabPath("narocnina")} className="btn btn-primary">
@@ -241,7 +235,6 @@ function PreviewUnlockBlock({
             <li key={item}>{item}</li>
           ))}
         </ul>
-        {notice}
         {actions}
       </div>
     </div>

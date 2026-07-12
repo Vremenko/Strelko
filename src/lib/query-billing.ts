@@ -49,10 +49,6 @@ export function querySubmitButtonLabelFromQuote(
   return quote.query_button_label;
 }
 
-export function previewInsufficientTokensNotice(required: number, available: number): string {
-  return `Za celoten pregled potrebujete ${tokenCountLabel(required, "accusative")}, na voljo pa imate ${tokenCountLabel(available)}. Zato je prikazan osnovni predogled.`;
-}
-
 export function previewUnlockTokenRequirementMessage(requiredTokens: number): string {
   return `Za odklep tega pregleda potrebujete ${tokenCountLabel(requiredTokens, "accusative")}.`;
 }
