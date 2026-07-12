@@ -30,11 +30,11 @@ export function HourlyChartPanel({ day, loading, data }: HourlyChartPanelProps) 
   return (
     <section className="panel results-hourly-panel" id="hourly-chart-panel">
       <div className="panel-head">
-        <h2 className="panel-head-title">Urni profil</h2>
+        <h2 className="panel-head-title">Po urah</h2>
         <p className="panel-period">{formatSlDate(day)}</p>
       </div>
       {loading ? (
-        <p className="hourly-chart-loading">Nalagam urni profil …</p>
+        <p className="hourly-chart-loading">Nalagam po urah …</p>
       ) : (
         <>
           <div className="stats" ref={statsRef} id="hourly-chart-stats" />

@@ -9,7 +9,6 @@ import { PdfDownloadPanel } from "./PdfDownloadPanel";
 import { useStrelko } from "../context/StrelkoContext";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
 import { formatSlDate, formatSlDecimal, formatSlTime } from "../lib/dates";
-import { HOURLY_PROFILE_MIN_STRIKES } from "../lib/search-dates";
 import type { DailyStrike, HourlyChartData, StrikePoint } from "../types";
 
 function nearestStrikeKm(daily: DailyStrike[]): number | null {
@@ -118,7 +117,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
       });
     } catch (e) {
       setHourlyChartDay(null);
-      alert((e as Error).message || "Urni profil ni na voljo.");
+      alert((e as Error).message || "Graf po urah ni na voljo.");
     } finally {
       setHourlyChartLoading(false);
     }
@@ -178,17 +177,13 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           />
         </ErrorBoundary>
       </div>
-      <p className="daily-table-hint">
-        Kliknite na vrstico dneva za prikaz udarov na zemljevidu. Ponovni klik prikaže vse dni. Pri
-        več kot {HOURLY_PROFILE_MIN_STRIKES} udarih na dan je na voljo urni profil.
-      </p>
       <div className="daily-table-scroll">
         <table className="daily-table">
           <thead>
             <tr>
               <th>Datum</th>
               <th>Št. strel</th>
-              <th>Najbližje</th>
+              <th>Najbližja</th>
               <th>Čas najbližje</th>
               <th>Profil</th>
             </tr>
@@ -199,7 +194,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
                 const key = dayKey(d.datum);
                 const selected = selectedMapDay === key;
                 const hourlyActive = hourlyChartDay === key;
-                const showHourly = d.stevilo_strel > HOURLY_PROFILE_MIN_STRIKES;
+                const showHourly = d.stevilo_strel > 0;
                 return (
                   <tr
                     key={key}
