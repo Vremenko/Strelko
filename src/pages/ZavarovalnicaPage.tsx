@@ -7,15 +7,16 @@ import { useStrelko } from "../context/StrelkoContext";
 
 export function ZavarovalnicaPage() {
   const { searchResult, previewScreen, loading } = useStrelko();
-  const hadSearchResultRef = useRef(Boolean(searchResult));
+  const awayFromForm =
+    Boolean(searchResult) || previewScreen === "teaser" || previewScreen === "no-strikes";
+  const wasAwayFromFormRef = useRef(awayFromForm);
 
   useEffect(() => {
-    const hasResult = Boolean(searchResult);
-    if (hasResult && !hadSearchResultRef.current) {
+    if (awayFromForm !== wasAwayFromFormRef.current) {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
-    hadSearchResultRef.current = hasResult;
-  }, [searchResult]);
+    wasAwayFromFormRef.current = awayFromForm;
+  }, [awayFromForm]);
 
   if (searchResult) {
     return (
