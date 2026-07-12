@@ -64,6 +64,26 @@ function computeMinZoom(map: L.Map): number | null {
   return Math.max(7, Math.ceil(zoom));
 }
 
+function computeCircleFitPadding(map: L.Map): {
+  paddingTopLeft: L.PointExpression;
+  paddingBottomRight: L.PointExpression;
+} {
+  map.invalidateSize(true);
+  const size = map.getSize();
+  const minDim = Math.min(size.x, size.y);
+  const base = Math.round(Math.min(16, Math.max(8, minDim * 0.028)));
+  const stroke = 3;
+  const edge = base + stroke;
+  return {
+    paddingTopLeft: [edge, edge],
+    paddingBottomRight: [edge + 44, edge + 22],
+  };
+}
+
+function getSearchCircleBounds(lat: number, lon: number, radiusKm: number): L.LatLngBounds {
+  return L.circle([lat, lon], { radius: radiusKm * 1000 }).getBounds();
+}
+
 function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: number): boolean {
   const host = map as L.Map & {
     setMaxBoundsViscosity?: (v: number) => void;
@@ -103,26 +123,30 @@ function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: numbe
   return true;
 }
 
-function fitSearchRadius(
-  map: L.Map,
-  lat: number,
-  lon: number,
-  radiusKm: number,
-  minZoom?: number
-) {
+function fitSearchRadius(map: L.Map, lat: number, lon: number, radiusKm: number): boolean {
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || radiusKm <= 0) {
-    map.setView([lat, lon], minZoom ?? 11, { animate: false });
-    return;
+    return false;
   }
+  map.invalidateSize(true);
+  const size = map.getSize();
+  if (size.x < 20 || size.y < 20) return false;
+
+  const host = map as L.Map & { _programmaticFit?: boolean };
+  const bounds = getSearchCircleBounds(lat, lon, radiusKm);
+  const { paddingTopLeft, paddingBottomRight } = computeCircleFitPadding(map);
+
+  host._programmaticFit = true;
   try {
-    const bounds = L.circle([lat, lon], { radius: radiusKm * 1000 }).getBounds();
-    map.fitBounds(bounds.pad(0.06), { animate: false, maxZoom: 15 });
-  } catch {
-    map.setView([lat, lon], minZoom ?? 11, { animate: false });
+    map.fitBounds(bounds, {
+      animate: false,
+      maxZoom: 15,
+      paddingTopLeft,
+      paddingBottomRight,
+    });
+  } finally {
+    host._programmaticFit = false;
   }
-  if (minZoom != null && map.getZoom() < minZoom) {
-    map.setZoom(minZoom, { animate: false });
-  }
+  return true;
 }
 
 function fitStrikeMarkers(
@@ -131,26 +155,19 @@ function fitStrikeMarkers(
   lat: number,
   lon: number,
   radiusKm: number,
-  strikeCount: number,
-  minZoom?: number
+  strikeCount: number
 ) {
   if (strikeCount > 0) {
     try {
       map.fitBounds(group.getBounds().pad(0.12), { animate: false, maxZoom: 15 });
     } catch {
-      fitSearchRadius(map, lat, lon, radiusKm, minZoom);
+      fitSearchRadius(map, lat, lon, radiusKm);
       return;
     }
   } else {
-    fitSearchRadius(map, lat, lon, radiusKm, minZoom);
-    return;
-  }
-  if (minZoom != null && map.getZoom() < minZoom) {
-    map.setZoom(minZoom, { animate: false });
+    fitSearchRadius(map, lat, lon, radiusKm);
   }
 }
-
-type RefitMode = "radius" | "strikes";
 
 function waitForSearchLimits(
   map: L.Map,
@@ -275,26 +292,74 @@ export function createStrikeMap(
   const strikeLayer = L.layerGroup().addTo(map);
   let fitGroup = rebuildStrikeLayer(strikeLayer, strikes, lat, lon);
 
-  const refitMap = (nextStrikes: StrikePoint[], mode: RefitMode) => {
+  type MapHost = L.Map & {
+    _programmaticFit?: boolean;
+    _userAdjustedView?: boolean;
+  };
+  const mapHost = map as MapHost;
+  mapHost._userAdjustedView = false;
+
+  let circleFitSeq = 0;
+  let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const markUserAdjusted = (ev: L.LeafletEvent) => {
+    if (mapHost._programmaticFit) return;
+    const original = (ev as L.LeafletEvent & { originalEvent?: Event }).originalEvent;
+    if (original) mapHost._userAdjustedView = true;
+  };
+  map.on("movestart", markUserAdjusted);
+  map.on("zoomstart", markUserAdjusted);
+
+  const scheduleCircleFit = () => {
+    if (mapHost._userAdjustedView) return;
+    circleFitSeq += 1;
+    const seq = circleFitSeq;
+
+    const attempt = () => {
+      if (seq !== circleFitSeq || mapHost._userAdjustedView) return;
+      if (fitSearchRadius(map, lat, lon, radiusKm)) return;
+      requestAnimationFrame(attempt);
+    };
+
+    requestAnimationFrame(attempt);
+  };
+
+  const resizeObserver =
+    typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => {
+          if (mapHost._userAdjustedView) return;
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(scheduleCircleFit, 80);
+        })
+      : null;
+  resizeObserver?.observe(el);
+
+  const updateStrikeMarkers = (nextStrikes: StrikePoint[], refitToMarkers: boolean) => {
     fitGroup = rebuildStrikeLayer(strikeLayer, nextStrikes, lat, lon);
-    const minZoom = (map as L.Map & { _searchMinZoom?: number })._searchMinZoom;
-    if (mode === "radius") {
-      fitSearchRadius(map, lat, lon, radiusKm, minZoom);
+    if (refitToMarkers) {
+      fitStrikeMarkers(map, fitGroup, lat, lon, radiusKm, nextStrikes.length);
       return;
     }
-    fitStrikeMarkers(map, fitGroup, lat, lon, radiusKm, nextStrikes.length, minZoom);
   };
 
   waitForSearchLimits(map, lat, lon, radiusKm, () => {
-    refitMap(strikes, "radius");
+    scheduleCircleFit();
   });
 
   return {
     updateStrikes(nextStrikes, opts = {}) {
-      refitMap(nextStrikes, opts.refit ? "strikes" : "radius");
+      updateStrikeMarkers(nextStrikes, !!opts.refit);
     },
     destroy() {
       basemapLoadActive = false;
+      circleFitSeq += 1;
+      if (resizeTimer) {
+        clearTimeout(resizeTimer);
+        resizeTimer = null;
+      }
+      resizeObserver?.disconnect();
+      map.off("movestart", markUserAdjusted);
+      map.off("zoomstart", markUserAdjusted);
       try {
         unbindGestures();
       } catch {
