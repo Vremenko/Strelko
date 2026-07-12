@@ -3243,6 +3243,10 @@ body.site-nav-open {
   min-width: 0;
 }
 
+.pricing-info-card--lead > .pricing-section-title:first-child {
+  margin-top: 0;
+}
+
 .pricing-info-card__subsection {
   margin-top: 1.5rem;
   padding-top: 1.35rem;
