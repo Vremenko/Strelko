@@ -310,83 +310,323 @@ export const LEGAL_PAGES = {
   },
   privacy: {
     path: "/zasebnost",
-    title: "Politika zasebnosti",
+    title: "Politika zasebnosti storitve Strelko",
+    navTitle: "Politika zasebnosti",
+    updated: "12. 7. 2026",
     sections: [
       {
-        title: "Splošna politika Meteoinfo",
+        title: "1. Upravljavec osebnih podatkov",
         body: `
-          <p>Za ${COMPANY.shortName} velja tudi skupna
-          <a href="${COMPANY.privacyPolicyUrl}" target="_blank" rel="noopener">politika zasebnosti Meteoinfo</a>.
-          Spodnja določila dopolnjujejo splošno politiko posebej za storitev <strong>Strelko</strong>.</p>`,
+          <p>Upravljavec osebnih podatkov je:</p>
+          <p><strong>${COMPANY.legalName}</strong></p>
+          <p>Kratka firma: ${COMPANY.shortName}</p>
+          <p>Sedež: ${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
+          <p>E-pošta za vprašanja glede zasebnosti:
+          <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>
+          <p>Celotni podatki o podjetju so objavljeni v
+          <a href="/impressum">Impressumu</a>.</p>`,
       },
       {
-        title: "1. Upravljavec",
+        title: "2. Namen politike zasebnosti",
         body: `
-          <p>Upravljavec osebnih podatkov je <strong>${COMPANY.legalName}</strong>,
-          ${COMPANY.address}, ${COMPANY.postal} (${COMPANY.shortName}).</p>
-          <p>Kontakt za zasebnost: <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>`,
+          <p>Ta politika pojasnjuje, katere osebne podatke obdelujemo pri uporabi storitve Strelko, za katere namene jih
+          uporabljamo, na katerih pravnih podlagah jih obdelujemo, komu jih lahko posredujemo, kako dolgo jih hranimo
+          in katere pravice imajo uporabniki.</p>
+          <p>Politika velja za spletno stran Strelko, uporabniški račun Moj Strelko, poizvedbe o udarih strel,
+          PDF-poročila, nakupe žetonov, paket Podpornik, podporo uporabnikom in druge povezane funkcije storitve.</p>`,
       },
       {
-        title: "2. Katere podatke obdelujemo",
+        title: "3. Katere podatke obdelujemo",
         body: `
+          <h3>3.1 Podatki uporabniškega računa</h3>
+          <p>Ob uporabi računa Moj Strelko obdelujemo:</p>
           <ul>
-            <li><strong>Račun:</strong> e-poštni naslov, geslo (shranjeno v zgoščeni obliki), status potrditve e-pošte.</li>
-            <li><strong>Iskanje:</strong> koordinate in oznaka lokacije, ki jo vnesete ali izberete pri iskanju.</li>
-            <li><strong>Opozorila:</strong> mobilna telefonska številka, shranjena lokacija za opozorila, radij, nastavitve SMS/e-pošte.</li>
-            <li><strong>Naročnina:</strong> podatki o paketu, stanju kreditov, ID seje plačila pri Stripe (ne shranjujemo številk plačilnih kartic).</li>
-            <li><strong>Tehnični podatki:</strong> IP naslov, čas dostopa, user-agent ob prijavi in varnostnih dogodkih.</li>
-            <li><strong>Lokalna shramba brskalnika:</strong> žeton za prijavo (localStorage) – glejte tudi <a href="/piskotki" data-legal="cookies">Politiko piškotkov</a>.</li>
-          </ul>`,
-      },
-      {
-        title: "3. Nameni in pravne podlage",
-        body: `
-          <ul>
-            <li><strong>Izvedba pogodbe</strong> – registracija, prijava, izvajanje iskanj, naročnine, opozorila.</li>
-            <li><strong>Zakoniti interes</strong> – varnost sistema, preprečevanje zlorab, tehnični dnevniki.</li>
-            <li><strong>Privolitev</strong> – kjer jo zahteva zakon (npr. neobvezna e-poštna obvestila, če jih vklopite).</li>
-            <li><strong>Zakonske obveznosti</strong> – računovodstvo in davčna dokumentacija plačil.</li>
-          </ul>`,
-      },
-      {
-        title: "4. Pogodbeni obdelovalci",
-        body: `
-          <p>Podatke lahko obdelujejo zaupanja vredni pogodbeni partnerji, ki zagotavljajo delovanje storitve:</p>
-          <ul>
-            <li><strong>Stripe</strong> – obdelava plačil in naročnin,</li>
-            <li><strong>ponudnik gostovanja / strežnikov</strong> – tehnično delovanje API-ja in baze,</li>
-            <li><strong>ponudnik SMS storitve</strong> – pošiljanje MeteoAlarm opozoril (če jih vklopite),</li>
-            <li><strong>ponudnik e-pošte</strong> – transakcijska sporočila (potrditev računa, opozorila).</li>
+            <li>e-poštni naslov;</li>
+            <li>interni identifikator uporabniškega računa;</li>
+            <li>podatke o načinu prijave (e-pošta in geslo ali Google);</li>
+            <li>status aktivnosti in potrditve e-poštnega naslova;</li>
+            <li>datum ustvaritve računa in podatke o zadnji uporabi;</li>
+            <li>stanje žetonov in zgodovino porabe žetonov;</li>
+            <li>stanje paketa Podpornik, podatke o naročnini Ob škodi in nastavitve widgeta občine (če jih uporabnik
+            konfigurira);</li>
+            <li>če uporabnik vklopi opozorila MeteoAlarm: telefonsko številko (za SMS), nastavitve e-poštnega
+            opozarjanja, shranjeno lokacijo in radij opozorila.</li>
           </ul>
-          <p>Podatkov ne prodajamo tretjim osebam za trženjske namene.</p>`,
-      },
-      {
-        title: "5. Hramba",
-        body: `
+          <p>Pri prijavi z Googlom prejmemo samo podatke, ki jih Google posreduje v okviru uporabljene prijavne povezave
+          in jih Strelko potrebuje za ustvaritev oziroma prepoznavo uporabniškega računa. V praksi to pomeni
+          <strong>preverjen e-poštni naslov</strong> iz Google računa. Google profilnega imena, profilne slike ali
+          uporabniškega gesla ne shranjujemo; računi, ustvarjeni prek Google prijave, nimajo gesla za prijavo v Strelko.</p>
+          <p>Pri registraciji ali prijavi z e-pošto in geslom hranimo e-poštni naslov in geslo v
+          <strong>varno zgoščeni obliki</strong> na strežniku. Geslo v čistem besedilu ne shranjujemo in ga ne moremo
+          prebrati.</p>
+          <h3>3.2 Podatki o poizvedbah in PDF-poročilih</h3>
+          <p>Ob izvedbi poizvedbe o udarih strel in ob izdelavi PDF-poročila obdelujemo:</p>
           <ul>
-            <li>Podatki računa: do izbrisa računa ali preklica soglasja, nato le še kolikor to zahteva zakon.</li>
-            <li>Zgodovina iskanj in kreditov: za čas trajanja računa in zakonsko predpisano obdobje.</li>
-            <li>Varnostni dnevniki: omejeno obdobje (običajno do 12 mesecev).</li>
+            <li>vneseni ali izbrani naslov oziroma lokacija;</li>
+            <li>koordinate izbrane lokacije;</li>
+            <li>izbrano obdobje in radij iskanja;</li>
+            <li>datum in čas izvedbe poizvedbe;</li>
+            <li>rezultat poizvedbe in povezane podatke o zaznanih udarih strel;</li>
+            <li>število porabljenih žetonov;</li>
+            <li>podatke o izdelavi in prenosu PDF-poročila (vključno s podatkom, ali je bilo poročilo že zaračunano);</li>
+            <li>tehnični identifikator poizvedbe.</li>
+          </ul>
+          <p>Naslov oziroma lokacija, ki jo uporabnik vnese ali izbere, se poveže z njegovim uporabniškim računom in
+          zgodovino poizvedb. Uporabnik naj ne vnaša osebnih podatkov drugih oseb, ki za izvedbo poizvedbe niso
+          potrebni.</p>
+          <p>Pri izbiri lokacije na zemljevidu lahko uporabnik prostovoljno uporabi lokacijo naprave. V tem primeru
+          brskalnik posreduje koordinate naprave le za izbrano mesto iskanja; Strelko ne zbirno ne spremlja lokacije
+          naprave.</p>
+          <p>PDF-poročilo se ob prenosu izdeluje na strežniku iz shranjenega rezultata poizvedbe. Datoteka PDF se v
+          brskalniku ne hrani trajno; na strežniku hranimo podatke o poizvedbi in o zaračunanem PDF-poročilu, ne pa
+          ločenega trajnega arhiva PDF-datotek.</p>
+          <h3>3.3 Podatki o nakupih, plačilih in naročnini</h3>
+          <p>Ob nakupu žetonov, paketa Podpornik ali naročnine Ob škodi obdelujemo:</p>
+          <ul>
+            <li>izbrano ponudbo in količino žetonov;</li>
+            <li>ceno, valuto in davčne podatke transakcije;</li>
+            <li>stanje in čas plačila;</li>
+            <li>identifikator transakcije in povezane identifikatorje pri ponudniku plačil;</li>
+            <li>datum začetka, podaljšanja, preklica in poteka paketa Podpornik oziroma naročnine Ob škodi;</li>
+            <li>podatke, potrebne za izdajo računa, kadar jih uporabnik posreduje.</li>
+          </ul>
+          <p>Podatke o plačilni kartici praviloma neposredno obdeluje ponudnik plačilnih storitev. Meteoinfo ne prejme
+          in ne hrani celotne številke plačilne kartice, varnostne kode kartice ali drugih podatkov, ki jih za izvedbo
+          plačila ne potrebuje. Plačilo poteka prek varne povezave ponudnika plačil.</p>
+          <h3>3.4 Komunikacija z uporabniki</h3>
+          <p>Ob stiku z nami za podporo ali druge poizvedbe obdelujemo:</p>
+          <ul>
+            <li>vsebino sporočila;</li>
+            <li>ime in kontaktne podatke pošiljatelja;</li>
+            <li>podatke o uporabniškem računu, poizvedbi ali plačilu, ki jih uporabnik navede;</li>
+            <li>zgodovino komunikacije in reševanja zahtevka.</li>
+          </ul>
+          <h3>3.5 Tehnični in varnostni podatki</h3>
+          <p>Ob uporabi storitve samodejno nastanejo in se obdelujejo:</p>
+          <ul>
+            <li>naslov IP;</li>
+            <li>datum in čas dostopa;</li>
+            <li>obiskane strani oziroma uporabljene funkcije;</li>
+            <li>vrsta naprave, operacijski sistem in brskalnik (user-agent);</li>
+            <li>identifikatorji seje in prijavnega žetona;</li>
+            <li>zapisi o prijavah, napakah in varnostnih dogodkih;</li>
+            <li>nujni piškotki in podobne tehnologije v brskalniku (localStorage in sessionStorage), potrebne za prijavo,
+            varnost, ohranjanje seje in delovanje izbranih funkcij – glej tudi
+            <a href="/piskotki">Politiko piškotkov</a>.</li>
           </ul>`,
       },
       {
-        title: "6. Vaše pravice (GDPR)",
+        title: "4. Nameni in pravne podlage",
         body: `
-          <p>Imate pravico do dostopa, popravka, izbrisa, omejitve obdelave, ugovora in prenosljivosti podatkov,
-          kjer to velja. Zahteve pošljite na <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a>.</p>
-          <p>Pritožbo lahko vložite pri Informacijskem pooblaščencu RS:
-          <a href="https://www.ip-rs.si" target="_blank" rel="noopener">www.ip-rs.si</a>.</p>`,
+          <table class="legal-table">
+            <thead>
+              <tr><th>Obdelava</th><th>Namen</th><th>Pravna podlaga</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Ustvaritev in upravljanje uporabniškega računa</td>
+                <td>Ustvaritev računa, prijava, prepoznava uporabnika in zagotavljanje funkcij Moj Strelko.</td>
+                <td>Izvajanje pogodbe oziroma ukrepi pred sklenitvijo pogodbe – člen 6(1)(b) GDPR.</td>
+              </tr>
+              <tr>
+                <td>Izvajanje poizvedb in izdelava PDF-poročil</td>
+                <td>Izvedba uporabnikove zahteve, shranjevanje poizvedb, prikaz rezultatov, obračun žetonov in izdelava
+                PDF-poročil.</td>
+                <td>Izvajanje pogodbe – člen 6(1)(b) GDPR.</td>
+              </tr>
+              <tr>
+                <td>Nakup žetonov in paket Podpornik</td>
+                <td>Obdelava naročila, plačila, aktivacije, podaljšanja ali preklica naročnine ter zagotavljanje
+                kupljenih funkcij.</td>
+                <td>Izvajanje pogodbe – člen 6(1)(b) GDPR.</td>
+              </tr>
+              <tr>
+                <td>Računi in poslovne evidence</td>
+                <td>Izdajanje računov, računovodstvo, davčne evidence in izpolnjevanje drugih zakonskih obveznosti.</td>
+                <td>Izpolnitev zakonske obveznosti – člen 6(1)(c) GDPR.</td>
+              </tr>
+              <tr>
+                <td>Podpora uporabnikom</td>
+                <td>Odgovarjanje na vprašanja, reševanje napak, reklamacij in zahtevkov uporabnikov.</td>
+                <td>Izvajanje pogodbe oziroma zakoniti interes ponudnika za podporo uporabnikom in izboljševanje
+                storitve – člen 6(1)(b) oziroma 6(1)(f) GDPR.</td>
+              </tr>
+              <tr>
+                <td>Varnost in preprečevanje zlorab</td>
+                <td>Varovanje uporabniških računov in storitve, odkrivanje zlorab, preprečevanje nepooblaščenih
+                dostopov ter odpravljanje tehničnih težav.</td>
+                <td>Zakoniti interesi ponudnika za zagotavljanje varne, zanesljive in učinkovite storitve –
+                člen 6(1)(f) GDPR.</td>
+              </tr>
+              <tr>
+                <td>Uveljavljanje in obramba pravnih zahtevkov</td>
+                <td>Dokazovanje izvedenih naročil in plačil ter uveljavljanje ali obramba pravnih zahtevkov.</td>
+                <td>Zakoniti interes ponudnika – člen 6(1)(f) GDPR oziroma izpolnitev zakonskih obveznosti.</td>
+              </tr>
+            </tbody>
+          </table>`,
       },
       {
-        title: "7. Varnost in otroci",
+        title: "5. Od kod pridobimo podatke",
         body: `
-          <p>Uporabljamo ustrezne tehnične in organizacijske ukrepe za zaščito podatkov.
-          Storitev ni namenjena osebam, mlajšim od 16 let.</p>`,
+          <p>Večino osebnih podatkov pridobimo neposredno od uporabnika, ko ustvari račun, izvede poizvedbo, opravi
+          nakup ali stopi v stik z nami.</p>
+          <p>Nekatere podatke lahko prejmemo od ponudnika prijave, ponudnika plačilnih storitev ali drugih ponudnikov,
+          ki jih uporabnik izbere za uporabo storitve.</p>
+          <p>Tehnični podatki nastanejo samodejno ob uporabi spletne strani in informacijskega sistema.</p>`,
       },
       {
-        title: "8. Spremembe",
+        title: "6. Ali je posredovanje podatkov obvezno",
         body: `
-          <p>Politiko lahko občasno posodobimo. Datum zadnje spremembe je naveden na dnu strani.</p>`,
+          <p>Podatki, označeni kot obvezni, so potrebni za ustvaritev računa, izvedbo poizvedbe, plačilo ali uporabo
+          druge zahtevane funkcije. Če jih uporabnik ne posreduje, mu te funkcije morda ne bomo mogli zagotoviti.</p>
+          <p>Podatki, ki niso potrebni za izvajanje storitve ali izpolnitev zakonskih obveznosti, so prostovoljni.</p>`,
+      },
+      {
+        title: "7. Komu lahko posredujemo podatke",
+        body: `
+          <p>Osebnih podatkov ne prodajamo.</p>
+          <p>Do podatkov lahko v obsegu, potrebnem za izvedbo posamezne naloge, dostopajo:</p>
+          <ul>
+            <li>ponudniki gostovanja, infrastrukture in tehničnega vzdrževanja;</li>
+            <li>ponudniki prijave in upravljanja identitete;</li>
+            <li>ponudniki pošiljanja sistemske e-pošte;</li>
+            <li>ponudniki plačilnih storitev;</li>
+            <li>računovodski in drugi strokovni izvajalci;</li>
+            <li>ponudniki zemljevidov, če jim brskalnik ob nalaganju zemljevida posreduje tehnične podatke;</li>
+            <li>državni organi, sodišča ali druge osebe, kadar posredovanje zahteva zakon.</li>
+          </ul>
+          <p>Med ključnimi zunanjimi ponudniki, ki jih Strelko dejansko uporablja, so:</p>
+          <ul>
+            <li><strong>Google</strong> – prijava z Google računom (Google Identity Services). Politika zasebnosti:
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</li>
+            <li><strong>Stripe</strong> – obdelava plačil in naročnin (preusmeritev na varno plačilno stran). Politika
+            zasebnosti:
+            <a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>.</li>
+            <li><strong>MapTiler</strong> – prikaz zemljevidnih slojev v brskalniku. Politika zasebnosti:
+            <a href="https://www.maptiler.com/privacy-policy/" target="_blank" rel="noopener">maptiler.com/privacy-policy</a>.</li>
+            <li><strong>Twilio</strong> – pošiljanje SMS opozoril MeteoAlarm, le če uporabnik vklopi SMS opozorila in
+            posreduje telefonsko številko. Politika zasebnosti:
+            <a href="https://www.twilio.com/legal/privacy" target="_blank" rel="noopener">twilio.com/legal/privacy</a>.</li>
+          </ul>
+          <p>Iskanje naslovov in predlogov lokacij poteka prek lastnega strežnika Strelko; geokodirni podatki se
+          ne posredujejo zunanjemu ponudniku geokodiranja ob vsaki poizvedbi.</p>
+          <p>Z zunanjimi izvajalci, ki podatke obdelujejo v našem imenu, ustrezno uredimo varstvo osebnih podatkov in
+          jim dovolimo obdelavo samo za dogovorjene namene.</p>`,
+      },
+      {
+        title: "8. Prenosi podatkov izven Evropskega gospodarskega prostora",
+        body: `
+          <p>Nekateri zunanji ponudniki lahko osebne podatke obdelujejo tudi v državah zunaj Evropskega gospodarskega
+          prostora, zlasti pri storitvah Google, Stripe, MapTiler in Twilio.</p>
+          <p>Kadar pride do takega prenosa, se podatki prenašajo samo na podlagi ustreznega pravnega mehanizma, kot so
+          sklep Evropske komisije o ustreznosti, standardne pogodbene klavzule ali drug mehanizem, ki ga dovoljuje
+          GDPR.</p>`,
+      },
+      {
+        title: "9. Kako dolgo hranimo podatke",
+        body: `
+          <h3>Uporabniški račun</h3>
+          <p>Podatke uporabniškega računa hranimo, dokler je račun aktiven oziroma dokler jih potrebujemo za
+          zagotavljanje storitve. Po izbrisu računa jih izbrišemo ali anonimiziramo, razen podatkov, ki jih moramo
+          hraniti zaradi zakonskih obveznosti, varnosti ali pravnih zahtevkov.</p>
+          <h3>Poizvedbe in PDF-poročila</h3>
+          <p>Poizvedbe, podatke o porabi žetonov in podatke o PDF-poročilih hranimo kot del uporabniškega računa, da
+          si jih lahko uporabnik ponovno ogleda. Ob izbrisu računa jih izbrišemo ali anonimiziramo, če za nadaljnjo
+          hrambo ne obstaja druga pravna podlaga. PDF-datoteka se ob prenosu izdeluje na zahtevo in se ločeno od zapisa
+          poizvedbe ne arhivira.</p>
+          <h3>Plačila in računi</h3>
+          <p>Podatke o plačilih, računih in poslovnih dogodkih hranimo toliko časa, kot to zahtevajo davčni,
+          računovodski in drugi veljavni predpisi.</p>
+          <h3>Podpora uporabnikom</h3>
+          <p>Komunikacijo z uporabniki hranimo toliko časa, kot je potrebno za obravnavo vprašanja ali zahtevka, nato
+          pa do poteka obdobja, v katerem je lahko pomembna za dokazovanje izvedene komunikacije ali uveljavljanje
+          pravnih zahtevkov.</p>
+          <h3>Tehnični in varnostni dnevniki</h3>
+          <p>Tehnične in varnostne dnevnike hranimo omejeno obdobje, potrebno za zagotavljanje varnosti,
+          diagnosticiranje napak in preprečevanje zlorab. Konkretni roki brisanja so določeni interno in se lahko
+          razlikujejo glede na vrsto dnevnika.</p>
+          <h3>Varnostne kopije</h3>
+          <p>Podatki so lahko še omejeno obdobje prisotni v varnostnih kopijah, dokler se te ne prepišejo v skladu z
+          običajnim ciklom varnostnega kopiranja.</p>`,
+      },
+      {
+        title: "10. Varovanje podatkov",
+        body: `
+          <p>Izvajamo primerne tehnične in organizacijske ukrepe za varovanje podatkov pred izgubo, nepooblaščenim
+          dostopom, razkritjem, spreminjanjem ali uničenjem.</p>
+          <p>Dostop do osebnih podatkov je omejen na osebe in izvajalce, ki ga potrebujejo za opravljanje svojih
+          nalog.</p>
+          <p>Kljub varnostnim ukrepom noben prenos ali informacijski sistem ne more zagotoviti popolne varnosti.</p>`,
+      },
+      {
+        title: "11. Pravice uporabnikov",
+        body: `
+          <p>Uporabnik lahko glede na okoliščine in veljavno zakonodajo zahteva:</p>
+          <ul>
+            <li>dostop do svojih osebnih podatkov;</li>
+            <li>popravek netočnih ali dopolnitev nepopolnih podatkov;</li>
+            <li>izbris osebnih podatkov;</li>
+            <li>omejitev obdelave;</li>
+            <li>prenosljivost podatkov;</li>
+            <li>ugovor obdelavi, ki temelji na zakonitem interesu;</li>
+            <li>preklic privolitve, kadar obdelava temelji na privolitvi.</li>
+          </ul>
+          <p>Preklic privolitve ne vpliva na zakonitost obdelave, izvedene pred njenim preklicem.</p>
+          <p>Posamezne pravice niso absolutne in so lahko omejene, kadar nadaljnjo obdelavo zahteva zakon ali obstaja
+          druga veljavna pravna podlaga.</p>
+          <p>Zahtevo lahko uporabnik pošlje na
+          <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a>. Zaradi varstva podatkov lahko pred
+          izvedbo zahteve preverimo identiteto vlagatelja.</p>`,
+      },
+      {
+        title: "12. Pritožba pri nadzornem organu",
+        body: `
+          <p>Če uporabnik meni, da njegove osebne podatke obdelujemo v nasprotju s predpisi, ima pravico vložiti
+          pritožbo pri:</p>
+          <p><strong>Informacijski pooblaščenec Republike Slovenije</strong></p>
+          <p>Dunajska cesta 22, 1000 Ljubljana</p>
+          <p>E-pošta: <a href="mailto:gp.ip@ip-rs.si">gp.ip@ip-rs.si</a></p>
+          <p>Spletna stran: <a href="https://www.ip-rs.si" target="_blank" rel="noopener">ip-rs.si</a></p>`,
+      },
+      {
+        title: "13. Piškotki in podobne tehnologije",
+        body: `
+          <p>Strelko uporablja nujne piškotke in podobne tehnologije, ki so potrebni za prijavo, varnost, ohranjanje
+          uporabniške seje in delovanje izbranih funkcij. V praksi gre predvsem za shranjevanje v
+          <strong>localStorage</strong> (npr. prijavni žeton, izbira glede obvestila o piškotkih, nastavitve zemljevida)
+          in <strong>sessionStorage</strong> (npr. začasno ohranjanje rezultata iskanja med brskanjem).</p>
+          <p>Trenutno ne uporabljamo analitičnih, oglaševalskih ali drugih nenujnih piškotkov tretjih oseb.</p>
+          <p>Podrobnejše informacije o uporabljenih piškotkih, njihovem namenu in trajanju so objavljene v
+          <a href="/piskotki">Politiki piškotkov</a>.</p>`,
+      },
+      {
+        title: "14. Avtomatizirano odločanje",
+        body: `
+          <p>Strelko ne izvaja avtomatiziranega odločanja ali profiliranja, ki bi za uporabnika ustvarjalo pravne ali
+          podobno pomembne učinke.</p>`,
+      },
+      {
+        title: "15. Povezave do drugih spletnih strani",
+        body: `
+          <p>Storitev lahko vsebuje povezave do spletnih strani ali storitev drugih ponudnikov. Za njihove postopke
+          obdelave osebnih podatkov veljajo njihove lastne politike zasebnosti.</p>`,
+      },
+      {
+        title: "16. Spremembe politike zasebnosti",
+        body: `
+          <p>Politiko zasebnosti lahko občasno posodobimo zaradi sprememb storitve, načina obdelave podatkov ali
+          zakonodaje.</p>
+          <p>Datum zadnje posodobitve je naveden na vrhu dokumenta. O pomembnih spremembah bomo uporabnike po potrebi
+          obvestili tudi prek storitve ali e-pošte.</p>`,
+      },
+      {
+        title: "17. Kontakt",
+        body: `
+          <p>Za vprašanja, zahteve ali pripombe v zvezi z obdelavo osebnih podatkov se lahko obrnete na:</p>
+          <p><strong>${COMPANY.shortName}</strong></p>
+          <p>${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
+          <p>E-pošta: <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>`,
       },
     ],
   },
