@@ -3848,12 +3848,17 @@ body.site-nav-open {
 
 .portal-overview-stat {
   margin: 0.35rem 0 0;
-  font-size: clamp(1.75rem, 1.5rem + 0.5vw, 2.1rem);
+  font-size: clamp(1.45rem, 1.3rem + 0.45vw, 1.75rem);
   font-weight: 800;
   line-height: 1.15;
   color: var(--accent);
   overflow-wrap: break-word;
   hyphens: auto;
+}
+
+.portal-overview-stat--expiry {
+  font-size: clamp(1.15rem, 1.05rem + 0.3vw, 1.35rem);
+  line-height: 1.25;
 }
 
 .portal-overview-stat-sub {

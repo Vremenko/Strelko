@@ -47,25 +47,23 @@ export function PortalOverview() {
           <article className="portal-card portal-card--service">
             <div className="portal-card__service-head">
               <h3 className="portal-card__title">Paket Podpornik</h3>
-              {podpornik.active ? (
-                <span className="portal-badge portal-badge--active">Aktiven</span>
-              ) : null}
+              <span
+                className={`portal-badge ${podpornik.active ? "portal-badge--active" : "portal-badge--inactive"}`}
+              >
+                {podpornik.active ? "Aktiven" : "Ni aktiven"}
+              </span>
             </div>
             <div className="portal-card__service-body">
               {podpornik.active ? (
-                <>
-                  <p className="portal-card__status-title">Paket je aktiven</p>
-                  {podpornik.expiryLabel ? (
-                    <p className="portal-overview-stat">{podpornik.expiryLabel}</p>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  <p className="portal-card__status-title">Paket ni aktiven</p>
-                  <p className="portal-card__hint">
-                    Dostop do celotnega arhiva, naprednih statistik in widgeta.
+                podpornik.expiryLabel ? (
+                  <p className="portal-overview-stat portal-overview-stat--expiry">
+                    {podpornik.expiryLabel}
                   </p>
-                </>
+                ) : null
+              ) : (
+                <p className="portal-card__hint">
+                  Dostop do celotnega arhiva, naprednih statistik in widgeta.
+                </p>
               )}
             </div>
             <div className="portal-card__service-footer">
