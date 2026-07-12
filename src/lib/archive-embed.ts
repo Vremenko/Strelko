@@ -1,6 +1,5 @@
 export type ArchiveEmbedAccess = {
   hourlyAccess?: boolean;
-  member?: boolean;
 };
 
 export function archiveEmbedUrl(
@@ -29,9 +28,6 @@ export function archiveEmbedUrl(
     }
     if (access.hourlyAccess) {
       params.set("hourly", "1");
-    }
-    if (access.member) {
-      params.set("member", "1");
     }
   }
   return `/arhiv/public/embed?${params}`;

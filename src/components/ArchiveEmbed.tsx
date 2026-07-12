@@ -16,6 +16,7 @@ import {
   setMapLockPortalActive,
 } from "../lib/map-period-access";
 import { isPodpornikActive } from "../lib/portal-account";
+import { ensureHourlyLockPortal } from "../lib/archive-hourly-lock";
 import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
 import { LockedContent } from "./LockedContent";
 import type { StatTab } from "../types";
@@ -88,17 +89,45 @@ export function ArchiveChartEmbed({
   scope,
   visible = true,
 }: ArchiveChartEmbedProps) {
-  const { credits, plansMeta, user } = useStrelko();
+  const { credits, plansMeta } = useStrelko();
   const fullAccess = hasArchiveFullAccess(credits, plansMeta);
   const hourlyAccess = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
-  const src = archiveEmbedUrl(scope, fullAccess, {
-    hourlyAccess,
-    member: !!user,
-  });
+  const src = archiveEmbedUrl(scope, fullAccess, { hourlyAccess });
   const height = scope === "preview" ? "200" : "900";
   const title =
     scope === "preview" ? "Dnevni graf strel — Slovenija" : "Arhiv strel — Slovenija";
   const { show, wrapRef } = useLazyShow(visible);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [hourlyLockMount, setHourlyLockMount] = useState<HTMLElement | null>(null);
+
+  const syncHourlyLockPortal = useCallback(() => {
+    if (scope !== "full" || hourlyAccess || !visible) {
+      setHourlyLockMount(null);
+      return;
+    }
+    const iframe = iframeRef.current;
+    const mount = iframe?.contentDocument
+      ? ensureHourlyLockPortal(iframe.contentDocument)
+      : null;
+    setHourlyLockMount(mount);
+  }, [hourlyAccess, scope, visible]);
+
+  useEffect(() => {
+    if (scope !== "full" || hourlyAccess || !visible) {
+      setHourlyLockMount(null);
+      return;
+    }
+    const onMessage = (ev: MessageEvent) => {
+      const iframe = iframeRef.current;
+      if (!iframe || ev.source !== iframe.contentWindow) return;
+      const data = ev.data;
+      if (data?.type === "strele-embed-resize") {
+        syncHourlyLockPortal();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [hourlyAccess, scope, visible, syncHourlyLockPortal]);
 
   useLayoutEffect(() => {
     if (scope !== "full") return;
@@ -122,6 +151,7 @@ export function ArchiveChartEmbed({
       >
         {show ? (
           <iframe
+            ref={iframeRef}
             key={src}
             id={iframeId}
             className="archive-charts-embed"
@@ -133,6 +163,7 @@ export function ArchiveChartEmbed({
             scrolling="no"
             style={{ overflow: "hidden" }}
             onLoad={() => {
+              syncHourlyLockPortal();
               if (scope === "full" && visible) {
                 activateStatDaysOverlayForGrafi(wrapId, iframeId);
               }
@@ -144,6 +175,9 @@ export function ArchiveChartEmbed({
           </p>
         )}
       </div>
+      {scope === "full" && !hourlyAccess && visible && hourlyLockMount
+        ? createPortal(<LockedContent mode="supporter" inset className="archive-hourly-locked" />, hourlyLockMount)
+        : null}
       {scope === "full" && !fullAccess && visible ? (
         <div className="archive-locked-charts charts-layout">
           {LOCKED_OBCINA_CHARTS.map((chart) => (
