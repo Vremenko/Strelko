@@ -632,39 +632,215 @@ export const LEGAL_PAGES = {
   },
   cookies: {
     path: "/piskotki",
-    title: "Politika piškotkov",
+    title: "Politika piškotkov in podobnih tehnologij",
+    navTitle: "Politika piškotkov",
+    updated: "12. 7. 2026",
     sections: [
       {
-        title: "1. Kaj so piškotki",
+        title: "1. Kaj so piškotki in podobne tehnologije?",
         body: `
-          <p>Piškotki so majhne datoteke, ki jih spletna stran shrani v vaš brskalnik.
-          Strelko uporablja le nujno potrebne mehanizme za delovanje storitve.</p>`,
+          <p>Piškotki so majhne besedilne datoteke, ki jih spletna stran shrani v brskalnik oziroma napravo
+          uporabnika. Strelko lahko za delovanje uporablja tudi druge podobne tehnologije, kot sta lokalna in sejna
+          shramba brskalnika.</p>
+          <p>Te tehnologije omogočajo delovanje prijave, ohranjanje uporabniške seje, varnost, pomnjenje
+          uporabnikovih nastavitev in izvajanje drugih funkcij spletne strani.</p>
+          <p>Strelko v kodi spletne strani <strong>ne uporablja branja ali pisanja HTTP piškotkov</strong>
+          (<code>document.cookie</code>). Shranjevanje poteka prek lokalne in sejne shrambe brskalnika ter prek
+          omrežnih povezav do zunanjih ponudnikov, kjer je to opisano spodaj.</p>`,
       },
       {
-        title: "2. Kaj uporabljamo",
+        title: "2. Kdo upravlja spletno stran?",
+        body: `
+          <p>Upravljavec spletne strani Strelko je:</p>
+          <p><strong>${COMPANY.legalName}</strong></p>
+          <p>${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
+          <p>E-pošta: <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>
+          <p>Podrobnejši podatki o podjetju so objavljeni v <a href="/impressum">Impressumu</a>.</p>`,
+      },
+      {
+        title: "3. Katere vrste tehnologij uporabljamo?",
+        body: `
+          <h3>Nujne tehnologije</h3>
+          <p>Nujne tehnologije so potrebne za osnovno delovanje spletne strani, prijavo, varnost, uporabniško sejo,
+          izvedbo uporabnikove zahteve ali shranitev njegove izbire glede piškotkov. Brez njih posamezne funkcije
+          Strelka ne morejo pravilno delovati.</p>
+          <p>Za uporabo nujnih tehnologij privolitev uporabnika ni potrebna.</p>
+          <h3>Funkcionalne tehnologije</h3>
+          <p>Strelko uporablja tudi omejene funkcionalne zapise, ki niso nujni za osnovni dostop do strani, vendar
+          olajšajo uporabo storitve, ki jo je uporabnik izbral:</p>
+          <ul>
+            <li>shranjevanje nastavitev prikaza zemljevida med obiski;</li>
+            <li>začasno ohranitev rezultata iskanja in povezave s shranjeno poizvedbo med enim obiskom zavihka.</li>
+          </ul>
+          <p>Te zapise ne uporabljamo za profiliranje, analitiko ali oglaševanje. Naložijo se brez ločenega
+          soglasja, ker ne nadomeščajo osnovnega delovanja strani in ne spremljajo uporabnika med spletnimi mesti.</p>
+          <h3>Analitične tehnologije</h3>
+          <p>Strelko trenutno ne uporablja analitičnih piškotkov za merjenje obiska ali sledenje uporabnikom.</p>
+          <h3>Trženjske tehnologije</h3>
+          <p>Strelko trenutno ne uporablja oglaševalskih ali trženjskih piškotkov.</p>`,
+      },
+      {
+        title: "4. Seznam uporabljenih piškotkov in podobnih tehnologij",
         body: `
           <table class="legal-table">
-            <thead><tr><th>Ime / vrsta</th><th>Namen</th><th>Trajanje</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Ime</th>
+                <th>Ponudnik oziroma domena</th>
+                <th>Vrsta shrambe</th>
+                <th>Namen</th>
+                <th>Kategorija</th>
+                <th>Trajanje</th>
+              </tr>
+            </thead>
             <tbody>
               <tr>
-                <td><code>strelko_token</code> (localStorage)</td>
-                <td>Ohranjanje prijave uporabnika</td>
+                <td><code>strelko_token</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Lokalna shramba</td>
+                <td>Ohranjanje prijave in uporabniške seje</td>
+                <td>Nujna</td>
                 <td>Do odjave ali ročnega izbrisa</td>
               </tr>
               <tr>
-                <td><code>strelko_cookie_consent</code> (localStorage)</td>
-                <td>Shranitev vaše izbire glede obvestila o piškotkih</td>
-                <td>12 mesecev</td>
+                <td><code>strelko_cookie_consent</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Lokalna shramba</td>
+                <td>Shranitev potrditve obvestila o uporabi nujnih tehnologij</td>
+                <td>Nujna</td>
+                <td>Do ročnega izbrisa v brskalniku</td>
+              </tr>
+              <tr>
+                <td><code>strelko_map_layers</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Lokalna shramba</td>
+                <td>Shranjevanje nastavitev prikaza zemljevidnih slojev</td>
+                <td>Funkcionalna</td>
+                <td>Do ročnega izbrisa v brskalniku</td>
+              </tr>
+              <tr>
+                <td><code>strelko_auth_return</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Sejna shramba</td>
+                <td>Povrnitev na stran po prijavi ali registraciji</td>
+                <td>Nujna</td>
+                <td>Do zaprtja zavihka brskalnika</td>
+              </tr>
+              <tr>
+                <td><code>strelko_checkout_plan</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Sejna shramba</td>
+                <td>Nadaljevanje izbranega nakupa po prijavi</td>
+                <td>Nujna</td>
+                <td>Do zaprtja zavihka brskalnika</td>
+              </tr>
+              <tr>
+                <td><code>strelko_checkout_quantity</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Sejna shramba</td>
+                <td>Shranitev izbrane količine žetonov ob nakupu</td>
+                <td>Nujna</td>
+                <td>Do zaprtja zavihka brskalnika</td>
+              </tr>
+              <tr>
+                <td><code>strelko_search_result_v1</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Sejna shramba</td>
+                <td>Začasno ohranitev rezultata iskanja med brskanjem</td>
+                <td>Funkcionalna</td>
+                <td>Do zaprtja zavihka brskalnika</td>
+              </tr>
+              <tr>
+                <td><code>strelko_saved_query_id_v1</code></td>
+                <td>strelko.meteoinfo.si / ${COMPANY.shortName}</td>
+                <td>Sejna shramba</td>
+                <td>Povezava z identifikatorjem shranjene poizvedbe v tej seji</td>
+                <td>Funkcionalna</td>
+                <td>Do zaprtja zavihka brskalnika</td>
+              </tr>
+              <tr>
+                <td>Google piškotki in podobne tehnologije (npr. po imenu ponudnika)</td>
+                <td>google.com / accounts.google.com</td>
+                <td>Piškotek (tretja oseba)</td>
+                <td>Prijava prek Google računa in varnost storitve Google Identity Services</td>
+                <td>Nujna ob izbiri Google prijave</td>
+                <td>Po pravilih Google; običajno od seje do več mesecev</td>
               </tr>
             </tbody>
           </table>
-          <p>Trenutno ne uporabljamo analitičnih ali oglaševalskih piškotkov tretjih oseb na Strelko.</p>`,
+          <p>Zgoraj navedeni Google zapisi nastanejo šele, ko uporabnik odpre okno za prijavo oziroma registracijo in
+          se naloži storitev Google Identity Services. Ob običajnem obisku strani brez odpiranja prijave se ta skripta
+          ne naloži.</p>`,
       },
       {
-        title: "3. Upravljanje",
+        title: "5. Google prijava in druge zunanje storitve",
         body: `
-          <p>Prijavni žeton lahko izbrišete z odjavo ali brisanjem podatkov spletne strani v nastavitvah brskalnika.
-          Brez nujnih piškotkov / localStorage prijava ne bo delovala.</p>`,
+          <p>Strelko omogoča prijavo prek storitve Google. Ko uporabnik uporabi to možnost, lahko Google uporabi
+          svoje piškotke ali druge tehnologije, potrebne za izvedbo prijave in varovanje uporabniškega računa. Za
+          obdelavo, ki jo Google izvaja kot samostojni ponudnik, veljajo tudi Googlovi pogoji in politika zasebnosti.</p>
+          <p>Politika zasebnosti Google:
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></p>
+          <p>Skripta Google Identity Services (<code>accounts.google.com/gsi/client</code>) se naloži ob odprtju okna
+          za prijavo ali registracijo, ne pa ob vsakem obisku domače strani.</p>
+          <p><strong>MapTiler</strong> – ob prikazu zemljevida (iskanje, statistika, izbira lokacije) brskalnik
+          pridobi ploščice in podatke z <code>api.maptiler.com</code>. Strelko ne shranjuje MapTiler piškotkov v
+          lastni domeni; MapTiler lahko obdeluje tehnične podatke na svoji strani. Politika zasebnosti:
+          <a href="https://www.maptiler.com/privacy-policy/" target="_blank" rel="noopener">maptiler.com/privacy-policy</a>.</p>
+          <p><strong>Vdelani arhivski prikazi</strong> – na nekaterih straneh se naložijo vdelani okvirji (<code>iframe</code>)
+          z iste domene Strelko za prikaz arhivskih grafov ali zemljevida. To niso piškotki tretjih oseb.</p>
+          <p><strong>Plačila prek Stripe</strong> – ob nakupu se uporabnik preusmeri na varno plačilno stran Stripe.
+          V spletni aplikaciji Strelko se ne vgrajuje Stripe sledilnih skript; podatke o kartici obdeluje Stripe na
+          svoji strani.</p>`,
+      },
+      {
+        title: "6. Privolitev in izbira uporabnika",
+        body: `
+          <p>Strelko ne uporablja analitičnih ali trženjskih tehnologij, ki bi zahtevale ločeno privolitev.</p>
+          <p>Ob prvem obisku se prikaže informativno obvestilo o uporabi nujnih tehnologij. S klikom na
+          <strong>Razumem</strong> se shrani zapis <code>strelko_cookie_consent</code>, da vam obvestila ni treba
+          ponavljati. To ni izbira med kategorijami piškotkov, temveč potrditev, da ste obvestilo prebrali.</p>
+          <p>Strelko trenutno ne ponuja ločenega vmesnika za sprejemanje ali zavračanje posameznih nenujnih kategorij,
+          ker takih kategorij ne uporablja. Zavrnitev analitike ali oglaševanja zato ni potrebna – ti zapisi se ne
+          nalagajo.</p>`,
+      },
+      {
+        title: "7. Shranjevanje izbire",
+        body: `
+          <p>Uporabnikovo izbiro glede piškotkov shranimo zato, da mu ob vsakem obisku ni treba ponovno odgovarjati
+          na isto vprašanje.</p>
+          <p>Izbor se shrani v lokalni shrambi pod ključem <code>strelko_cookie_consent</code> z vrednostjo
+          <code>1</code>. Zapis nima samodejnega datuma poteka in ostane, dokler ga uporabnik ne izbriše v
+          nastavitvah brskalnika ali dokler ne počisti podatkov spletne strani Strelko.</p>`,
+      },
+      {
+        title: "8. Upravljanje prek brskalnika",
+        body: `
+          <p>Uporabnik lahko piškotke in podatke spletnih mest izbriše ali omeji tudi v nastavitvah svojega brskalnika.
+          Če izbriše nujne podatke seje ali prijave, se bo morda moral ponovno prijaviti, posamezne funkcije pa
+          lahko prenehajo delovati do ponovne vzpostavitve potrebnih nastavitev.</p>
+          <p>Za ponovno prikaz obvestila o piškotkih izbrišite v brskalniku podatke spletne strani Strelko, vključno
+          z zapisom <code>strelko_cookie_consent</code>.</p>`,
+      },
+      {
+        title: "9. Osebni podatki",
+        body: `
+          <p>Če je mogoče podatke, shranjene s piškotki ali podobnimi tehnologijami, povezati z določenim
+          uporabnikom, jih obdelujemo v skladu s
+          <a href="/zasebnost">Politiko zasebnosti storitve Strelko</a>.</p>`,
+      },
+      {
+        title: "10. Spremembe politike",
+        body: `
+          <p>Politiko lahko posodobimo zaradi sprememb uporabljenih tehnologij, funkcionalnosti Strelka ali veljavnih
+          predpisov.</p>
+          <p>Datum zadnje posodobitve je naveden na vrhu dokumenta.</p>`,
+      },
+      {
+        title: "11. Kontakt",
+        body: `
+          <p>Za vprašanja glede uporabe piškotkov in podobnih tehnologij se lahko obrnete na:</p>
+          <p><strong>${COMPANY.shortName}</strong></p>
+          <p>E-pošta: <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>`,
       },
     ],
   },
