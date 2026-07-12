@@ -14,11 +14,14 @@ export function LegalPage({ pageId }: { pageId: LegalPageId }) {
     </Link>
   ));
 
+  const updatedLabel =
+    "updated" in page && typeof page.updated === "string" ? page.updated : COMPANY.updated;
+
   return (
     <article className="legal-page page--standard">
       <header className="page-header">
         <h1 className="legal-title">{page.title}</h1>
-        <p className="legal-meta">Zadnja posodobitev: {COMPANY.updated}</p>
+        <p className="legal-meta">Zadnja posodobitev: {updatedLabel}</p>
         <nav className="legal-nav" aria-label="Pravne informacije">
           {nav}
         </nav>

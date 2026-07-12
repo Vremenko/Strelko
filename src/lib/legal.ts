@@ -24,35 +24,39 @@ export const LEGAL_PAGES = {
   impressum: {
     path: "/impressum",
     title: "Impressum",
+    updated: "12. 7. 2026",
     sections: [
       {
         title: "Podatki o podjetju",
         body: `
-          <p><strong>${COMPANY.legalName}</strong><br />
-          Kratko ime: ${COMPANY.shortName}<br />
-          ${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
+          <p><strong>${COMPANY.legalName}</strong></p>
+          <p>Kratka firma: ${COMPANY.shortName}</p>
+          <p>Sedež in poslovni naslov: ${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}</p>
+          <p>Podjetje zastopata: Amadej Krepek in Rok Nosan</p>
           <ul>
             <li>Matična številka: ${COMPANY.matična}</li>
-            <li>Davčna številka: ${COMPANY.davčna}</li>
-            <li>Identifikacijska številka za DDV: podjetje ni davčni zavezanec</li>
-            <li>Registrski organ: ${COMPANY.court}</li>
+            <li>Davčna številka: 61712949</li>
+            <li>Identifikacijska številka za DDV: SI61712949</li>
+            <li>Družba je vpisana v sodni register pri Okrožnem sodišču v Mariboru.</li>
+            <li>Osnovni kapital: 7.500,00 €</li>
           </ul>`,
       },
       {
         title: "Storitev Strelko",
         body: `
-          <p>Strelko je spletna storitev za informativni pregled udarov strel v bližini izbrane lokacije,
-          opozorila ob vremenskih opozorilih (MeteoAlarm) in pomoč pri pripravi podatkov za zavarovalnico.
-          Storitev je na voljo na naslovu <strong>strelko.meteoinfo.si</strong>.</p>`,
+          <p>Strelko je spletna storitev podjetja ${COMPANY.shortName} za informativni pregled zaznanih udarov strel,
+          arhivske in statistične prikaze ter izdelavo PDF-poročil kot pomoč pri komunikaciji z zavarovalnico.</p>
+          <p>Storitev je dostopna na naslovu strelko.meteoinfo.si.</p>`,
       },
       {
         title: "Kontakt",
         body: `
-          <p>Splošna podpora in vprašanja o storitvi Strelko:<br />
+          <p>Podpora uporabnikom in vprašanja o storitvi Strelko:<br />
           <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>
-          <p>Vprašanja glede zasebnosti in osebnih podatkov:<br />
+          <p>Vprašanja glede zasebnosti in varstva osebnih podatkov:<br />
           <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>
-          <p>Spletna stran podjetja: <a href="${COMPANY.website}" target="_blank" rel="noopener">meteoinfo.si</a></p>`,
+          <p>Spletna stran podjetja:<br />
+          <a href="${COMPANY.website}" target="_blank" rel="noopener">meteoinfo.si</a></p>`,
       },
     ],
   },
@@ -368,7 +372,7 @@ export function renderLegalPage(pageId) {
   return `
     <article class="legal-page">
       <h1 class="legal-title">${page.title}</h1>
-      <p class="legal-meta">Zadnja posodobitev: ${COMPANY.updated}</p>
+      <p class="legal-meta">Zadnja posodobitev: ${page.updated ?? COMPANY.updated}</p>
       ${renderLegalNav(pageId)}
       <div class="legal-card">${sections}</div>
     </article>`;
