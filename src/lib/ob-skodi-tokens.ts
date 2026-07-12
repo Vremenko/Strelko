@@ -72,6 +72,17 @@ export function tokenCountLabel(count: number, form: TokenCountForm = "nominativ
   return `${n} ${tokenWord(n, form)}`;
 }
 
+/** npr. Skupaj porabljena 2 žetona. — za kartico porabe v portalu. */
+export function tokensSpentSummaryLabel(count: number): string {
+  const n = Math.abs(Math.floor(count));
+  let participle: string;
+  if (n === 1) participle = "porabljen";
+  else if (n === 2) participle = "porabljena";
+  else if (n >= 3 && n <= 4) participle = "porabljeni";
+  else participle = "porabljenih";
+  return `Skupaj ${participle} ${tokenCountLabel(n)}.`;
+}
+
 export function obSkodiPurchaseCtaLabel(quantity: number, purchaseAllowed: boolean): string {
   if (!purchaseAllowed) return "Nakup bo kmalu na voljo";
   const order = calculateObSkodiOrder(quantity);

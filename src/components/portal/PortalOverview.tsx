@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useStrelko } from "../../context/StrelkoContext";
 import { portalTabPath } from "../../lib/auth-intent";
 import { getPodpornikOverview, tokenBalanceLabel } from "../../lib/portal-account";
-import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
+import { tokensSpentSummaryLabel } from "../../lib/ob-skodi-tokens";
 
 function queryCountLabel(count: number): string {
   if (count === 1) return "1 poizvedba";
@@ -96,7 +96,7 @@ export function PortalOverview() {
             <h3 className="portal-card__title">Vaše poizvedbe</h3>
             <p className="portal-overview-stat">{queriesStat}</p>
             <p className="portal-overview-stat-sub">
-              Skupaj porabljenih {tokenCountLabel(tokensSpent)}.
+              {tokensSpentSummaryLabel(tokensSpent)}
             </p>
           </div>
           <div className="portal-card--usage__action">

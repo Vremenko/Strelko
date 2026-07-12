@@ -1033,8 +1033,15 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         window.location.href = checkout_url;
       },
       openBillingPortal: async () => {
-        const { portal_url } = await api.billingPortal();
-        window.location.href = portal_url;
+        try {
+          const { portal_url } = await api.billingPortal();
+          window.location.href = portal_url;
+        } catch (e) {
+          const message =
+            (e as Error).message ||
+            "Portal za upravljanje naročnine trenutno ni na voljo.";
+          window.alert(message);
+        }
       },
       acceptCookies: () => {
         localStorage.setItem("strelko_cookie_consent", "1");

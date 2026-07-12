@@ -28,7 +28,7 @@ export function defaultPlansFallback(): Plan[] {
       tagline_sl: "Statistika strel in widget za vašo stran",
       price_eur: PODPORNIST_MONTHLY_GROSS_LABEL.replace(" €", ""),
       price_suffix_sl: " do konca sezone",
-      billing_mode: "season_pass",
+      billing_mode: "subscription",
       monthly_credits: 5,
       max_locations: 1,
       pdf_per_period: 0,

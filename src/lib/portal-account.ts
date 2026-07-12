@@ -70,9 +70,11 @@ export function getPodpornikOverview(credits?: Credits | null): {
   const seasonEnd = credits?.season_pass_expires_at;
   const expiryRaw = periodEnd || seasonEnd;
   const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
-  /** Samodejno podaljševanje = aktivna Stripe naročnina (ne enkratni sezonski paket). */
-  const autoRenews = Boolean(credits?.has_subscription);
-  const canCancel = autoRenews && !cancelScheduled;
+  const canManageBilling = Boolean(
+    credits?.billing_portal_available || credits?.has_subscription
+  );
+  /** Gumb: aktivni Podpornik brez že načrtovanega preklica. Stripe portal deluje le ob plačilni naročnini. */
+  const canCancel = !cancelScheduled && (canManageBilling || Boolean(seasonEnd));
 
   return {
     active: true,
