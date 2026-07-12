@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
 import { formatSlDateRange } from "../../lib/dates";
-import { TOKEN_USAGE_RULES } from "../../lib/pricing-offers";
 import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
 import { formatQueryExecutedAt, strikeCountLabel } from "../../lib/saved-queries";
 import { PortalEmptyState } from "./PortalEmptyState";
@@ -24,7 +23,6 @@ export function PortalQueries() {
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
   const [pdfErrors, setPdfErrors] = useState<Record<string, string | null>>({});
   const [page, setPage] = useState(0);
-  const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPage(0);
@@ -80,11 +78,7 @@ export function PortalQueries() {
 
   const goToPage = useCallback(
     (next: number) => {
-      const clamped = Math.max(0, Math.min(totalPages - 1, next));
-      setPage(clamped);
-      requestAnimationFrame(() => {
-        listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
+      setPage(Math.max(0, Math.min(totalPages - 1, next)));
     },
     [totalPages]
   );
@@ -119,7 +113,6 @@ export function PortalQueries() {
           </PortalEmptyState>
         ) : (
           <div className="portal-queries-list-wrap">
-            <div ref={listTopRef} className="portal-queries-list-anchor" aria-hidden="true" />
             <div className="portal-queries-list">
             {pageQueries.map((q) => {
               const locationLabel = q.label?.trim() || `${q.lat.toFixed(4)}, ${q.lon.toFixed(4)}`;
@@ -183,21 +176,6 @@ export function PortalQueries() {
             />
           </div>
         )}
-      </article>
-
-      <article className="portal-card portal-card--rules">
-        <h2 className="portal-card__title">Kratka pravila porabe žetonov</h2>
-        <ul className="plan-features">
-          {TOKEN_USAGE_RULES.map((r) => (
-            <li key={r.daysLabel}>
-              {r.daysLabel}: <strong>{tokenCountLabel(r.tokens)}</strong>
-            </li>
-          ))}
-          <li>
-            Prva izdelava PDF-ja: <strong>+1 žeton</strong>
-          </li>
-          <li>Ponovna izdelava PDF-ja iste lokacije in radija je brezplačna, če je obdobje enako ali krajše od že plačenega</li>
-        </ul>
       </article>
     </div>
   );

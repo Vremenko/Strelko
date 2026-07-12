@@ -4226,11 +4226,6 @@ body.site-nav-open {
   user-select: none;
 }
 
-.portal-queries-list-anchor {
-  height: 0;
-  overflow: hidden;
-}
-
 .portal-queries-list-wrap {
   min-width: 0;
 }
