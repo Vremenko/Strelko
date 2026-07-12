@@ -847,49 +847,203 @@ export const LEGAL_PAGES = {
   consumer: {
     path: "/pravice-potrosnikov",
     title: "Pravice potrošnikov",
+    updated: "12. 7. 2026",
     sections: [
       {
-        title: "1. Identiteta trgovca",
+        title: "Praktičen povzetek",
         body: `
-          <p>${COMPANY.legalName}, ${COMPANY.address}, ${COMPANY.postal}.<br />
-          E-pošta: <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>`,
+          <p>Ta stran je <strong>praktičen povzetek</strong> najpomembnejših potrošniških pravic pri nakupu žetonov in
+          paketa Podpornik v storitvi Strelko. Ne nadomešča veljavne zakonodaje in ne omejuje pravic, ki vam po zakonu
+          pripadajo.</p>`,
       },
       {
-        title: "2. Cene in plačilo",
+        title: "1. Kdo je potrošnik?",
         body: `
-          <p>Cene paketov so jasno prikazane pred nakupom v modalu za izbiro paketa.
-          Plačilo poteka varno prek Stripe. Račun za plačilo prejmete v skladu z davčnimi predpisi.</p>`,
+          <p>Potrošnik je fizična oseba, ki storitev pridobi ali uporablja za namene zunaj svoje poklicne ali
+          pridobitne dejavnosti.</p>
+          <p>Pravice, opisane na tej strani, veljajo za potrošnike. Za nakupe podjetij in drugih poslovnih uporabnikov
+          se uporabljajo pogodbeni pogoji in splošna pravila obligacijskega prava.</p>`,
       },
       {
-        title: "3. Pravica do odstopa od pogodbe",
+        title: "2. Informacije pred nakupom",
         body: `
-          <p>Kot potrošnik imate pri sklenitvi pogodbe na daljavo na splošno pravico do odstopa v 14 dneh,
-          razen v primerih, ki jih določa Zakon o varstvu potrošnikov (ZVPot-1).</p>
-          <p>Pri digitalnih vsebinah, ki se začnejo izvajati takoj po nakupu (npr. dodelitev mesečnih kreditov
-          ali takojšnja aktivacija naročnine), z nakupom izrecno soglašate, da se izvajanje storitve začne pred
-          potekom roka za odstop; v tem primeru lahko odstop velja le za neporabljene storitve, kolikor to zakon dopušča.</p>`,
+          <p>Pred zaključkom nakupa so uporabniku jasno prikazani zlasti:</p>
+          <ul>
+            <li>izbrana ponudba in njene bistvene lastnosti;</li>
+            <li>končna cena z DDV;</li>
+            <li>število kupljenih oziroma porabljenih žetonov;</li>
+            <li>trajanje paketa Podpornik;</li>
+            <li>samodejno podaljševanje in način preklica;</li>
+            <li>pogoji takojšnje uporabe plačljive storitve;</li>
+            <li>pogoji in postopek za odstop od pogodbe.</li>
+          </ul>
+          <p>Uporabnik lahko pred potrditvijo naročila preveri in po potrebi popravi vnesene podatke. Naročilo je oddano
+          šele z dejanjem, ki jasno označuje obveznost plačila.</p>
+          <p>Podrobnosti ponudb in cen so objavljene na strani <a href="/cenik">Cenik</a>.</p>`,
       },
       {
-        title: "4. Preklic naročnine",
+        title: "3. Pravica do odstopa v 14 dneh",
         body: `
-          <p>Mesečno naročnino lahko kadar koli prekličete v razdelku <strong>Naročnina</strong> (Stripe portal)
-          v uporabniškem meniju. Preklic začne veljati ob koncu tekočega obračunskega obdobja, razen če
-          Stripe prikaže drugačen datum.</p>`,
+          <div style="margin: 1.25rem 0; padding: 1rem 1.25rem; border-left: 3px solid #05a5ce; background: rgba(5, 165, 206, 0.1); border-radius: 0 8px 8px 0;">
+            <p>Potrošnik ima pri pogodbi, sklenjeni na daljavo, praviloma pravico, da v <strong>14 dneh</strong> od
+            sklenitve pogodbe od nje odstopi brez navedbe razloga.</p>
+            <p>Za pravočasen odstop zadostuje, da potrošnik pred iztekom roka pošlje nedvoumno izjavo, iz katere je
+            jasno razvidno, da odstopa od pogodbe.</p>
+          </div>
+          <p>Pravica do odstopa se presoja v skladu z Zakonom o varstvu potrošnikov in morebitnimi zakonskimi
+          izjemami.</p>`,
       },
       {
-        title: "5. Reklamacije",
+        title: "4. Takojšnja uporaba storitve",
         body: `
-          <p>Na nepravilnosti v delovanju storitve ali plačilih nas obvestite na
-          <a href="mailto:${COMPANY.email}">${COMPANY.email}</a>. Odgovorili bomo v razumnem roku, najpozneje v 15 dneh.</p>`,
+          <p>Žetone in paket Podpornik želi uporabnik praviloma uporabljati takoj po plačilu, še pred iztekom
+          14-dnevnega odstopnega roka.</p>
+          <p>Kadar zakon to zahteva, mora uporabnik pred takojšnjim začetkom izvajanja podati izrecno zahtevo oziroma
+          soglasje in potrditi, da razume, kako začetek ali popolna izvedba storitve vpliva na njegovo pravico do
+          odstopa.</p>
+          <p>Če potrošnik veljavno odstopi po začetku izvajanja storitve, se morebitno plačilo za že opravljeni del
+          oziroma obseg vračila določi skladno z veljavno zakonodajo in izjavami, ki jih je uporabnik podal pred
+          začetkom izvajanja.</p>
+          <p>Uporabniku se pravica do odstopa ne omeji ali odvzame samo zato, ker je podjetje to zapisalo v splošnih
+          pogojih. Izpolnjeni morajo biti vsi zakonski pogoji.</p>`,
       },
       {
-        title: "6. Izvensodno reševanje sporov",
+        title: "5. Odstop od nakupa žetonov",
         body: `
-          <p>Potrošnik lahko spor posreduje v izvensodno reševanje pri subjektu za izvensodno reševanje
-          potrošniških sporov. Seznam je na voljo na spletni strani
-          <a href="https://www.gov.si" target="_blank" rel="noopener">Vlade RS</a>.</p>
-          <p>Platforma EU za spletno reševanje sporov (ODR):
-          <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a></p>`,
+          <p>Potrošnik lahko od nakupa žetonov odstopi v zakonskem roku, če za omejitev ali prenehanje pravice do
+          odstopa niso izpolnjeni zakonski pogoji.</p>
+          <p>Če je uporabnik pred odstopom že zahteval in prejel plačljivo storitev, na primer odklenil poizvedbo ali
+          izdelal PDF-poročilo, se vračilo presoja glede na dejansko opravljeno storitev, podane izjave uporabnika in
+          veljavno zakonodajo.</p>
+          <p>Neporabljeni žetoni ostanejo na uporabniškem računu in ne potečejo, dokler uporabnik ne zahteva njihovega
+          vračila na veljavni pravni podlagi oziroma dokler račun ni zakonito zaprt.</p>`,
+      },
+      {
+        title: "6. Paket Podpornik: odstop in preklic",
+        body: `
+          <p>Odstop od pogodbe in preklic samodejnega podaljševanja sta <strong>različna postopka</strong>.</p>
+          <h3>Odstop od pogodbe</h3>
+          <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #05a5ce; background: rgba(5, 165, 206, 0.08); border-radius: 0 8px 8px 0;">
+            <p>Potrošnik lahko pri prvi sklenitvi pogodbe za paket Podpornik uveljavlja zakonsko pravico do odstopa v
+            14 dneh, ob upoštevanju pravil o takojšnjem začetku izvajanja digitalne storitve.</p>
+          </div>
+          <h3>Preklic naročnine</h3>
+          <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #fbb006; background: rgba(251, 176, 6, 0.08); border-radius: 0 8px 8px 0;">
+            <p>Uporabnik lahko samodejno podaljševanje paketa Podpornik kadar koli prekliče v razdelku
+            <a href="/moj-strelko">Moj Strelko</a>.</p>
+            <p>Po preklicu se nova plačila ne izvedejo, dostop pa ostane aktiven do konca že plačanega 30-dnevnega
+            obdobja.</p>
+            <p>Preklic samodejnega podaljševanja sam po sebi <strong>ne pomeni</strong> odstopa od že plačanega obdobja
+            ali samodejnega vračila plačila.</p>
+          </div>`,
+      },
+      {
+        title: "7. Kako uveljaviti odstop",
+        body: `
+          <div style="margin: 1.25rem 0; padding: 1.25rem 1.5rem; border: 1px solid rgba(5, 165, 206, 0.35); background: rgba(5, 165, 206, 0.12); border-radius: 12px;">
+            <p><strong>Odstop lahko sporočite na:</strong>
+            <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>
+            <p>V sporočilu navedite:</p>
+            <ul>
+              <li>ime in priimek;</li>
+              <li>e-poštni naslov uporabniškega računa;</li>
+              <li>datum nakupa;</li>
+              <li>kupljeno ponudbo;</li>
+              <li>številko naročila ali identifikator plačila, če je na voljo;</li>
+              <li>jasno izjavo, da odstopate od pogodbe.</li>
+            </ul>
+          </div>
+          <p><strong>Vzorec izjave:</strong></p>
+          <p><em>Obveščam vas, da odstopam od pogodbe za [nakup žetonov/paket Podpornik], sklenjene dne [datum]. Moj
+          uporabniški račun je povezan z e-poštnim naslovom [e-pošta].</em></p>
+          <p>Uporaba tega vzorca ni obvezna. Zadostuje vsaka nedvoumna in pravočasno poslana izjava o odstopu.</p>`,
+      },
+      {
+        title: "8. Vračilo plačila",
+        body: `
+          <p>Če je odstop veljaven, Meteoinfo vrne ustrezno plačilo brez nepotrebnega odlašanja in najpozneje v 14 dneh
+          po prejemu obvestila o odstopu.</p>
+          <p>Vračilo se praviloma izvede z istim plačilnim sredstvom, kot je bilo uporabljeno pri nakupu, razen če se
+          potrošnik izrecno strinja z drugim načinom in zaradi tega nima dodatnih stroškov.</p>
+          <p>Potrošniku se za izvedbo vračila ne zaračunajo dodatni stroški.</p>
+          <p>Obseg vračila je lahko odvisen od tega, ali se je storitev na potrošnikovo izrecno zahtevo že začela
+          izvajati oziroma je bila v celoti izvedena.</p>`,
+      },
+      {
+        title: "9. Če storitev ni dobavljena",
+        body: `
+          <p>Če se kupljeni žetoni ne pripišejo računu, paket Podpornik ni aktiviran ali druga plačana funkcija ni
+          dostopna, naj uporabnik najprej obvesti Meteoinfo in zahteva dobavo oziroma odpravo težave.</p>
+          <p>Če storitev kljub pozivu ni zagotovljena brez nepotrebnega odlašanja oziroma v dogovorjenem dodatnem
+          roku, lahko potrošnik pod zakonskimi pogoji odstopi od pogodbe.</p>
+          <p>V določenih primerih lahko potrošnik odstopi takoj, zlasti kadar ponudnik izjavi ali je očitno, da
+          storitve ne bo zagotovil, oziroma kadar je bil dogovorjeni čas izvedbe bistven.</p>`,
+      },
+      {
+        title: "10. Neskladna digitalna storitev",
+        body: `
+          <p>Digitalna storitev mora ustrezati opisu in lastnostim, ki so bile uporabniku predstavljene ob nakupu, ter
+          delovati tako, kot lahko potrošnik glede na naravo storitve razumno pričakuje.</p>
+          <p>Če storitev ni skladna, lahko potrošnik najprej zahteva brezplačno vzpostavitev skladnosti v razumnem roku
+          in brez znatnih nevšečnosti.</p>
+          <p>Pod zakonskimi pogoji lahko potrošnik zahteva tudi sorazmerno znižanje kupnine ali odstop od pogodbe,
+          zlasti če:</p>
+          <ul>
+            <li>vzpostavitev skladnosti ni mogoča ali bi bila nesorazmerna;</li>
+            <li>ponudnik skladnosti ne vzpostavi v razumnem roku;</li>
+            <li>storitev tudi po poskusu odprave ostane neskladna;</li>
+            <li>je neskladnost dovolj resna;</li>
+            <li>je očitno, da ponudnik težave ne bo odpravil v razumnem roku.</li>
+          </ul>
+          <p>Te pravice veljajo poleg pravice do odstopa od pogodbe na daljavo in je ne nadomeščajo.</p>`,
+      },
+      {
+        title: "11. Reklamacije in pritožbe",
+        body: `
+          <div style="margin: 1.25rem 0; padding: 1rem 1.25rem; border-left: 3px solid #05a5ce; background: rgba(5, 165, 206, 0.1); border-radius: 0 8px 8px 0;">
+            <p>Reklamacijo ali pritožbo lahko uporabnik pošlje na
+            <a href="mailto:${COMPANY.email}">${COMPANY.email}</a>.</p>
+          </div>
+          <p>Za hitrejšo obravnavo naj navede:</p>
+          <ul>
+            <li>e-poštni naslov uporabniškega računa;</li>
+            <li>opis težave;</li>
+            <li>datum in čas dogodka;</li>
+            <li>identifikator poizvedbe, naročila ali plačila;</li>
+            <li>želeni način rešitve.</li>
+          </ul>
+          <p>Meteoinfo bo zahtevek obravnaval brez nepotrebnega odlašanja in uporabniku odgovoril po e-pošti.</p>`,
+      },
+      {
+        title: "12. Izvensodno reševanje sporov",
+        body: `
+          <p>Meteoinfo d.o.o. ne priznava nobenega izvajalca izvensodnega reševanja potrošniških sporov kot pristojnega
+          za reševanje potrošniškega spora, ki bi ga potrošnik lahko sprožil v skladu z Zakonom o izvensodnem
+          reševanju potrošniških sporov.</p>
+          <p>Informacije o registriranih izvajalcih izvensodnega reševanja potrošniških sporov so dostopne na uradnih
+          spletnih straneh državnih organov.</p>`,
+      },
+      {
+        title: "13. Pomoč in nadzor",
+        body: `
+          <p>Potrošnik se lahko za informacije o svojih pravicah obrne tudi na brezplačno svetovanje potrošnikom, za
+          prijavo domnevne kršitve pa na Tržni inšpektorat Republike Slovenije.</p>
+          <p>Brezplačno svetovanje potrošnikom:
+          <a href="tel:0808899">080 88 99</a></p>
+          <p><strong>Tržni inšpektorat Republike Slovenije</strong></p>
+          <p>Dunajska cesta 160, 1000 Ljubljana</p>
+          <p>E-pošta: <a href="mailto:gp.tirs@gov.si">gp.tirs@gov.si</a></p>
+          <p>Spletna stran:
+          <a href="https://www.gov.si/tirs" target="_blank" rel="noopener">gov.si/tirs</a></p>`,
+      },
+      {
+        title: "14. Dodatne informacije",
+        body: `
+          <p>Podrobnejša pogodbena pravila so objavljena v
+          <a href="/pogoji-uporabe">Pogojih uporabe</a>.</p>
+          <p>Informacije o ponudniku so objavljene v <a href="/impressum">Impressumu</a>.</p>
+          <p>Ta stran je povzetek najpomembnejših pravic in ne omejuje pravic, ki potrošniku pripadajo po veljavni
+          zakonodaji.</p>`,
       },
     ],
   },
