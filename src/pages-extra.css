@@ -3181,21 +3181,41 @@ body.site-nav-open {
 }
 
 .pricing-surface-card {
-  background: rgba(62, 62, 62, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: var(--radius);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+}
+
+.pricing-explainer-grid .pricing-surface-card {
+  background: rgba(56, 56, 56, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+}
+
+.pricing-plan-grid .pricing-surface-card {
+  background: rgba(74, 74, 74, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(251, 176, 6, 0.28);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .pricing-page .plan-card.pricing-surface-card {
   cursor: default;
   pointer-events: auto;
-  transform: none;
   padding: clamp(1.25rem, 1rem + 0.65vw, 1.75rem);
 }
 
-.pricing-page .plan-card.pricing-surface-card:hover {
-  border-color: rgba(255, 255, 255, 0.11);
+@media (hover: hover) {
+  .pricing-plan-grid .plan-card.pricing-surface-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.24);
+    box-shadow:
+      0 16px 38px rgba(0, 0, 0, 0.34),
+      inset 0 1px 0 rgba(251, 176, 6, 0.4);
+  }
 }
 
 .pricing-plan-card__desc {
