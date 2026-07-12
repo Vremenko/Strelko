@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
@@ -7,6 +7,7 @@ import { TOKEN_USAGE_RULES } from "../../lib/pricing-offers";
 import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
 import { formatQueryExecutedAt, strikeCountLabel } from "../../lib/saved-queries";
 import { PortalEmptyState } from "./PortalEmptyState";
+import { PortalQueriesPagination } from "./PortalQueriesPagination";
 
 const QUERIES_PER_PAGE = 5;
 
@@ -23,6 +24,7 @@ export function PortalQueries() {
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
   const [pdfErrors, setPdfErrors] = useState<Record<string, string | null>>({});
   const [page, setPage] = useState(0);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPage(0);
@@ -76,6 +78,17 @@ export function PortalQueries() {
 
   const creditsBalance = credits?.credits_balance ?? null;
 
+  const goToPage = useCallback(
+    (next: number) => {
+      const clamped = Math.max(0, Math.min(totalPages - 1, next));
+      setPage(clamped);
+      requestAnimationFrame(() => {
+        listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    },
+    [totalPages]
+  );
+
   return (
     <div className="portal-panel">
       <article className="portal-card portal-card--full">
@@ -105,7 +118,9 @@ export function PortalQueries() {
             </div>
           </PortalEmptyState>
         ) : (
-          <div className="portal-queries-list">
+          <div className="portal-queries-list-wrap">
+            <div ref={listTopRef} className="portal-queries-list-anchor" aria-hidden="true" />
+            <div className="portal-queries-list">
             {pageQueries.map((q) => {
               const locationLabel = q.label?.trim() || `${q.lat.toFixed(4)}, ${q.lon.toFixed(4)}`;
               const pdfBusy = pdfBusyId === q.id;
@@ -160,29 +175,12 @@ export function PortalQueries() {
                 </article>
               );
             })}
-            {savedQueries.length > QUERIES_PER_PAGE ? (
-              <nav className="portal-queries-pagination" aria-label="Strani poizvedb">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  disabled={safePage === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                >
-                  Prejšnja
-                </button>
-                <span className="portal-queries-pagination__status">
-                  Stran {safePage + 1} od {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  disabled={safePage >= totalPages - 1}
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                >
-                  Naslednja
-                </button>
-              </nav>
-            ) : null}
+            </div>
+            <PortalQueriesPagination
+              currentPage={safePage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+            />
           </div>
         )}
       </article>
