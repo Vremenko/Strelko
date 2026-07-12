@@ -208,7 +208,7 @@ export function AuthModal() {
                 />
                 {!isLogin && !registerFieldErrors.password && (
                   <p className="auth-field-hint" id="register-password-hint">
-                    Geslo mora vsebovati od 8 do 72 znakov.
+                    Geslo naj vsebuje vsaj 8 znakov.
                   </p>
                 )}
                 {!isLogin && registerFieldErrors.password && (

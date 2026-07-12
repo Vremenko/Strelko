@@ -38,7 +38,7 @@ export function validateRegisterForm(input: {
   } else if (input.password.length < REGISTER_PASSWORD_MIN) {
     errors.password = `Geslo mora imeti vsaj ${REGISTER_PASSWORD_MIN} znakov.`;
   } else if (input.password.length > REGISTER_PASSWORD_MAX) {
-    errors.password = `Geslo je predolgo (največ ${REGISTER_PASSWORD_MAX} znakov).`;
+    errors.password = "Geslo je lahko dolgo največ 72 znakov.";
   }
 
   if (!input.passwordConfirm) {
@@ -79,7 +79,7 @@ function mapPasswordDetail(detail: ValidationDetail): string {
     return `Geslo mora imeti vsaj ${REGISTER_PASSWORD_MIN} znakov.`;
   }
   if (detail.type === "string_too_long") {
-    return `Geslo je predolgo (največ ${REGISTER_PASSWORD_MAX} znakov).`;
+    return "Geslo je lahko dolgo največ 72 znakov.";
   }
   return `Geslo mora imeti vsaj ${REGISTER_PASSWORD_MIN} znakov.`;
 }
