@@ -3167,10 +3167,149 @@ body.site-nav-open {
 
 .pricing-page-header__intro {
   margin: 0.85rem 0 0;
-  max-width: min(70ch, 100%);
+  max-width: min(74ch, 100%);
   font-size: clamp(0.98rem, 0.95rem + 0.15vw, 1.05rem);
   line-height: 1.65;
   color: var(--muted);
+}
+
+.pricing-surface-card {
+  background: rgba(62, 62, 62, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+}
+
+.pricing-page .plan-card.pricing-surface-card {
+  cursor: default;
+  pointer-events: auto;
+  transform: none;
+  padding: clamp(1.25rem, 1rem + 0.65vw, 1.75rem);
+}
+
+.pricing-page .plan-card.pricing-surface-card:hover {
+  border-color: rgba(255, 255, 255, 0.11);
+}
+
+.pricing-plan-card__desc {
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.pricing-plan-card__features {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.pricing-plan-card__min-note {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.pricing-plan-card__footer-note {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.pricing-plan-card__disclaimer {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1px solid rgba(251, 176, 6, 0.28);
+  background: rgba(251, 176, 6, 0.08);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.pricing-explainer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 0.75rem + 1vw, 1.5rem);
+  margin-top: clamp(22px, 1rem + 1.8vw, 36px);
+}
+
+.pricing-info-card {
+  padding: clamp(1.25rem, 1rem + 0.85vw, 1.85rem);
+  min-width: 0;
+}
+
+.pricing-info-card__subsection {
+  margin-top: 1.5rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pricing-info-card__list {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.pricing-subsection-title {
+  margin: 1.15rem 0 0.55rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pricing-qa-block {
+  margin-bottom: 1rem;
+}
+
+.pricing-qa-block__question {
+  margin: 0 0 0.35rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.pricing-qa-block__answer {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.pricing-qa-block__emphasis {
+  margin: 0.85rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.pricing-unavailable-notice {
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(51, 51, 51, 0.55);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.ob-skodi-purchase--cenik {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ob-skodi-purchase__cta {
+  margin-top: auto;
 }
 
 .pricing-lead {
@@ -3215,7 +3354,7 @@ body.site-nav-open {
 
 .pricing-token-explainer,
 .pricing-purchase-info {
-  margin-top: clamp(22px, 1rem + 1.8vw, 36px);
+  margin-top: 0;
 }
 
 .pricing-plan-grid {

@@ -11,9 +11,12 @@ import {
   parseObSkodiQuantityInput,
   tokenCountLabel,
 } from "../../lib/ob-skodi-tokens";
+import { CENIK_ZETONI_FEATURES } from "../../lib/pricing-offers";
 
 interface ObSkodiTokenPurchaseProps {
   paymentsEnabled: boolean;
+  /** Cenik prikaže razširjeno vsebino; privzeto kompaktno (portal). */
+  variant?: "default" | "cenik";
   /** Prikaže trenutno stanje (portal). */
   showBalance?: boolean;
   tokenBalance?: string;
@@ -24,6 +27,7 @@ interface ObSkodiTokenPurchaseProps {
 
 export function ObSkodiTokenPurchase({
   paymentsEnabled,
+  variant = "default",
   showBalance = false,
   tokenBalance,
   showAddToBalanceNote = false,
@@ -34,6 +38,7 @@ export function ObSkodiTokenPurchase({
   const quantityId = useId();
   const purchaseAllowed = isObSkodiPurchaseAllowed(paymentsEnabled);
   const order = calculateObSkodiOrder(quantity);
+  const isCenik = variant === "cenik";
 
   const syncQuantity = useCallback((next: number) => {
     const clamped = clampObSkodiQuantity(next);
@@ -66,19 +71,32 @@ export function ObSkodiTokenPurchase({
   };
 
   return (
-    <>
+    <div className={`ob-skodi-purchase${isCenik ? " ob-skodi-purchase--cenik" : ""}`}>
       <p className="pricing-plan-card__price">
         <span className="pricing-plan-card__amount">{OB_SKODI_PER_TOKEN_GROSS_LABEL}</span>
         <span className="pricing-plan-card__period">na žeton</span>
       </p>
       <p className="pricing-plan-card__label">DDV je vključen</p>
       <p className="pricing-plan-card__ex-vat">
-        približno {OB_SKODI_PER_TOKEN_NET_APPROX_LABEL} brez DDV
+        {isCenik ? OB_SKODI_PER_TOKEN_NET_APPROX_LABEL : `približno ${OB_SKODI_PER_TOKEN_NET_APPROX_LABEL}`}{" "}
+        brez DDV
       </p>
-      <ul className="plan-features">
-        <li>Najmanjši nakup so 3 žetoni</li>
-        <li>Žetoni ne potečejo</li>
-      </ul>
+
+      {isCenik ? (
+        <>
+          <ul className="plan-features pricing-plan-card__features">
+            {CENIK_ZETONI_FEATURES.map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
+          <p className="pricing-plan-card__min-note">Najmanjši nakup so 3 žetoni.</p>
+        </>
+      ) : (
+        <ul className="plan-features">
+          <li>Najmanjši nakup so 3 žetoni</li>
+          <li>Žetoni ne potečejo</li>
+        </ul>
+      )}
 
       {showBalance ? (
         <div className="portal-stat portal-stat--inline">
@@ -147,7 +165,7 @@ export function ObSkodiTokenPurchase({
 
       <button
         type="button"
-        className="btn btn-primary btn-block"
+        className="btn btn-primary btn-block ob-skodi-purchase__cta"
         onClick={handlePurchase}
         disabled={!purchaseAllowed}
         aria-disabled={!purchaseAllowed}
@@ -157,9 +175,11 @@ export function ObSkodiTokenPurchase({
 
       {!purchaseAllowed ? (
         <p className="portal-disabled-note">
-          Nakup žetonov trenutno ni na voljo (plačila niso vklopljena).
+          {isCenik
+            ? "Nakup žetonov trenutno še ni na voljo."
+            : "Nakup žetonov trenutno ni na voljo (plačila niso vklopljena)."}
         </p>
       ) : null}
-    </>
+    </div>
   );
 }

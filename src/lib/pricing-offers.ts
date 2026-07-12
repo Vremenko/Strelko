@@ -56,14 +56,33 @@ export const PRICING_PODPORNIST: PricingOffer = {
   priceExVat: "(3,69 € brez DDV / mesec)",
   vatNote: PRICING_VAT_NOTE,
   features: [
-    "polni arhiv in napredne statistike",
-    "widget za eno spletno stran",
-    "podpora razvoju Strelka, produktov, meritev in vsebin Meteoinfa",
-    "samodejno mesečno obnavljanje",
-    "preklic kadar koli",
-    "brez žetonov in zavarovalniških PDF-poročil",
+    "Dostop do celotnega arhiva strel",
+    "Napredne statistike",
+    "Widget za prikaz podatkov na spletni strani",
+    "Samodejno mesečno podaljšanje",
+    "Preklic kadar koli",
   ],
 };
+
+export const CENIK_PODPORNIST_DESCRIPTION =
+  "Za uporabnike, ki želijo redno spremljati strele in uporabljati dodatne prikaze ter orodja Strelka.";
+
+export const CENIK_PODPORNIST_FOOTER =
+  "Z naročnino hkrati podprete nadaljnji razvoj Strelka ter novih meteoroloških aplikacij in produktov Meteoinfa.";
+
+export const CENIK_PODPORNIST_DISCLAIMER =
+  "Paket Podpornik ne vključuje žetonov ali PDF-poročil za zavarovalnico.";
+
+export const CENIK_ZETONI_DESCRIPTION =
+  "Za posamezna preverjanja udarov strel in izdelavo PDF-poročila za zavarovalnico.";
+
+export const CENIK_ZETONI_FEATURES = [
+  "Pregled udarov za izbrano lokacijo, radij in obdobje",
+  "Prikaz udarov na zemljevidu",
+  "Pregled rezultatov in najbližjih zaznanih udarov",
+  "Izdelava PDF-poročila",
+  "Žetoni ne potečejo",
+] as const;
 
 export const PRICING_OFFERS: PricingOffer[] = [PRICING_OB_SKODI, PRICING_PODPORNIST];
 
@@ -112,7 +131,7 @@ export const PRICING_FAQ = [
 ] as const;
 
 export const PURCHASE_STEPS = [
-  "Prijavite se ali ustvarite račun.",
-  "Plačilo prek varnega plačilnega sistema (kmalu na voljo).",
-  "Za žetone izvedite poizvedbo na strani Pomoč pri zavarovalnici; za Podpornika odprite arhiv in widget.",
+  "Prijavite se ali ustvarite uporabniški račun.",
+  "Izberite nakup žetonov ali paket Podpornik ter plačilo opravite prek varnega plačilnega sistema.",
+  "Naročnina Podpornik se vsak mesec samodejno podaljša, dokler je ne prekličete v razdelku Moj Strelko.",
 ] as const;

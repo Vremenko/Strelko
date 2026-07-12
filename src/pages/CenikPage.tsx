@@ -10,7 +10,13 @@ import {
   setCheckoutPlanId,
 } from "../lib/auth-intent";
 import { isObSkodiPurchaseAllowed } from "../lib/ob-skodi-tokens";
-import { PRICING_PODPORNIST, PRICING_VAT_RATE_NOTE } from "../lib/pricing-offers";
+import {
+  CENIK_PODPORNIST_DESCRIPTION,
+  CENIK_PODPORNIST_DISCLAIMER,
+  CENIK_PODPORNIST_FOOTER,
+  CENIK_ZETONI_DESCRIPTION,
+  PRICING_PODPORNIST,
+} from "../lib/pricing-offers";
 
 export function CenikPage() {
   const { user, openAuth, paymentsEnabled, setSelectedPlan, checkout } = useStrelko();
@@ -53,29 +59,26 @@ export function CenikPage() {
     <article className="pricing-page page--standard">
       <header className="page-header pricing-page-header">
         <h1>Cenik</h1>
-        <p className="pricing-page-header__subtitle">
-          Potrebujete podroben pregled za zavarovalnico ali želite redno spremljati strele?
-        </p>
-        <p className="pricing-page-header__intro">
-          Za podroben pregled udarov strel, zemljevid in možnost izdelave PDF-poročila izberite Ob
-          škodi. Za polni arhiv, napredne statistike in widget ter podporo nadaljnjemu razvoju
-          Strelka in produktov Meteoinfa izberite Podpornika.
-        </p>
       </header>
 
-      <section className="pricing-plans" aria-label="Paketi">
+      <section className="pricing-plans" aria-label="Ponudbi">
         <div className="plan-grid plan-grid--2 pricing-plan-grid">
-          <article className="plan-card pricing-plan-card">
-            <div className="portal-card__head">
-              <h3 className="pricing-plan-card__title">Ob škodi – žetoni</h3>
-              <span className="portal-card__tag">Enkratno</span>
-            </div>
+          <article className="plan-card pricing-plan-card pricing-surface-card">
+            <h3 className="pricing-plan-card__title">Ob škodi</h3>
+            <p className="pricing-plan-card__desc">{CENIK_ZETONI_DESCRIPTION}</p>
             <ObSkodiTokenPurchase
+              variant="cenik"
               paymentsEnabled={paymentsEnabled}
               onPurchase={handleObSkodiPurchase}
             />
           </article>
-          <PricingPlanCard offer={PRICING_PODPORNIST}>
+
+          <PricingPlanCard
+            offer={PRICING_PODPORNIST}
+            description={CENIK_PODPORNIST_DESCRIPTION}
+            footerNote={CENIK_PODPORNIST_FOOTER}
+            disclaimer={CENIK_PODPORNIST_DISCLAIMER}
+          >
             <button
               type="button"
               className="btn btn-primary btn-block"
@@ -85,14 +88,17 @@ export function CenikPage() {
             >
               {podpornikCtaLabel}
             </button>
+            {!paymentsEnabled ? (
+              <p className="portal-disabled-note">Aktivacija naročnine trenutno še ni na voljo.</p>
+            ) : null}
           </PricingPlanCard>
         </div>
-        <p className="pricing-vat-rate-note">{PRICING_VAT_RATE_NOTE}</p>
       </section>
 
-      <TokenUsageExplainer />
-
-      <PricingPurchaseInfo />
+      <section className="pricing-explainer-grid" aria-label="Pojasnila">
+        <TokenUsageExplainer />
+        <PricingPurchaseInfo paymentsEnabled={paymentsEnabled} />
+      </section>
     </article>
   );
 }
