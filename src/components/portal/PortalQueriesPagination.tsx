@@ -17,6 +17,10 @@ export function PortalQueriesPagination({
   const atStart = currentPage === 0;
   const atEnd = currentPage >= totalPages - 1;
 
+  const keepScrollOnPress = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
+
   return (
     <nav className="portal-queries-pagination" aria-label="Strani poizvedb">
       <button
@@ -24,6 +28,7 @@ export function PortalQueriesPagination({
         className="portal-pagination__nav"
         disabled={atStart}
         onClick={() => onPageChange(0)}
+        onMouseDown={keepScrollOnPress}
       >
         « Začetek
       </button>
@@ -32,6 +37,7 @@ export function PortalQueriesPagination({
         className="portal-pagination__nav"
         disabled={atStart}
         onClick={() => onPageChange(currentPage - 1)}
+        onMouseDown={keepScrollOnPress}
       >
         ‹ Nazaj
       </button>
@@ -53,6 +59,7 @@ export function PortalQueriesPagination({
                 }`}
                 aria-current={item.page === currentPage ? "page" : undefined}
                 onClick={() => onPageChange(item.page)}
+                onMouseDown={keepScrollOnPress}
               >
                 {item.page + 1}
               </button>
@@ -65,6 +72,7 @@ export function PortalQueriesPagination({
         className="portal-pagination__nav"
         disabled={atEnd}
         onClick={() => onPageChange(currentPage + 1)}
+        onMouseDown={keepScrollOnPress}
       >
         Naprej ›
       </button>
@@ -73,6 +81,7 @@ export function PortalQueriesPagination({
         className="portal-pagination__nav"
         disabled={atEnd}
         onClick={() => onPageChange(totalPages - 1)}
+        onMouseDown={keepScrollOnPress}
       >
         Konec »
       </button>

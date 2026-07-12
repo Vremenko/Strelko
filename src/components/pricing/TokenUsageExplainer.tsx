@@ -43,6 +43,11 @@ export function TokenUsageExplainer() {
         glede na dolžino izbranega obdobja.
       </p>
 
+      <p className="pricing-info-notice" role="note">
+        Vse poizvedbe se samodejno shranijo v Moj Strelko, kjer si jih lahko kadar koli ponovno
+        ogledate. Ponovni ogled že plačane poizvedbe ne porabi dodatnih žetonov.
+      </p>
+
       <h3 className="pricing-subsection-title">PDF-poročilo</h3>
       <p className="pricing-section-lead">Prva izdelava PDF-poročila porabi 1 dodaten žeton.</p>
       <p className="pricing-section-lead">

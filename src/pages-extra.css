@@ -3294,6 +3294,17 @@ body.site-nav-open {
   line-height: 1.6;
 }
 
+.pricing-info-notice {
+  margin: 0 0 1.15rem;
+  padding: 0.85rem 1rem;
+  border-radius: calc(var(--radius) - 6px);
+  border: 1px solid rgba(251, 176, 6, 0.42);
+  background: rgba(251, 176, 6, 0.1);
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
 .pricing-subsection-title {
   margin: 1.15rem 0 0.55rem;
   font-size: 1.05rem;
@@ -4268,6 +4279,7 @@ body.site-nav-open {
   display: flex;
   flex-direction: column;
   gap: clamp(1rem, 0.85rem + 0.5vw, 1.35rem);
+  overflow-anchor: none;
 }
 
 .btn-sm.is-disabled,

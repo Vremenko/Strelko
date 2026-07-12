@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
@@ -23,6 +23,7 @@ export function PortalQueries() {
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
   const [pdfErrors, setPdfErrors] = useState<Record<string, string | null>>({});
   const [page, setPage] = useState(0);
+  const pendingScrollRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setPage(0);
@@ -78,10 +79,21 @@ export function PortalQueries() {
 
   const goToPage = useCallback(
     (next: number) => {
+      pendingScrollRef.current = { x: window.scrollX, y: window.scrollY };
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       setPage(Math.max(0, Math.min(totalPages - 1, next)));
     },
     [totalPages]
   );
+
+  useLayoutEffect(() => {
+    const saved = pendingScrollRef.current;
+    if (!saved) return;
+    pendingScrollRef.current = null;
+    window.scrollTo(saved.x, saved.y);
+  }, [safePage]);
 
   return (
     <div className="portal-panel">
