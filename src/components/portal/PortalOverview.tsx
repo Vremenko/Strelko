@@ -34,7 +34,7 @@ export function PortalOverview() {
             Kupljeni žetoni ne potečejo in ostanejo na vašem računu, dokler jih ne porabite.
           </p>
           <p className="portal-card__footer-link">
-            <Link to={portalTabPath("narocnina")}>Kupite dodatne žetone</Link>
+            <Link to="/cenik">Kupite dodatne žetone</Link>
           </p>
         </article>
 
@@ -42,9 +42,6 @@ export function PortalOverview() {
           <h2 className="portal-card__title">Podpornik</h2>
           <p className="portal-card__value portal-card__value--text">{podpornik.label}</p>
           <p className="portal-card__hint">{podpornik.hint}</p>
-          <p className="portal-card__footer-link">
-            <Link to={portalTabPath("narocnina")}>Paketi in plačila</Link>
-          </p>
         </article>
 
         <article className="portal-card">
@@ -68,9 +65,6 @@ export function PortalOverview() {
       <div className="portal-quick-actions">
         <Link to="/pomoc-pri-zavarovalnici" className="btn btn-primary">
           Nova poizvedba
-        </Link>
-        <Link to={portalTabPath("narocnina")} className="btn btn-ghost">
-          Paketi in plačila
         </Link>
         <Link to={portalTabPath("poizvedbe")} className="btn btn-ghost">
           Moje poizvedbe

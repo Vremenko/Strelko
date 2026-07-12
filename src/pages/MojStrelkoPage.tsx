@@ -55,12 +55,6 @@ function MojStrelkoInner() {
       <PortalTabs active={tab} onChange={onTabChange} />
 
       <PortalContent tab={tab} />
-
-      <p className="portal-back-link">
-        <button type="button" className="btn-link" onClick={() => navigate("/cenik")}>
-          ← Nazaj na cenik
-        </button>
-      </p>
     </section>
   );
 }
