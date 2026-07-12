@@ -1,4 +1,5 @@
 import type { DailyStrike, SavedQueryOut, SearchResult, StrikePoint } from "../types";
+import { formatSlTime } from "./dates";
 
 const SAVED_QUERY_ID_STORAGE_KEY = "strelko_saved_query_id_v1";
 
@@ -87,11 +88,22 @@ export function savedQueryOutToSearchResult(out: SavedQueryOut): SearchResult {
 
 export function formatQueryExecutedAt(iso: string): string {
   try {
-    return new Intl.DateTimeFormat("sl-SI", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(iso));
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    const datePart = new Intl.DateTimeFormat("sl-SI", { dateStyle: "medium" }).format(d);
+    return `${datePart}, ${formatSlTime(iso)}`;
   } catch {
     return iso;
   }
+}
+
+/** npr. 1 strela, 2 streli, 4 strele, 10 strel */
+export function strikeCountLabel(count: number): string {
+  const n = Math.abs(Math.floor(count));
+  let word: string;
+  if (n === 1) word = "strela";
+  else if (n === 2) word = "streli";
+  else if (n === 3 || n === 4) word = "strele";
+  else word = "strel";
+  return `${n} ${word}`;
 }

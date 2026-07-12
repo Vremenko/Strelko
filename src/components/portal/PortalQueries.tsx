@@ -2,14 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { useStrelko } from "../../context/StrelkoContext";
+import { formatSlDateRange } from "../../lib/dates";
 import { TOKEN_USAGE_RULES } from "../../lib/pricing-offers";
 import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
-import { formatQueryExecutedAt } from "../../lib/saved-queries";
+import { formatQueryExecutedAt, strikeCountLabel } from "../../lib/saved-queries";
 import { PortalEmptyState } from "./PortalEmptyState";
-
-function formatPeriod(from: string, to: string): string {
-  return `${from} – ${to}`;
-}
 
 const QUERIES_PER_PAGE = 5;
 
@@ -123,7 +120,7 @@ export function PortalQueries() {
                   <dl className="portal-query-card__details">
                     <div>
                       <dt>Obdobje</dt>
-                      <dd>{formatPeriod(q.date_from, q.date_to)}</dd>
+                      <dd>{formatSlDateRange(q.date_from, q.date_to)}</dd>
                     </div>
                     <div>
                       <dt>Radij</dt>
@@ -139,13 +136,13 @@ export function PortalQueries() {
                     </div>
                     <div>
                       <dt>Rezultat</dt>
-                      <dd>{q.total_strikes} udarov</dd>
+                      <dd>{strikeCountLabel(q.total_strikes)}</dd>
                     </div>
                   </dl>
                   <div className="portal-query-card__actions">
                     <button
                       type="button"
-                      className="btn btn-ghost btn-sm portal-query-card__btn"
+                      className="btn btn-primary btn-sm portal-query-card__btn"
                       onClick={() => onOpen(q.id)}
                     >
                       Odpri
