@@ -2504,14 +2504,23 @@ body.site-nav-open {
 /* —— pravne strani —— */
 .legal-page.page--standard {
   margin-bottom: 0;
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+}
+
+.legal-page.page--standard .legal-card {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.legal-page.page--standard .page-header .legal-meta {
+  max-width: none;
 }
 
 .legal-page.page--standard .page-header .legal-nav {
   margin-top: clamp(1rem, 0.75rem + 0.5vw, 1.35rem);
-  margin-bottom: 0;
-}
-
-.legal-page.page--standard .legal-back {
   margin-bottom: 0;
 }
 

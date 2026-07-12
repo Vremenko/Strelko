@@ -16,9 +16,6 @@ export function LegalPage({ pageId }: { pageId: LegalPageId }) {
 
   return (
     <article className="legal-page page--standard">
-      <p className="legal-back">
-        <Link to="/">← Nazaj na Strelko</Link>
-      </p>
       <header className="page-header">
         <h1 className="legal-title">{page.title}</h1>
         <p className="legal-meta">Zadnja posodobitev: {COMPANY.updated}</p>

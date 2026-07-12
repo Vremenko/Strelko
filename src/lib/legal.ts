@@ -367,7 +367,6 @@ export function renderLegalPage(pageId) {
 
   return `
     <article class="legal-page">
-      <p class="legal-back"><a href="/" data-nav="landing">← Nazaj na Strelko</a></p>
       <h1 class="legal-title">${page.title}</h1>
       <p class="legal-meta">Zadnja posodobitev: ${COMPANY.updated}</p>
       ${renderLegalNav(pageId)}
