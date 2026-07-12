@@ -4,13 +4,16 @@ import { COMPANY, LEGAL_PAGES, type LegalPageId } from "../lib/legal";
 export function LegalPage({ pageId }: { pageId: LegalPageId }) {
   const page = LEGAL_PAGES[pageId];
 
+  const navLabel = (p: (typeof LEGAL_PAGES)[LegalPageId]) =>
+    "navTitle" in p && typeof p.navTitle === "string" ? p.navTitle : p.title;
+
   const nav = Object.entries(LEGAL_PAGES).map(([id, p]) => (
     <Link
       key={id}
       to={p.path}
       className={`legal-nav-link${id === pageId ? " is-active" : ""}`}
     >
-      {p.title}
+      {navLabel(p)}
     </Link>
   ));
 
