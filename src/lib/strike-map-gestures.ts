@@ -1,7 +1,7 @@
 import type { Map as LeafletMap } from "leaflet";
 
 const DESKTOP_HINT = "Ctrl + kolesce ali vlečenje miške";
-const MOBILE_HINT = "Premakni zemljevid z dvema prstoma";
+const MOBILE_HINT = "Premaknite zemljevid z dvema prstoma.";
 const HINT_HIDE_MS = 700;
 const MOB_DRAG_HINT_PX = 3;
 const PINCH_DIST_CHANGE = 0.02;
