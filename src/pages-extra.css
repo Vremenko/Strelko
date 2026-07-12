@@ -1321,6 +1321,53 @@ label.field-labeled > span {
   padding-right: 2.5rem;
 }
 
+.auth-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-field-error {
+  margin: 0.35rem 0 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--danger);
+}
+
+.auth-field-hint {
+  margin: 0.35rem 0 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.auth-field-error-terms {
+  margin-top: -0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.auth-register-success p {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.auth-register-success-lead {
+  font-size: 0.95rem;
+}
+
+.auth-register-success-hint {
+  color: var(--muted);
+  font-size: 0.88rem !important;
+}
+
+.auth-register-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
 .modal-close-btn {
   position: absolute;
   top: 0.65rem;

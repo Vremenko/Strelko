@@ -973,8 +973,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       register: async (email, password) => {
         await api.register(email, password);
-        alert("Račun ustvarjen. Preverite e-pošto za aktivacijo, nato se prijavite.");
-        setModals((m) => ({ ...m, auth: "login" }));
       },
       loginGoogle: async (credential) => {
         const tok = await api.loginGoogle(credential);
