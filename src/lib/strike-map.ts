@@ -64,24 +64,26 @@ function computeMinZoom(map: L.Map): number | null {
   return Math.max(7, Math.ceil(zoom));
 }
 
+const MAP_SIZE_EPS_PX = 2;
+
+/** Pixel padding derived from actual map width/height (not viewport alone). */
 function computeCircleFitPadding(map: L.Map): {
   paddingTopLeft: L.PointExpression;
   paddingBottomRight: L.PointExpression;
 } {
   map.invalidateSize(true);
   const size = map.getSize();
-  const minDim = Math.min(size.x, size.y);
-  const base = Math.round(Math.min(16, Math.max(8, minDim * 0.028)));
-  const stroke = 3;
-  const edge = base + stroke;
+  const edgeX = Math.round(Math.min(16, Math.max(8, size.x * 0.012))) + 3;
+  const edgeY = Math.round(Math.min(16, Math.max(8, size.y * 0.012))) + 3;
   return {
-    paddingTopLeft: [edge, edge],
-    paddingBottomRight: [edge + 44, edge + 22],
+    paddingTopLeft: [edgeX, edgeY],
+    paddingBottomRight: [edgeX + 44, edgeY + 22],
   };
 }
 
 function getSearchCircleBounds(lat: number, lon: number, radiusKm: number): L.LatLngBounds {
-  return L.circle([lat, lon], { radius: radiusKm * 1000 }).getBounds();
+  const bounds = L.circle([lat, lon], { radius: radiusKm * 1000 }).getBounds();
+  return bounds.pad(0.004);
 }
 
 function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: number): boolean {
@@ -90,6 +92,7 @@ function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: numbe
     _searchMinZoom?: number;
     _searchCenter?: L.LatLng;
     _searchZoomClampBound?: boolean;
+    _programmaticFit?: boolean;
   };
   if (typeof map.setMaxBounds !== "function" || typeof host.setMaxBoundsViscosity !== "function") {
     return false;
@@ -105,7 +108,10 @@ function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: numbe
 
   if (!host._searchZoomClampBound) {
     host._searchZoomClampBound = true;
-    const clampZoom = () => {
+    const clampZoom = (ev?: L.LeafletEvent) => {
+      if (host._programmaticFit) return;
+      const original = (ev as L.LeafletEvent & { originalEvent?: Event } | undefined)?.originalEvent;
+      if (!original) return;
       const floor = host._searchMinZoom;
       if (floor != null && map.getZoom() < floor) {
         map.setZoom(floor, { animate: false });
@@ -113,10 +119,6 @@ function applySearchLimits(map: L.Map, lat: number, lon: number, radiusKm: numbe
     };
     map.on("zoom", clampZoom);
     map.on("zoomend", clampZoom);
-  }
-
-  if (map.getZoom() < minZoom && host._searchCenter) {
-    map.setView(host._searchCenter, minZoom, { animate: false });
   }
 
   void radiusKm;
@@ -138,35 +140,17 @@ function fitSearchRadius(map: L.Map, lat: number, lon: number, radiusKm: number)
   host._programmaticFit = true;
   try {
     map.fitBounds(bounds, {
-      animate: false,
-      maxZoom: 15,
       paddingTopLeft,
       paddingBottomRight,
+      maxZoom: 15,
+      animate: false,
     });
   } finally {
-    host._programmaticFit = false;
+    requestAnimationFrame(() => {
+      host._programmaticFit = false;
+    });
   }
   return true;
-}
-
-function fitStrikeMarkers(
-  map: L.Map,
-  group: L.FeatureGroup,
-  lat: number,
-  lon: number,
-  radiusKm: number,
-  strikeCount: number
-) {
-  if (strikeCount > 0) {
-    try {
-      map.fitBounds(group.getBounds().pad(0.12), { animate: false, maxZoom: 15 });
-    } catch {
-      fitSearchRadius(map, lat, lon, radiusKm);
-      return;
-    }
-  } else {
-    fitSearchRadius(map, lat, lon, radiusKm);
-  }
 }
 
 function waitForSearchLimits(
@@ -174,12 +158,11 @@ function waitForSearchLimits(
   lat: number,
   lon: number,
   radiusKm: number,
-  onReady: (minZoom: number) => void
+  onReady: () => void
 ) {
   const tick = () => {
     if (applySearchLimits(map, lat, lon, radiusKm)) {
-      const minZoom = (map as L.Map & { _searchMinZoom?: number })._searchMinZoom ?? 7;
-      onReady(minZoom);
+      onReady();
       return;
     }
     requestAnimationFrame(tick);
@@ -254,7 +237,7 @@ export function createStrikeMap(
   (el as HTMLElement & { _leafletMap?: L.Map })._leafletMap = map;
 
   map.attributionControl.setPrefix("");
-  map.setView([lat, lon], mobile ? 10 : 11, { animate: false });
+  map.setView([lat, lon], 7, { animate: false });
 
   const unbindGestures = bindStreleMapZoomGestures(map, el);
   ensureStrikeMapPanes(map);
@@ -290,7 +273,7 @@ export function createStrikeMap(
   }).addTo(map);
 
   const strikeLayer = L.layerGroup().addTo(map);
-  let fitGroup = rebuildStrikeLayer(strikeLayer, strikes, lat, lon);
+  rebuildStrikeLayer(strikeLayer, strikes, lat, lon);
 
   type MapHost = L.Map & {
     _programmaticFit?: boolean;
@@ -301,6 +284,8 @@ export function createStrikeMap(
 
   let circleFitSeq = 0;
   let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastFitWidth = 0;
+  let lastFitHeight = 0;
 
   const markUserAdjusted = (ev: L.LeafletEvent) => {
     if (mapHost._programmaticFit) return;
@@ -310,6 +295,24 @@ export function createStrikeMap(
   map.on("movestart", markUserAdjusted);
   map.on("zoomstart", markUserAdjusted);
 
+  const mapSizeChanged = (width: number, height: number) =>
+    Math.abs(width - lastFitWidth) > MAP_SIZE_EPS_PX ||
+    Math.abs(height - lastFitHeight) > MAP_SIZE_EPS_PX;
+
+  const runCircleFit = (opts?: { ignoreUserAdjusted?: boolean; requireSizeChange?: boolean }) => {
+    map.invalidateSize(true);
+    const size = map.getSize();
+    if (size.x < 20 || size.y < 20) return false;
+    if (opts?.requireSizeChange && !mapSizeChanged(size.x, size.y)) return true;
+    if (!fitSearchRadius(map, lat, lon, radiusKm)) return false;
+    lastFitWidth = size.x;
+    lastFitHeight = size.y;
+    if (opts?.ignoreUserAdjusted) {
+      mapHost._userAdjustedView = false;
+    }
+    return true;
+  };
+
   const scheduleCircleFit = () => {
     if (mapHost._userAdjustedView) return;
     circleFitSeq += 1;
@@ -317,29 +320,40 @@ export function createStrikeMap(
 
     const attempt = () => {
       if (seq !== circleFitSeq || mapHost._userAdjustedView) return;
-      if (fitSearchRadius(map, lat, lon, radiusKm)) return;
+      if (runCircleFit()) return;
       requestAnimationFrame(attempt);
     };
 
     requestAnimationFrame(attempt);
   };
 
+  const scheduleResizeCircleFit = () => {
+    circleFitSeq += 1;
+    const seq = circleFitSeq;
+
+    const attempt = () => {
+      if (seq !== circleFitSeq) return;
+      if (runCircleFit({ ignoreUserAdjusted: true, requireSizeChange: true })) return;
+      requestAnimationFrame(attempt);
+    };
+
+    requestAnimationFrame(attempt);
+  };
+
+  const onContainerResize = () => {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scheduleResizeCircleFit, 80);
+  };
+
   const resizeObserver =
-    typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(() => {
-          if (mapHost._userAdjustedView) return;
-          if (resizeTimer) clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(scheduleCircleFit, 80);
-        })
-      : null;
+    typeof ResizeObserver !== "undefined" ? new ResizeObserver(onContainerResize) : null;
   resizeObserver?.observe(el);
 
-  const updateStrikeMarkers = (nextStrikes: StrikePoint[], refitToMarkers: boolean) => {
-    fitGroup = rebuildStrikeLayer(strikeLayer, nextStrikes, lat, lon);
-    if (refitToMarkers) {
-      fitStrikeMarkers(map, fitGroup, lat, lon, radiusKm, nextStrikes.length);
-      return;
-    }
+  const onWindowResize = () => onContainerResize();
+  window.addEventListener("resize", onWindowResize);
+
+  const updateStrikeMarkers = (nextStrikes: StrikePoint[]) => {
+    rebuildStrikeLayer(strikeLayer, nextStrikes, lat, lon);
   };
 
   waitForSearchLimits(map, lat, lon, radiusKm, () => {
@@ -347,8 +361,8 @@ export function createStrikeMap(
   });
 
   return {
-    updateStrikes(nextStrikes, opts = {}) {
-      updateStrikeMarkers(nextStrikes, !!opts.refit);
+    updateStrikes(nextStrikes) {
+      updateStrikeMarkers(nextStrikes);
     },
     destroy() {
       basemapLoadActive = false;
@@ -358,6 +372,7 @@ export function createStrikeMap(
         resizeTimer = null;
       }
       resizeObserver?.disconnect();
+      window.removeEventListener("resize", onWindowResize);
       map.off("movestart", markUserAdjusted);
       map.off("zoomstart", markUserAdjusted);
       try {
