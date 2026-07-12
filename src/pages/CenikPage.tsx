@@ -100,7 +100,7 @@ export function CenikPage() {
 
       <section className="pricing-explainer-grid" aria-label="Pojasnila">
         <TokenUsageExplainer />
-        <PricingPurchaseInfo paymentsEnabled={paymentsEnabled} />
+        <PricingPurchaseInfo />
       </section>
     </article>
   );

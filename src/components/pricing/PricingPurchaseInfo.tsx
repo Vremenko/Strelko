@@ -1,10 +1,6 @@
 import { PURCHASE_STEPS } from "../../lib/pricing-offers";
 
-interface PricingPurchaseInfoProps {
-  paymentsEnabled: boolean;
-}
-
-export function PricingPurchaseInfo({ paymentsEnabled }: PricingPurchaseInfoProps) {
+export function PricingPurchaseInfo() {
   return (
     <section
       className="pricing-info-card pricing-surface-card pricing-purchase-info"
@@ -21,21 +17,6 @@ export function PricingPurchaseInfo({ paymentsEnabled }: PricingPurchaseInfoProp
           </li>
         ))}
       </ol>
-      <ul className="plan-features pricing-purchase-info__notes">
-        <li>
-          Po preklicu novih plačil ne bo, dostop do paketa Podpornik pa ostane aktiven do konca že
-          plačanega obdobja.
-        </li>
-        <li>
-          Potrdila o plačilu in računi bodo po povezavi plačilnega sistema poslani po e-pošti ter
-          dostopni v razdelku Moj Strelko.
-        </li>
-      </ul>
-      {!paymentsEnabled ? (
-        <p className="pricing-unavailable-notice" role="status">
-          Nakup žetonov in aktivacija naročnine trenutno še nista na voljo.
-        </p>
-      ) : null}
     </section>
   );
 }

@@ -138,5 +138,6 @@ export const PRICING_FAQ = [
 export const PURCHASE_STEPS = [
   "Prijavite se ali ustvarite uporabniški račun.",
   "Izberite nakup žetonov ali paket Podpornik ter plačilo opravite prek varnega plačilnega sistema.",
-  "Naročnina Podpornik se vsak mesec samodejno podaljša, dokler je ne prekličete v razdelku Moj Strelko.",
+  "Naročnina Podpornik se vsak mesec samodejno podaljša, dokler je ne prekličete v razdelku Moj Strelko. Po preklicu novih plačil ne bo, dostop do paketa Podpornik pa ostane aktiven do konca že plačanega obdobja.",
+  "Potrdila o plačilu in računi bodo po povezavi plačilnega sistema poslani po e-pošti ter dostopni v razdelku Moj Strelko.",
 ] as const;
