@@ -13,11 +13,11 @@ export function TokenUsageExplainer() {
       aria-labelledby="pricing-tokens-title"
     >
       <h2 className="pricing-section-title" id="pricing-tokens-title">
-        Žetoni za preverjanje škode
+        Žetoni za pregled udarov strel
       </h2>
       <p className="pricing-section-lead">
-        Žetone uporabite za preverjanje udarov strel v bližini izbranega naslova in za izdelavo
-        PDF-poročila, ki ga lahko uporabite pri komunikaciji z zavarovalnico.
+        Žetone uporabite za pregled udarov strel v bližini izbranega naslova in za izdelavo
+        PDF-poročila, ki vam lahko pomaga pri uveljavljanju škode pri zavarovalnici.
       </p>
 
       <h3 className="pricing-subsection-title">Kaj omogoča pregled?</h3>
