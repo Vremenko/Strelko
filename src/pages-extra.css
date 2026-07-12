@@ -3159,6 +3159,14 @@ body.site-nav-open {
   overflow-x: clip;
 }
 
+.pricing-page > .page-header + .pricing-plans {
+  margin-top: clamp(2.5rem, 1.85rem + 1.35vw, 3.85rem);
+}
+
+.pricing-page .pricing-plans + .pricing-explainer-grid {
+  margin-top: clamp(2rem, 1.35rem + 1.75vw, 3.25rem);
+}
+
 .pricing-page-header {
   text-align: left;
 }
@@ -3261,8 +3269,8 @@ body.site-nav-open {
 .pricing-explainer-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(1rem, 0.75rem + 1vw, 1.5rem);
-  margin-top: clamp(22px, 1rem + 1.8vw, 36px);
+  gap: clamp(1.5rem, 1.05rem + 1.25vw, 2.25rem);
+  margin-top: 0;
 }
 
 .pricing-info-card {
