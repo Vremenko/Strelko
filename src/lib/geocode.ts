@@ -12,6 +12,14 @@ const PRODUCT_BBOX = {
   maxLon: 16.63,
 };
 
+const PHOTON_BBOX = `${PRODUCT_BBOX.minLon},${PRODUCT_BBOX.minLat},${PRODUCT_BBOX.maxLon},${PRODUCT_BBOX.maxLat}`;
+
+type PlaceKind = "settlement" | "street" | "other";
+
+interface SuggestCandidate extends GeocodeResult {
+  placeKind: PlaceKind;
+}
+
 function normalizeCoordinate(value: unknown): number {
   return typeof value === "number" ? value : Number(value);
 }
@@ -41,10 +49,37 @@ function prefixRank(label: string, query: string): number {
   const q = normalizeMatchText(query);
   const head = normalizeMatchText(placeHead(label));
   if (head.startsWith(q)) return 0;
-  if (head.includes(q)) return 1;
+  const words = head.split(/[\s,-]+/).filter(Boolean);
+  if (words.some((word) => word.startsWith(q))) return 1;
+  if (head.includes(q)) return 2;
   const full = normalizeMatchText(label);
-  if (full.includes(q)) return 2;
+  if (full.includes(q)) return 3;
   return 9;
+}
+
+function kindRank(kind: PlaceKind): number {
+  if (kind === "settlement") return 0;
+  if (kind === "other") return 1;
+  return 2;
+}
+
+function classifyApiLabel(label: string): PlaceKind {
+  const head = placeHead(label);
+  if (/\d/.test(head)) return "street";
+  if (/\b(ulica|cesta|pot|trg|nas\.|številka)\b/i.test(label)) return "street";
+  return "settlement";
+}
+
+function classifyPhotonPlace(props: Record<string, unknown>): PlaceKind {
+  const osmKey = typeof props.osm_key === "string" ? props.osm_key : "";
+  const osmValue = typeof props.osm_value === "string" ? props.osm_value : "";
+  if (osmKey === "place") {
+    if (["street", "road", "path", "track"].includes(osmValue)) return "street";
+    return "settlement";
+  }
+  if (osmKey === "highway") return "street";
+  if (["amenity", "building", "shop", "tourism", "leisure"].includes(osmKey)) return "other";
+  return "other";
 }
 
 function resultKey(result: GeocodeResult): string {
@@ -101,7 +136,7 @@ function formatPhotonLabel(props: Record<string, unknown>): string {
   return parts.join(", ");
 }
 
-async function fetchApiSuggestions(query: string, limit: number): Promise<GeocodeResult[]> {
+async function fetchApiSuggestions(query: string, limit: number): Promise<SuggestCandidate[]> {
   const params = new URLSearchParams({ q: query, limit: String(limit) });
   const res = await fetch(`${API_BASE}/geocode/search?${params}`);
   const data = await res.json().catch(() => ({}));
@@ -112,14 +147,16 @@ async function fetchApiSuggestions(query: string, limit: number): Promise<Geocod
       .results || [];
   return items
     .map((item) => normalizeGeocodeResult(item))
-    .filter((item): item is GeocodeResult => item !== null);
+    .filter((item): item is GeocodeResult => item !== null)
+    .map((item) => ({ ...item, placeKind: classifyApiLabel(item.label) }));
 }
 
-async function fetchPhotonSuggestions(query: string, limit: number): Promise<GeocodeResult[]> {
-  const photonLimit = query.length <= 3 ? 30 : Math.max(limit * 2, 8);
+async function fetchPhotonSuggestions(query: string, limit: number): Promise<SuggestCandidate[]> {
+  const photonLimit = query.length <= 3 ? 30 : Math.max(limit * 2, 12);
   const params = new URLSearchParams({
     q: query,
     limit: String(photonLimit),
+    bbox: PHOTON_BBOX,
   });
   const res = await fetch(`https://photon.komoot.io/api/?${params}`);
   const data = (await res.json().catch(() => ({}))) as {
@@ -130,7 +167,7 @@ async function fetchPhotonSuggestions(query: string, limit: number): Promise<Geo
   };
   if (!res.ok || !Array.isArray(data.features)) return [];
 
-  const out: GeocodeResult[] = [];
+  const out: SuggestCandidate[] = [];
   for (const feature of data.features) {
     const coords = feature.geometry?.coordinates;
     const props = feature.properties;
@@ -142,37 +179,70 @@ async function fetchPhotonSuggestions(query: string, limit: number): Promise<Geo
     if (!inProductBBox(lat, lon)) continue;
 
     const label = formatPhotonLabel(props);
-    out.push({ label, lat, lon });
+    out.push({ label, lat, lon, placeKind: classifyPhotonPlace(props) });
   }
   return out;
 }
 
-function rankSuggestions(results: GeocodeResult[], query: string): GeocodeResult[] {
+function rankSuggestions(results: SuggestCandidate[], query: string): GeocodeResult[] {
   const q = query.trim();
   const ranked = results
     .map((result, index) => ({
       result,
       index,
       rank: prefixRank(result.label, q),
+      kind: kindRank(result.placeKind),
     }))
-    .sort((a, b) => a.rank - b.rank || a.index - b.index);
+    .filter((entry) => entry.rank <= 3)
+    .sort(
+      (a, b) =>
+        a.rank - b.rank ||
+        a.kind - b.kind ||
+        a.index - b.index
+    );
 
-  const startsWithMatches = ranked.filter((entry) => entry.rank === 0);
+  const settlements = ranked.filter((entry) => entry.result.placeKind === "settlement");
+  const pool = settlements.length > 0 ? settlements : ranked.filter((entry) => entry.result.placeKind !== "street");
+
+  const startsWithMatches = pool.filter((entry) => entry.rank === 0);
+  const wordStartMatches = pool.filter((entry) => entry.rank === 1);
   const picked = (
     startsWithMatches.length > 0
       ? startsWithMatches
-      : ranked.filter((entry) => entry.rank <= 1)
+      : wordStartMatches.length > 0
+        ? wordStartMatches
+        : pool.filter((entry) => entry.rank <= 2)
   ).slice(0, SUGGEST_LIMIT);
-  return picked.map((entry) => entry.result);
+
+  return picked.map((entry) => ({
+    label: entry.result.label,
+    lat: entry.result.lat,
+    lon: entry.result.lon,
+  }));
 }
 
-function mergeSuggestions(apiResults: GeocodeResult[], photonResults: GeocodeResult[]): GeocodeResult[] {
-  const merged: GeocodeResult[] = [];
-  const seen = new Set<string>();
+function mergeSuggestions(apiResults: SuggestCandidate[], photonResults: SuggestCandidate[]): SuggestCandidate[] {
+  const merged: SuggestCandidate[] = [];
+  const seenCoords = new Set<string>();
+  const seenNames = new Map<string, SuggestCandidate>();
+
   for (const result of [...apiResults, ...photonResults]) {
+    const nameKey = normalizeMatchText(placeHead(result.label));
+    const existingByName = seenNames.get(nameKey);
+    if (
+      !existingByName ||
+      kindRank(result.placeKind) < kindRank(existingByName.placeKind) ||
+      (kindRank(result.placeKind) === kindRank(existingByName.placeKind) &&
+        result.label.length < existingByName.label.length)
+    ) {
+      seenNames.set(nameKey, result);
+    }
+  }
+
+  for (const result of seenNames.values()) {
     const key = resultKey(result);
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (seenCoords.has(key)) continue;
+    seenCoords.add(key);
     merged.push(result);
   }
   return merged;
