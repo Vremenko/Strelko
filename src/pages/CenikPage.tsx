@@ -96,9 +96,6 @@ export function CenikPage() {
             >
               {podpornikCtaLabel}
             </button>
-            {!paymentsEnabled ? (
-              <p className="portal-disabled-note">Aktivacija naročnine trenutno še ni na voljo.</p>
-            ) : null}
           </PricingPlanCard>
         </div>
       </section>

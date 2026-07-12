@@ -3262,6 +3262,42 @@ body.site-nav-open {
   padding-top: 1.35rem;
 }
 
+.pricing-plan-card__footer--cta {
+  gap: 0;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.pricing-plan-grid .ob-skodi-purchase--cenik {
+  flex: 1;
+  min-height: 0;
+}
+
+.pricing-plan-grid .ob-skodi-purchase__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pricing-plan-grid .pricing-plan-card__footer--cta .btn-block,
+.pricing-plan-grid .pricing-plan-card__footer--cta .ob-skodi-purchase__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  width: 100%;
+  margin-top: 0;
+  padding: 0 1.25rem;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.pricing-plan-grid .pricing-plan-card__main .pricing-plan-card__disclaimer {
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
 .pricing-plan-grid .pricing-plan-card__price {
   margin-top: 1.2rem;
 }
@@ -3281,11 +3317,6 @@ body.site-nav-open {
 
 .pricing-plan-grid .ob-skodi-purchase--cenik > .pricing-plan-card__price {
   margin-top: 1.2rem;
-}
-
-.pricing-plan-grid .ob-skodi-purchase__cta {
-  margin-top: auto;
-  padding-top: 1.35rem;
 }
 
 .pricing-plan-card__features {

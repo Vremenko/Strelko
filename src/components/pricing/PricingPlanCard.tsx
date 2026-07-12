@@ -25,7 +25,6 @@ export function PricingPlanCard({
 }: PricingPlanCardProps) {
   const featureItems = features ?? offer.features;
   const exVatLabel = priceExVat ?? offer.priceExVat;
-  const showFooter = Boolean(disclaimer || children);
   return (
     <article className="plan-card pricing-plan-card pricing-surface-card">
       {badge ? <span className="pricing-plan-card__badge">{badge}</span> : null}
@@ -46,12 +45,10 @@ export function PricingPlanCard({
           ))}
         </ul>
         {footerNote ? <p className="pricing-plan-card__footer-note">{footerNote}</p> : null}
+        {disclaimer ? <p className="pricing-plan-card__disclaimer">{disclaimer}</p> : null}
       </div>
-      {showFooter ? (
-        <div className="pricing-plan-card__footer">
-          {disclaimer ? <p className="pricing-plan-card__disclaimer">{disclaimer}</p> : null}
-          {children}
-        </div>
+      {children ? (
+        <div className="pricing-plan-card__footer pricing-plan-card__footer--cta">{children}</div>
       ) : null}
     </article>
   );

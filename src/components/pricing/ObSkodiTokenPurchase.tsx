@@ -97,10 +97,10 @@ export function ObSkodiTokenPurchase({
   })();
 
   const showUnavailableNote =
-    !paymentsEnabled || (loggedIn && !purchaseReady);
+    !isCenik && (!paymentsEnabled || (loggedIn && !purchaseReady));
 
-  return (
-    <div className={`ob-skodi-purchase${isCenik ? " ob-skodi-purchase--cenik" : ""}`}>
+  const purchaseContent = (
+    <>
       <p className="pricing-plan-card__price">
         <span className="pricing-plan-card__amount">{OB_SKODI_PER_TOKEN_GROSS_LABEL}</span>
         <span className="pricing-plan-card__period">na žeton</span>
@@ -192,24 +192,41 @@ export function ObSkodiTokenPurchase({
           <dd>{formatEurSl(order.grossEur)}</dd>
         </div>
       </dl>
+    </>
+  );
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block ob-skodi-purchase__cta"
-        onClick={handlePurchase}
-        disabled={!buttonEnabled}
-        aria-disabled={!buttonEnabled}
-      >
-        {ctaLabel}
-      </button>
+  const purchaseButton = (
+    <button
+      type="button"
+      className="btn btn-primary btn-block ob-skodi-purchase__cta"
+      onClick={handlePurchase}
+      disabled={!buttonEnabled}
+      aria-disabled={!buttonEnabled}
+    >
+      {ctaLabel}
+    </button>
+  );
 
-      {showUnavailableNote ? (
-        <p className="portal-disabled-note">
-          {isCenik
-            ? "Nakup žetonov trenutno še ni na voljo."
-            : "Nakup žetonov trenutno ni na voljo (plačila niso vklopljena)."}
-        </p>
-      ) : null}
+  return (
+    <div className={`ob-skodi-purchase${isCenik ? " ob-skodi-purchase--cenik" : ""}`}>
+      {isCenik ? (
+        <>
+          <div className="ob-skodi-purchase__body">{purchaseContent}</div>
+          <div className="pricing-plan-card__footer pricing-plan-card__footer--cta">
+            {purchaseButton}
+          </div>
+        </>
+      ) : (
+        <>
+          {purchaseContent}
+          {purchaseButton}
+          {showUnavailableNote ? (
+            <p className="portal-disabled-note">
+              Nakup žetonov trenutno ni na voljo (plačila niso vklopljena).
+            </p>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
