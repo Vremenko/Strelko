@@ -1,4 +1,5 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
+import { peekCheckoutQuantity } from "../../lib/auth-intent";
 import {
   calculateObSkodiOrder,
   clampObSkodiQuantity,
@@ -17,6 +18,8 @@ interface ObSkodiTokenPurchaseProps {
   paymentsEnabled: boolean;
   /** Cenik prikaže razširjeno vsebino; privzeto kompaktno (portal). */
   variant?: "default" | "cenik";
+  /** Pri prijavi na ceniku omogoči gumb za prijavo (brez checkouta). */
+  loggedIn?: boolean;
   /** Prikaže trenutno stanje (portal). */
   showBalance?: boolean;
   tokenBalance?: string;
@@ -28,15 +31,23 @@ interface ObSkodiTokenPurchaseProps {
 export function ObSkodiTokenPurchase({
   paymentsEnabled,
   variant = "default",
+  loggedIn = true,
   showBalance = false,
   tokenBalance,
   showAddToBalanceNote = false,
   onPurchase,
 }: ObSkodiTokenPurchaseProps) {
-  const [quantity, setQuantity] = useState(OB_SKODI_MIN_QUANTITY);
-  const [inputValue, setInputValue] = useState(String(OB_SKODI_MIN_QUANTITY));
+  const savedQuantity = variant === "cenik" ? peekCheckoutQuantity() : null;
+  const [quantity, setQuantity] = useState(() =>
+    savedQuantity != null ? clampObSkodiQuantity(savedQuantity) : OB_SKODI_MIN_QUANTITY
+  );
+  const [inputValue, setInputValue] = useState(() =>
+    savedQuantity != null ? String(clampObSkodiQuantity(savedQuantity)) : String(OB_SKODI_MIN_QUANTITY)
+  );
   const quantityId = useId();
-  const purchaseAllowed = isObSkodiPurchaseAllowed(paymentsEnabled);
+  const purchaseReady = isObSkodiPurchaseAllowed(paymentsEnabled);
+  const authRequired = paymentsEnabled && !loggedIn;
+  const buttonEnabled = purchaseReady || authRequired;
   const order = calculateObSkodiOrder(quantity);
   const isCenik = variant === "cenik";
 
@@ -45,6 +56,13 @@ export function ObSkodiTokenPurchase({
     setQuantity(clamped);
     setInputValue(String(clamped));
   }, []);
+
+  useEffect(() => {
+    if (!isCenik) return;
+    const saved = peekCheckoutQuantity();
+    if (saved == null) return;
+    syncQuantity(saved);
+  }, [isCenik, loggedIn, syncQuantity]);
 
   const handleDecrease = () => {
     if (quantity <= OB_SKODI_MIN_QUANTITY) return;
@@ -66,9 +84,20 @@ export function ObSkodiTokenPurchase({
   };
 
   const handlePurchase = () => {
-    if (!purchaseAllowed) return;
+    if (!buttonEnabled) return;
     onPurchase(order.quantity);
   };
+
+  const ctaLabel = (() => {
+    if (!paymentsEnabled) return obSkodiPurchaseCtaLabel(quantity, false);
+    if (!loggedIn) {
+      return `Prijava ali registracija — ${tokenCountLabel(order.quantity, "accusative")}`;
+    }
+    return obSkodiPurchaseCtaLabel(quantity, purchaseReady);
+  })();
+
+  const showUnavailableNote =
+    !paymentsEnabled || (loggedIn && !purchaseReady);
 
   return (
     <div className={`ob-skodi-purchase${isCenik ? " ob-skodi-purchase--cenik" : ""}`}>
@@ -168,13 +197,13 @@ export function ObSkodiTokenPurchase({
         type="button"
         className="btn btn-primary btn-block ob-skodi-purchase__cta"
         onClick={handlePurchase}
-        disabled={!purchaseAllowed}
-        aria-disabled={!purchaseAllowed}
+        disabled={!buttonEnabled}
+        aria-disabled={!buttonEnabled}
       >
-        {obSkodiPurchaseCtaLabel(quantity, purchaseAllowed)}
+        {ctaLabel}
       </button>
 
-      {!purchaseAllowed ? (
+      {showUnavailableNote ? (
         <p className="portal-disabled-note">
           {isCenik
             ? "Nakup žetonov trenutno še ni na voljo."

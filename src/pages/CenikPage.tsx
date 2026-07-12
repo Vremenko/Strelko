@@ -4,10 +4,11 @@ import { PricingPurchaseInfo } from "../components/pricing/PricingPurchaseInfo";
 import { TokenUsageExplainer } from "../components/pricing/TokenUsageExplainer";
 import { useStrelko } from "../context/StrelkoContext";
 import {
+  CENIK_RETURN_PATH,
   checkoutPlanForTab,
-  portalTabPath,
   setAuthReturn,
   setCheckoutPlanId,
+  setCheckoutQuantity,
 } from "../lib/auth-intent";
 import { isObSkodiPurchaseAllowed } from "../lib/ob-skodi-tokens";
 import {
@@ -30,22 +31,25 @@ export function CenikPage() {
       void checkout();
       return;
     }
-    setAuthReturn(portalTabPath("narocnina"));
+    setAuthReturn(CENIK_RETURN_PATH);
     setCheckoutPlanId(planId);
-    openAuth("register");
+    openAuth("login");
   };
 
-  const handleObSkodiPurchase = (_quantity: number) => {
-    if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
+  const handleObSkodiPurchase = (quantity: number) => {
     const planId = checkoutPlanForTab("zetoni");
     if (user) {
+      if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
       setSelectedPlan(planId);
+      setCheckoutQuantity(quantity);
       void checkout();
       return;
     }
-    setAuthReturn(portalTabPath("narocnina"));
+    if (!paymentsEnabled) return;
+    setAuthReturn(CENIK_RETURN_PATH);
     setCheckoutPlanId(planId);
-    openAuth("register");
+    setCheckoutQuantity(quantity);
+    openAuth("login");
   };
 
   const podpornikCtaLabel = !paymentsEnabled
@@ -70,6 +74,7 @@ export function CenikPage() {
             <ObSkodiTokenPurchase
               variant="cenik"
               paymentsEnabled={paymentsEnabled}
+              loggedIn={Boolean(user)}
               onPurchase={handleObSkodiPurchase}
             />
           </article>

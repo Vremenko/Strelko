@@ -12,7 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { geocodeSuggest, isValidGeocodePlace, resolveGeocodePlace } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
-import { clearCheckoutPlanId, consumeCheckoutPlanId, peekCheckoutPlanId } from "../lib/auth-intent";
+import { clearAuthCheckoutIntent, clearCheckoutIntent, clearCheckoutPlanId, consumeCheckoutPlanId, isCenikAuthReturn, peekAuthReturn, peekCheckoutPlanId } from "../lib/auth-intent";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
 import {
   DEFAULT_SEARCH_RADIUS_KM,
@@ -614,6 +614,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           },
           creditsOptions: {},
         });
+        clearCheckoutIntent();
       } catch (e) {
         const err = e as ApiError;
         setModals((m) => ({
@@ -632,6 +633,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const afterAuth = useCallback(async () => {
     await refreshUser();
     setModals((m) => ({ ...m, auth: null }));
+    if (isCenikAuthReturn(peekAuthReturn())) {
+      return;
+    }
     const pendingPlan = peekCheckoutPlanId();
     if (pendingPlan) {
       setSelectedPlanState(pendingPlan);
@@ -641,7 +645,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         window.location.href = checkout_url;
         return;
       } catch (e) {
-        clearCheckoutPlanId();
+        clearCheckoutIntent();
         const err = e as ApiError;
         setModals((m) => ({
           ...m,
@@ -984,7 +988,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
       closeAuth: () => {
-        clearCheckoutPlanId();
+        clearAuthCheckoutIntent();
         setModals((m) => ({ ...m, auth: null }));
       },
       openForgotPassword: () =>
@@ -1004,7 +1008,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         await afterAuth();
       },
       logout: () => {
-        clearCheckoutPlanId();
+        clearAuthCheckoutIntent();
         setToken(null);
         setUser(null);
         setCredits(null);
