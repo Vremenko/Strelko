@@ -46,6 +46,7 @@ export function SearchCard({
     selectPlace,
     suggestions,
     fetchSuggestions,
+    cancelSuggestions,
     loading,
     preview,
     previewScreen,
@@ -54,12 +55,26 @@ export function SearchCard({
     clearSearch,
   } = useStrelko();
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [queryQuote, setQueryQuote] = useState<QueryQuoteOut | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const quoteDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const quoteRequestSeq = useRef(0);
   const locationFieldRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActiveSuggestion(-1);
+  }, [suggestions, locationQuery]);
+
+  useEffect(() => {
+    const trimmed = locationQuery.trim();
+    if (trimmed.length >= 3 && suggestions.length > 0) {
+      setShowSuggestions(true);
+    } else if (suggestions.length === 0) {
+      setShowSuggestions(false);
+    }
+  }, [suggestions, locationQuery]);
 
   useEffect(() => {
     if (!showSuggestions) return;
@@ -136,14 +151,60 @@ export function SearchCard({
     setLocationQuery(value);
     if (selected && selected.label.trim() !== value.trim()) selectPlace(null);
     clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => void fetchSuggestions(value), 400);
-    setShowSuggestions(true);
+
+    const trimmed = value.trim();
+    if (trimmed.length < 3) {
+      cancelSuggestions();
+      setShowSuggestions(false);
+      setActiveSuggestion(-1);
+      return;
+    }
+
+    cancelSuggestions();
+    setShowSuggestions(false);
+    setActiveSuggestion(-1);
+
+    debounce.current = setTimeout(() => {
+      void fetchSuggestions(value);
+    }, 250);
   };
 
   const pickSuggestion = (s: GeocodeResult) => {
+    clearTimeout(debounce.current);
+    cancelSuggestions();
     selectPlace(s);
     setLocationQuery(s.label);
     setShowSuggestions(false);
+    setActiveSuggestion(-1);
+  };
+
+  const onLocationKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      setShowSuggestions(false);
+      setActiveSuggestion(-1);
+      return;
+    }
+
+    const listOpen = showSuggestions && suggestions.length > 0;
+    if (!listOpen) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveSuggestion((index) => Math.min(suggestions.length - 1, index + 1));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveSuggestion((index) => Math.max(0, index - 1));
+      return;
+    }
+
+    if (event.key === "Enter" && activeSuggestion >= 0) {
+      event.preventDefault();
+      const picked = suggestions[activeSuggestion];
+      if (picked) pickSuggestion(picked);
+    }
   };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -227,11 +288,16 @@ export function SearchCard({
             value={locationQuery}
             disabled={loading}
             onChange={(e) => onInput(e.target.value)}
-            onFocus={() => suggestions.length && setShowSuggestions(true)}
+            onKeyDown={onLocationKeyDown}
+            onFocus={() => {
+              if (locationQuery.trim().length >= 3 && suggestions.length) {
+                setShowSuggestions(true);
+              }
+            }}
           />
           <ul className={`suggestions${showSuggestions && suggestions.length ? "" : " hidden"}`}>
-            {suggestions.map((s: GeocodeResult) => (
-              <li key={`${s.lat}-${s.lon}`}>
+            {suggestions.map((s: GeocodeResult, index) => (
+              <li key={`${s.lat}-${s.lon}-${s.label}`} className={index === activeSuggestion ? "active" : undefined}>
                 <button
                   type="button"
                   onPointerDown={(event) => event.preventDefault()}

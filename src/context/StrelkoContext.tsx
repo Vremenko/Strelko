@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
-import { geocodeAddress, isValidGeocodePlace } from "../lib/geocode";
+import { geocodeAddress, geocodeSuggest, isValidGeocodePlace } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
 import { clearCheckoutPlanId, consumeCheckoutPlanId, peekCheckoutPlanId } from "../lib/auth-intent";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
@@ -129,6 +129,7 @@ interface StrelkoContextValue extends StrelkoState {
   setLocationQuery: (q: string) => void;
   selectPlace: (place: GeocodeResult | null) => void;
   fetchSuggestions: (q: string) => Promise<void>;
+  cancelSuggestions: () => void;
   runPreview: () => Promise<void>;
   runFullSearch: () => Promise<void>;
   downloadPdf: () => Promise<void>;
@@ -312,6 +313,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const refreshUserInFlightRef = useRef<Promise<void> | null>(null);
   const runPreviewInFlightRef = useRef(false);
   const openQueryInFlightRef = useRef<string | null>(null);
+  const suggestSeqRef = useRef(0);
 
   const loadSavedQueries = useCallback(async () => {
     if (!user) {
@@ -724,6 +726,30 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const cancelSuggestions = useCallback(() => {
+    suggestSeqRef.current += 1;
+    setSuggestions([]);
+  }, []);
+
+  const fetchSuggestions = useCallback(async (q: string) => {
+    const trimmed = q.trim();
+    if (trimmed.length < 3) {
+      cancelSuggestions();
+      return;
+    }
+
+    const seq = ++suggestSeqRef.current;
+
+    try {
+      const results = await geocodeSuggest(trimmed);
+      if (seq !== suggestSeqRef.current) return;
+      setSuggestions(results);
+    } catch {
+      if (seq !== suggestSeqRef.current) return;
+      setSuggestions([]);
+    }
+  }, [cancelSuggestions]);
+
   const value = useMemo<StrelkoContextValue>(
     () => ({
       user,
@@ -760,17 +786,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       setSelectedPlan: setSelectedPlanState,
       setLocationQuery: setLocationQueryState,
       selectPlace: setSelected,
-      fetchSuggestions: async (q) => {
-        if (!q || q.length < 3) {
-          setSuggestions([]);
-          return;
-        }
-        try {
-          setSuggestions(await geocodeAddress(q));
-        } catch {
-          setSuggestions([]);
-        }
-      },
+      fetchSuggestions,
+      cancelSuggestions,
       runPreview: async () => {
         if (runPreviewInFlightRef.current) {
           return;
@@ -1079,6 +1096,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       cookieAccepted,
       refreshUser,
       loadPlans,
+      fetchSuggestions,
+      cancelSuggestions,
       loadUserWidget,
       loadWidgetObcine,
       loadWidgetSelection,
