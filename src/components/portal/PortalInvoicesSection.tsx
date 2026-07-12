@@ -1,4 +1,4 @@
-/** Plačila in računi — skupna sekcija pod karticama paketov. */
+/** Plačila in računi — zavihek Plačila v Moj Strelko. */
 export function PortalInvoicesSection() {
   return (
     <section className="portal-section portal-section--invoices" aria-labelledby="portal-invoices-title">

@@ -8,7 +8,7 @@ const LEGACY_TAB_MAP: Record<string, PortalTabId> = {
 export const PORTAL_TABS: { id: PortalTabId; label: string }[] = [
   { id: "pregled", label: "Pregled" },
   { id: "poizvedbe", label: "Poizvedbe" },
-  { id: "narocnina", label: "Paketi in plačila" },
+  { id: "narocnina", label: "Plačila" },
 ];
 
 export function parsePortalTab(raw: string | null): PortalTabId {
