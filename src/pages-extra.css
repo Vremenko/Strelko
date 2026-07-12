@@ -679,16 +679,19 @@ label.field-labeled > span {
 }
 
 .zavarovalnica-page .suggestions {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(12, 12, 12, 0.98);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.58),
+    0 4px 14px rgba(0, 0, 0, 0.38);
 }
 
 .zavarovalnica-page .suggestions li {
   margin: 0;
   padding: 0;
-  border-radius: 0;
+  border-radius: 8px;
   background: transparent;
   cursor: default;
 }
@@ -702,7 +705,7 @@ label.field-labeled > span {
   margin: 0;
   padding: 0.65rem 0.85rem;
   border: 0;
-  border-radius: 0;
+  border-radius: 8px;
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -714,11 +717,16 @@ label.field-labeled > span {
 }
 
 #app .zavarovalnica-page .suggestions > li:hover,
-#app .zavarovalnica-page .suggestions > li.active,
 #app .zavarovalnica-page .suggestions > li:has(> button:focus),
 #app .zavarovalnica-page .suggestions > li:has(> button:focus-visible) {
-  background: #e4e4e4;
-  color: #1a1a1a;
+  background: rgba(5, 165, 206, 0.16);
+  color: var(--text);
+}
+
+#app .zavarovalnica-page .suggestions > li.active {
+  background: rgba(5, 165, 206, 0.26);
+  color: var(--text);
+  box-shadow: inset 3px 0 0 var(--mi-cyan);
 }
 
 #app .zavarovalnica-page .suggestions > li:hover > button,
@@ -727,7 +735,7 @@ label.field-labeled > span {
 #app .zavarovalnica-page .suggestions button:focus,
 #app .zavarovalnica-page .suggestions button:focus-visible {
   background: transparent;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .results-panel--zavarovalnica {
