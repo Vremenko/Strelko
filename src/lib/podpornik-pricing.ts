@@ -2,7 +2,7 @@
 
 import { formatEurSl, OB_SKODI_VAT_RATE, roundMoneyEur } from "./ob-skodi-tokens";
 
-export const PODPORNIST_MONTHLY_PRICE_GROSS_EUR = 4;
+export const PODPORNIST_MONTHLY_PRICE_GROSS_EUR = 4.2;
 export const PODPORNIST_PERIOD_LABEL = "na mesec";
 
 export const PODPORNIST_MONTHLY_GROSS_LABEL = formatEurSl(PODPORNIST_MONTHLY_PRICE_GROSS_EUR);

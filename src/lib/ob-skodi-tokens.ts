@@ -1,7 +1,7 @@
 /** Ob škodi — cena, količina, DDV in besedila (cenik + portal). */
 
 export const OB_SKODI_MIN_QUANTITY = 3;
-export const OB_SKODI_TOKEN_PRICE_GROSS_EUR = 1.2;
+export const OB_SKODI_TOKEN_PRICE_GROSS_EUR = 1.3;
 export const OB_SKODI_VAT_RATE = 0.22;
 
 /**

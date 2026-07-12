@@ -70,7 +70,7 @@ export const PRICING_PODPORNIST: PricingOffer = {
 };
 
 export const CENIK_PODPORNIST_DESCRIPTION =
-  "S paketom Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov ter nadaljnjem izboljševanju Strelka.";
+  "S paketom Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov.";
 
 export const CENIK_PODPORNIST_FEATURES = [
   "Celoten arhiv strel po dnevih, urah, statističnih regijah in občinah",
@@ -144,3 +144,8 @@ export const PURCHASE_STEPS = [
   "Naročnina Podpornik se vsak mesec samodejno podaljša, dokler je ne prekličete v razdelku Moj Strelko. Po preklicu novih plačil ne bo, dostop do paketa Podpornik pa ostane aktiven do konca že plačanega obdobja.",
   "Potrdila o plačilu in računi bodo po povezavi plačilnega sistema poslani po e-pošti ter dostopni v razdelku Moj Strelko.",
 ] as const;
+
+export const PURCHASE_CLOSING_NOTE = {
+  lead: "Paket Podpornik in žetone lahko uporabljate hkrati.",
+  body: "Podpornik omogoča dostop do dodatnih prikazov in orodij, žetoni pa so namenjeni posameznim pregledom udarov strel in izdelavi PDF-poročil.",
+} as const;

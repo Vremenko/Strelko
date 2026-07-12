@@ -1,4 +1,4 @@
-import { PURCHASE_STEPS } from "../../lib/pricing-offers";
+import { PURCHASE_CLOSING_NOTE, PURCHASE_STEPS } from "../../lib/pricing-offers";
 
 export function PricingPurchaseInfo() {
   return (
@@ -17,6 +17,9 @@ export function PricingPurchaseInfo() {
           </li>
         ))}
       </ol>
+      <p className="pricing-purchase-info__closing">
+        <strong>{PURCHASE_CLOSING_NOTE.lead}</strong> {PURCHASE_CLOSING_NOTE.body}
+      </p>
     </section>
   );
 }
