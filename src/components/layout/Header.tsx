@@ -1,6 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { useStrelko } from "../../context/StrelkoContext";
+import { isMainNavActive, mainNavLinkClass, type MainNavId } from "../../lib/main-nav";
 
 function MenuIcon() {
   return (
@@ -25,6 +26,7 @@ export function Header() {
     logout,
   } = useStrelko();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const logged = !!user;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerHidden, setDrawerHidden] = useState(true);
@@ -61,6 +63,16 @@ export function Header() {
     navigate(path);
   };
 
+  const navLinkProps = (id: MainNavId) => {
+    const active = isMainNavActive(pathname, id);
+    return {
+      className: mainNavLinkClass(pathname, id),
+      "aria-current": active ? ("page" as const) : undefined,
+    };
+  };
+
+  const mojStrelkoClass = `btn btn-moj-strelko${isMainNavActive(pathname, "moj-strelko") ? " is-active" : ""}`;
+
   return (
     <>
       <header className={`site-header${logged ? " site-header--logged-in" : " site-header--guest"}`}>
@@ -88,23 +100,27 @@ export function Header() {
           </button>
           <nav className="site-nav site-nav--desktop" aria-label="Glavna navigacija">
             <div className="site-nav__content">
-              <Link to="/pomoc-pri-zavarovalnici" className="nav-link">
+              <Link to="/pomoc-pri-zavarovalnici" {...navLinkProps("zavarovalnica")}>
                 Pomoč pri zavarovalnici
               </Link>
-              <Link to="/statistika" className="nav-link">
+              <Link to="/statistika" {...navLinkProps("statistika")}>
                 Arhiv strel
               </Link>
-              <Link to="/widget-obcine" className="nav-link">
+              <Link to="/widget-obcine" {...navLinkProps("widget")}>
                 Widget
               </Link>
-              <Link to="/cenik" className="nav-link">
+              <Link to="/cenik" {...navLinkProps("cenik")}>
                 Cenik
               </Link>
             </div>
             <div className="site-nav__auth nav-actions">
               {logged ? (
                 <>
-                  <Link to="/moj-strelko" className="btn btn-moj-strelko">
+                  <Link
+                    to="/moj-strelko"
+                    className={mojStrelkoClass}
+                    aria-current={isMainNavActive(pathname, "moj-strelko") ? "page" : undefined}
+                  >
                     Moj Strelko
                   </Link>
                   <button type="button" className="btn btn-logout" onClick={logout}>
@@ -149,18 +165,34 @@ export function Header() {
           <nav className="site-nav-drawer__content" aria-label="Vsebina">
             <button
               type="button"
-              className="nav-link nav-link--drawer"
+              className={mainNavLinkClass(pathname, "zavarovalnica", "nav-link--drawer")}
+              aria-current={isMainNavActive(pathname, "zavarovalnica") ? "page" : undefined}
               onClick={() => go("/pomoc-pri-zavarovalnici")}
             >
               Pomoč pri zavarovalnici
             </button>
-            <button type="button" className="nav-link nav-link--drawer" onClick={() => go("/statistika")}>
+            <button
+              type="button"
+              className={mainNavLinkClass(pathname, "statistika", "nav-link--drawer")}
+              aria-current={isMainNavActive(pathname, "statistika") ? "page" : undefined}
+              onClick={() => go("/statistika")}
+            >
               Arhiv strel
             </button>
-            <button type="button" className="nav-link nav-link--drawer" onClick={() => go("/widget-obcine")}>
+            <button
+              type="button"
+              className={mainNavLinkClass(pathname, "widget", "nav-link--drawer")}
+              aria-current={isMainNavActive(pathname, "widget") ? "page" : undefined}
+              onClick={() => go("/widget-obcine")}
+            >
               Widget
             </button>
-            <button type="button" className="nav-link nav-link--drawer" onClick={() => go("/cenik")}>
+            <button
+              type="button"
+              className={mainNavLinkClass(pathname, "cenik", "nav-link--drawer")}
+              aria-current={isMainNavActive(pathname, "cenik") ? "page" : undefined}
+              onClick={() => go("/cenik")}
+            >
               Cenik
             </button>
           </nav>
@@ -169,7 +201,8 @@ export function Header() {
               <>
                 <button
                   type="button"
-                  className="btn btn-moj-strelko btn-block"
+                  className={`${mojStrelkoClass} btn-block`}
+                  aria-current={isMainNavActive(pathname, "moj-strelko") ? "page" : undefined}
                   onClick={() => go("/moj-strelko")}
                 >
                   Moj Strelko
