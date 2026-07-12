@@ -70,14 +70,16 @@ export function getPodpornikOverview(credits?: Credits | null): {
   const seasonEnd = credits?.season_pass_expires_at;
   const expiryRaw = periodEnd || seasonEnd;
   const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
-  const canCancel = Boolean(credits?.billing_portal_available) && !cancelScheduled;
+  /** Samodejno podaljševanje = aktivna Stripe naročnina (ne enkratni sezonski paket). */
+  const autoRenews = Boolean(credits?.has_subscription);
+  const canCancel = autoRenews && !cancelScheduled;
 
   return {
     active: true,
     cancelScheduled,
     canCancel,
     expiryLabel: expiryFormatted ? `Velja do ${expiryFormatted}` : null,
-    cancelNotice: cancelScheduled ? "Naročnina se ne podaljša samodejno." : null,
+    cancelNotice: cancelScheduled ? "Naročnina se ne bo samodejno podaljšala." : null,
   };
 }
 
