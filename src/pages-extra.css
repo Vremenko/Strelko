@@ -186,7 +186,7 @@ label.field-labeled > span {
 }
 
 .page--standard .page-header .legal-title {
-  color: var(--accent);
+  color: var(--text);
 }
 
 .page--standard .page-header h2 em {
