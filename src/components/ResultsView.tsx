@@ -9,6 +9,7 @@ import { PdfDownloadPanel } from "./PdfDownloadPanel";
 import { useStrelko } from "../context/StrelkoContext";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
 import { formatSlDate, formatSlDecimal, formatSlTime } from "../lib/dates";
+import { resultLocationTitle } from "../lib/pick-location-map";
 import type { DailyStrike, HourlyChartData, StrikePoint } from "../types";
 
 function nearestStrikeKm(daily: DailyStrike[]): number | null {
@@ -27,6 +28,7 @@ function dayKey(datum: string): string {
 export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean }) {
   const {
     searchResult,
+    selected,
     savedQueryId,
     activeQueryPdf,
     credits,
@@ -144,10 +146,17 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
     activeQueryPdf != null &&
     activeQueryPdf.queryId === savedQueryId;
 
+  const placeTitle = resultLocationTitle(
+    selected?.fromMap,
+    r.lat,
+    r.lon,
+    r.location_label
+  );
+
   return (
     <section className={`results-panel${panelClass}`}>
       <h3 className="results-panel-title">
-        ⚡ Pregled strel – {r.location_label || "vaša lokacija"}
+        ⚡ Pregled strel – {placeTitle}
       </h3>
       <ResultsPeriod label={periodLabel} />
       <ResultsStats

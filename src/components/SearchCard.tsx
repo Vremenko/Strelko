@@ -1,15 +1,53 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult, QueryQuoteOut } from "../types";
-import { isSameSuggestBase, isValidGeocodePlace } from "../lib/geocode";
+import { geocodeSuggest, isSameSuggestBase, isValidGeocodePlace } from "../lib/geocode";
 import {
   queryCostHintFromQuote,
   querySubmitButtonLabelFromQuote,
 } from "../lib/query-billing";
 import { clampSearchRange } from "../lib/search-dates";
 import { api } from "../api/client";
-import { SearchScanBolt } from "./icons";
+import { IconLocationPin, SearchScanBolt } from "./icons";
 import { SearchOptions } from "./SearchOptions";
+import { LocationPickerModal, type MapPickerView } from "./LocationPickerModal";
+import { formatMapCoordinate } from "../lib/pick-location-map";
+
+const MAP_PICKER_EMPTY_LABEL = "Izbrana lokacija na zemljevidu";
+const SLOVENIA_CENTER = { lat: 46.1512, lon: 14.9955 };
+const SLOVENIA_ZOOM = 8;
+
+async function resolveMapPickerView(
+  selected: GeocodeResult | null,
+  query: string
+): Promise<MapPickerView> {
+  if (isValidGeocodePlace(selected)) {
+    return {
+      center: { lat: selected.lat, lon: selected.lon },
+      zoom: 16,
+      marker: { lat: selected.lat, lon: selected.lon },
+    };
+  }
+
+  const trimmed = query.trim();
+  if (trimmed.length >= 3) {
+    const suggestions = await geocodeSuggest(trimmed);
+    const first = suggestions[0];
+    if (first) {
+      return {
+        center: { lat: first.lat, lon: first.lon },
+        zoom: 14,
+        marker: null,
+      };
+    }
+  }
+
+  return {
+    center: SLOVENIA_CENTER,
+    zoom: SLOVENIA_ZOOM,
+    marker: null,
+  };
+}
 
 interface SearchCardProps {
   busy?: boolean;
@@ -58,10 +96,13 @@ export function SearchCard({
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [queryQuote, setQueryQuote] = useState<QueryQuoteOut | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [mapPickerView, setMapPickerView] = useState<MapPickerView | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const quoteDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const quoteRequestSeq = useRef(0);
   const locationFieldRef = useRef<HTMLDivElement>(null);
+  const searchCardRef = useRef<HTMLDivElement>(null);
   const previousInputRef = useRef(locationQuery);
 
   useEffect(() => {
@@ -184,6 +225,34 @@ export function SearchCard({
     setActiveSuggestion(-1);
   };
 
+  const openMapPicker = () => {
+    void (async () => {
+      const view = await resolveMapPickerView(selected, locationQuery);
+      setMapPickerView(view);
+      setMapPickerOpen(true);
+    })();
+  };
+
+  const closeMapPicker = () => {
+    setMapPickerOpen(false);
+  };
+
+  const confirmMapLocation = (lat: number, lon: number) => {
+    const trimmed = locationQuery.trim();
+    const label = trimmed || MAP_PICKER_EMPTY_LABEL;
+    if (!trimmed) {
+      previousInputRef.current = label;
+      setLocationQuery(label);
+    }
+    selectPlace({ label, lat, lon, fromMap: true });
+    cancelSuggestions();
+    setShowSuggestions(false);
+    setActiveSuggestion(-1);
+    setMapPickerOpen(false);
+  };
+
+  const mapLocationSelected = Boolean(selected?.fromMap && isValidGeocodePlace(selected));
+
   const onLocationKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       setShowSuggestions(false);
@@ -235,6 +304,7 @@ export function SearchCard({
 
   return (
     <div
+      ref={searchCardRef}
       className={`search-card${inline ? " search-card--inline" : ""}${overlayActive ? " search-card--busy" : ""}`}
     >
       {showOverlay && overlayActive && (
@@ -285,22 +355,45 @@ export function SearchCard({
           </label>
         )}
         <div className="location-field" ref={locationFieldRef}>
-          <input
-            id="location-input"
-            className="search-input"
-            type="text"
-            placeholder={placeholder}
-            autoComplete="off"
-            value={locationQuery}
-            disabled={loading}
-            onChange={(e) => onInput(e.target.value)}
-            onKeyDown={onLocationKeyDown}
-            onFocus={() => {
-              if (locationQuery.trim().length >= 3 && suggestions.length) {
-                setShowSuggestions(true);
-              }
-            }}
-          />
+          <div className={`location-field-input-row${showOptions ? " location-field-input-row--with-map" : ""}`}>
+            <input
+              id="location-input"
+              className="search-input"
+              type="text"
+              placeholder={placeholder}
+              autoComplete="off"
+              value={locationQuery}
+              disabled={loading}
+              onChange={(e) => onInput(e.target.value)}
+              onKeyDown={onLocationKeyDown}
+              onFocus={() => {
+                if (locationQuery.trim().length >= 3 && suggestions.length) {
+                  setShowSuggestions(true);
+                }
+              }}
+            />
+            {showOptions && (
+              <button
+                type="button"
+                className={`location-map-btn${mapLocationSelected ? " location-map-btn--active" : ""}`}
+                aria-label="Izberi lokacijo na zemljevidu"
+                title="Izberi lokacijo na zemljevidu"
+                disabled={loading}
+                onClick={openMapPicker}
+              >
+                <IconLocationPin />
+              </button>
+            )}
+          </div>
+          {mapLocationSelected && selected && (
+            <div className="location-map-selected" role="status">
+              <p className="location-map-selected-label">Lokacija izbrana na zemljevidu</p>
+              <p className="location-map-coords">
+                <span>Lat: {formatMapCoordinate(selected.lat)}</span>
+                <span>Lon: {formatMapCoordinate(selected.lon)}</span>
+              </p>
+            </div>
+          )}
           <ul className={`suggestions${showSuggestions && suggestions.length ? "" : " hidden"}`}>
             {suggestions.map((s: GeocodeResult, index) => (
               <li key={`${s.lat}-${s.lon}-${s.label}`} className={index === activeSuggestion ? "active" : undefined}>
@@ -330,6 +423,15 @@ export function SearchCard({
           {submitLabel}
         </button>
       </form>
+      {showOptions && (
+        <LocationPickerModal
+          open={mapPickerOpen}
+          view={mapPickerView}
+          anchorRef={searchCardRef}
+          onClose={closeMapPicker}
+          onConfirm={confirmMapLocation}
+        />
+      )}
     </div>
   );
 }

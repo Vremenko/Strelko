@@ -7,6 +7,7 @@ import { isValidGeocodePlace } from "../lib/geocode";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
 import { previewInsufficientTokensNotice } from "../lib/query-billing";
 import { clampSearchRange } from "../lib/search-dates";
+import { resultLocationTitle } from "../lib/pick-location-map";
 import { formatPlaceName } from "../lib/utils";
 import type { InsufficientTokensDetail, QueryQuoteOut } from "../types";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
@@ -248,7 +249,12 @@ export function PreviewTeaser() {
   } = useStrelko();
   if (!preview) return null;
 
-  const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
+  const place = resultLocationTitle(
+    selected?.fromMap,
+    selected?.lat ?? 0,
+    selected?.lon ?? 0,
+    preview.location_label || formatPlaceName(selected?.label)
+  );
   const periodLabel = formatResultsPeriodLabel(searchRadiusKm, preview);
 
   return (
@@ -287,7 +293,12 @@ export function PreviewNoStrikes() {
   } = useStrelko();
   if (!preview) return null;
 
-  const place = preview.location_label || formatPlaceName(selected?.label) || "vaša lokacija";
+  const place = resultLocationTitle(
+    selected?.fromMap,
+    selected?.lat ?? 0,
+    selected?.lon ?? 0,
+    preview.location_label || formatPlaceName(selected?.label)
+  );
   const periodLabel = formatResultsPeriodLabel(searchRadiusKm, preview);
 
   return (

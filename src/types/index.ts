@@ -14,6 +14,8 @@ export interface GeocodeResult {
   label: string;
   lat: number;
   lon: number;
+  /** Koordinate ročno izbrane na zemljevidu (ni uradni naslov). */
+  fromMap?: boolean;
 }
 
 export interface User {
