@@ -896,27 +896,39 @@ export const LEGAL_PAGES = {
       {
         title: "4. Takojšnja uporaba storitve",
         body: `
-          <p>Žetone in paket Podpornik želi uporabnik praviloma uporabljati takoj po plačilu, še pred iztekom
+          <p>Žetoni in paket Podpornik so uporabniku praviloma na voljo takoj po uspešnem plačilu, še pred potekom
           14-dnevnega odstopnega roka.</p>
           <p>Kadar zakon to zahteva, mora uporabnik pred takojšnjim začetkom izvajanja podati izrecno zahtevo oziroma
-          soglasje in potrditi, da razume, kako začetek ali popolna izvedba storitve vpliva na njegovo pravico do
-          odstopa.</p>
-          <p>Če potrošnik veljavno odstopi po začetku izvajanja storitve, se morebitno plačilo za že opravljeni del
-          oziroma obseg vračila določi skladno z veljavno zakonodajo in izjavami, ki jih je uporabnik podal pred
-          začetkom izvajanja.</p>
-          <p>Uporabniku se pravica do odstopa ne omeji ali odvzame samo zato, ker je podjetje to zapisalo v splošnih
-          pogojih. Izpolnjeni morajo biti vsi zakonski pogoji.</p>`,
+          soglasje. Izjava mora biti jasna, ločena od sprejetja splošnih pogojev in ne sme biti vnaprej označena.</p>
+          <h3>Paket Podpornik</h3>
+          <p>Paket Podpornik je storitev, ki se zagotavlja v plačanem 30-dnevnem obdobju. Če potrošnik zahteva
+          takojšnjo aktivacijo in nato veljavno odstopi pred koncem obdobja, se njegova pravica in morebitno sorazmerno
+          plačilo za že izvedeni del presojata skladno z veljavno zakonodajo ter informacijami in izjavami, ki jih je
+          prejel oziroma podal pred nakupom.</p>
+          <p>Potrošnik pravice do odstopa ne izgubi samodejno že z aktivacijo paketa. Pri storitvi lahko pravica
+          preneha po popolni izvedbi le, če so izpolnjeni vsi zakonski pogoji, vključno z ustrezno predhodno zahtevo
+          oziroma soglasjem potrošnika.</p>
+          <h3>Odklep poizvedbe in PDF-poročilo</h3>
+          <p>Odklep posamezne poizvedbe in izdelava PDF-poročila se lahko izvedeta takoj in v celoti. Pred tako
+          izvedbo mora biti uporabniku jasno pojasnjeno, kako takojšnji začetek oziroma popolna izvedba vpliva na
+          pravico do odstopa.</p>
+          <p>Kadar zakon za posamezno plačljivo funkcijo zahteva izrecno soglasje in potrditev, da uporabnik razume
+          posledice takojšnje izvedbe, se taka izjava pridobi ločeno pred izvedbo.</p>
+          <p>Pravica do odstopa se ne omeji ali odvzame zgolj z navedbo v splošnih pogojih. Izpolnjeni morajo biti
+          vsi zakonski pogoji.</p>`,
       },
       {
         title: "5. Odstop od nakupa žetonov",
         body: `
           <p>Potrošnik lahko od nakupa žetonov odstopi v zakonskem roku, če za omejitev ali prenehanje pravice do
           odstopa niso izpolnjeni zakonski pogoji.</p>
-          <p>Če je uporabnik pred odstopom že zahteval in prejel plačljivo storitev, na primer odklenil poizvedbo ali
-          izdelal PDF-poročilo, se vračilo presoja glede na dejansko opravljeno storitev, podane izjave uporabnika in
-          veljavno zakonodajo.</p>
-          <p>Neporabljeni žetoni ostanejo na uporabniškem računu in ne potečejo, dokler uporabnik ne zahteva njihovega
-          vračila na veljavni pravni podlagi oziroma dokler račun ni zakonito zaprt.</p>`,
+          <p>Ob veljavnem odstopu od nakupa se neporabljeni žetoni odstranijo z uporabniškega računa, ustrezno
+          vračilo plačila pa se izvede skladno z veljavno zakonodajo.</p>
+          <p>Če je uporabnik pred odstopom že uporabil plačljivo storitev, na primer odklenil poizvedbo ali izdelal
+          PDF-poročilo, se obseg vračila presoja glede na že opravljeno storitev, informacije in izjave, podane pred
+          izvedbo, ter veljavno zakonodajo.</p>
+          <p>Uporabnik ob vračilu plačila za neporabljene žetone teh žetonov ne more hkrati obdržati na svojem
+          računu.</p>`,
       },
       {
         title: "6. Paket Podpornik: odstop in preklic",
@@ -924,8 +936,10 @@ export const LEGAL_PAGES = {
           <p>Odstop od pogodbe in preklic samodejnega podaljševanja sta <strong>različna postopka</strong>.</p>
           <h3>Odstop od pogodbe</h3>
           <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #05a5ce; background: rgba(5, 165, 206, 0.08); border-radius: 0 8px 8px 0;">
-            <p>Potrošnik lahko pri prvi sklenitvi pogodbe za paket Podpornik uveljavlja zakonsko pravico do odstopa v
-            14 dneh, ob upoštevanju pravil o takojšnjem začetku izvajanja digitalne storitve.</p>
+            <p>Potrošnik lahko pri sklenitvi pogodbe za paket Podpornik uveljavlja zakonsko pravico do odstopa v 14
+            dneh, ob upoštevanju pravil o takojšnjem začetku izvajanja storitve.</p>
+            <p>Če je potrošnik izrecno zahteval takojšnjo aktivacijo, se obseg morebitnega vračila oziroma sorazmernega
+            plačila za že izvedeni del določi skladno z veljavno zakonodajo.</p>
           </div>
           <h3>Preklic naročnine</h3>
           <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #fbb006; background: rgba(251, 176, 6, 0.08); border-radius: 0 8px 8px 0;">
@@ -933,30 +947,49 @@ export const LEGAL_PAGES = {
             <a href="/moj-strelko">Moj Strelko</a>.</p>
             <p>Po preklicu se nova plačila ne izvedejo, dostop pa ostane aktiven do konca že plačanega 30-dnevnega
             obdobja.</p>
-            <p>Preklic samodejnega podaljševanja sam po sebi <strong>ne pomeni</strong> odstopa od že plačanega obdobja
-            ali samodejnega vračila plačila.</p>
+            <p>Preklic samodejnega podaljševanja ni enak odstopu od že sklenjene pogodbe in sam po sebi ne pomeni
+            vračila plačila za tekoče obdobje.</p>
           </div>`,
       },
       {
         title: "7. Kako uveljaviti odstop",
         body: `
           <div style="margin: 1.25rem 0; padding: 1.25rem 1.5rem; border: 1px solid rgba(5, 165, 206, 0.35); background: rgba(5, 165, 206, 0.12); border-radius: 12px;">
-            <p><strong>Odstop lahko sporočite na:</strong>
-            <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>
-            <p>V sporočilu navedite:</p>
-            <ul>
-              <li>ime in priimek;</li>
-              <li>e-poštni naslov uporabniškega računa;</li>
-              <li>datum nakupa;</li>
-              <li>kupljeno ponudbo;</li>
-              <li>številko naročila ali identifikator plačila, če je na voljo;</li>
-              <li>jasno izjavo, da odstopate od pogodbe.</li>
-            </ul>
+            <p>Odstop lahko sporočite na <a href="mailto:${COMPANY.email}">${COMPANY.email}</a> ali po pošti na naslov
+            ${COMPANY.shortName}, ${COMPANY.address}, ${COMPANY.postal}.</p>
+            <p>Za pravočasen odstop zadostuje, da potrošnik pred potekom roka pošlje nedvoumno izjavo, iz katere je
+            jasno razvidno, da odstopa od pogodbe.</p>
+            <p>Uporabite lahko spodnji vzorčni obrazec, vendar njegova uporaba ni obvezna.</p>
+          </div>`,
+      },
+      {
+        title: "Vzorčni obrazec za odstop od pogodbe",
+        body: `
+          <p>Obrazec izpolnite in pošljite samo, če želite odstopiti od pogodbe.</p>
+          <div class="legal-withdrawal-form" style="margin: 1.5rem 0; padding: 1.25rem 1.5rem; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow-x: auto;">
+            <p><strong>Prejemnik:</strong></p>
+            <p>${COMPANY.legalName}<br />
+            ${COMPANY.address}, ${COMPANY.postal}, ${COMPANY.country}<br />
+            E-pošta: <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>
+            <p style="margin-top: 1.25rem;">Obveščam vas, da odstopam od pogodbe za naslednjo storitev oziroma ponudbo:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>Datum sklenitve pogodbe oziroma nakupa:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>Številka naročila ali identifikator plačila, če je na voljo:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>Ime in priimek potrošnika:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>Naslov potrošnika:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>E-poštni naslov uporabniškega računa:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>Datum:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 1.75rem; margin: 0.5rem 0 1rem;">&nbsp;</p>
+            <p>Podpis potrošnika:</p>
+            <p style="border-bottom: 1px solid rgba(255, 255, 255, 0.35); min-height: 2.5rem; margin: 0.5rem 0 0;">&nbsp;</p>
           </div>
-          <p><strong>Vzorec izjave:</strong></p>
-          <p><em>Obveščam vas, da odstopam od pogodbe za [nakup žetonov/paket Podpornik], sklenjene dne [datum]. Moj
-          uporabniški račun je povezan z e-poštnim naslovom [e-pošta].</em></p>
-          <p>Uporaba tega vzorca ni obvezna. Zadostuje vsaka nedvoumna in pravočasno poslana izjava o odstopu.</p>`,
+          <p><em>Podpis je potreben samo, če se obrazec pošlje v papirni obliki.</em></p>
+          <p><em>Uporaba obrazca ni obvezna. Odstop je mogoče sporočiti tudi z drugo jasno in nedvoumno izjavo.</em></p>`,
       },
       {
         title: "8. Vračilo plačila",
@@ -966,8 +999,10 @@ export const LEGAL_PAGES = {
           <p>Vračilo se praviloma izvede z istim plačilnim sredstvom, kot je bilo uporabljeno pri nakupu, razen če se
           potrošnik izrecno strinja z drugim načinom in zaradi tega nima dodatnih stroškov.</p>
           <p>Potrošniku se za izvedbo vračila ne zaračunajo dodatni stroški.</p>
-          <p>Obseg vračila je lahko odvisen od tega, ali se je storitev na potrošnikovo izrecno zahtevo že začela
-          izvajati oziroma je bila v celoti izvedena.</p>`,
+          <p>Obseg vračila je odvisen od vrste kupljene ponudbe, že opravljenega dela storitve, izjav uporabnika pred
+          začetkom izvajanja in veljavne zakonodaje.</p>
+          <p>Ob veljavnem vračilu plačila za neporabljene žetone se ti odstranijo z uporabniškega računa. Ob odstopu od
+          paketa Podpornik se uporabniku po izvedenem vračilu ustrezno omeji nadaljnji dostop do plačljivih funkcij.</p>`,
       },
       {
         title: "9. Če storitev ni dobavljena",
