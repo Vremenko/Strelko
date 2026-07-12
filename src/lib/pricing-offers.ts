@@ -5,6 +5,11 @@ import {
   OB_SKODI_PER_TOKEN_GROSS_LABEL,
   OB_SKODI_PER_TOKEN_NET_APPROX_LABEL,
 } from "./ob-skodi-tokens";
+import {
+  PODPORNIST_MONTHLY_GROSS_LABEL,
+  PODPORNIST_MONTHLY_NET_EX_VAT_LABEL,
+  PODPORNIST_PERIOD_LABEL,
+} from "./podpornik-pricing";
 
 export type PricingOfferId = "ob_skodi" | "podpornik";
 
@@ -17,7 +22,7 @@ export interface PricingOffer {
   id: PricingOfferId;
   name: string;
   priceEur: string;
-  /** Npr. «/ mesec» pri Podporniku */
+  /** Npr. «na mesec» pri Podporniku */
   pricePeriod?: string;
   priceLabel: string;
   priceExVat: string;
@@ -50,10 +55,10 @@ export const PRICING_OB_SKODI: PricingOffer = {
 export const PRICING_PODPORNIST: PricingOffer = {
   id: "podpornik",
   name: "Podpornik",
-  priceEur: "4,50 €",
-  pricePeriod: "/ mesec",
+  priceEur: PODPORNIST_MONTHLY_GROSS_LABEL,
+  pricePeriod: PODPORNIST_PERIOD_LABEL,
   priceLabel: "mesečna naročnina",
-  priceExVat: "(3,69 € brez DDV / mesec)",
+  priceExVat: PODPORNIST_MONTHLY_NET_EX_VAT_LABEL,
   vatNote: PRICING_VAT_NOTE,
   features: [
     "Dostop do celotnega arhiva strel",
@@ -63,8 +68,6 @@ export const PRICING_PODPORNIST: PricingOffer = {
     "Preklic kadar koli",
   ],
 };
-
-export const CENIK_PODPORNIST_PRICE_EX_VAT = "(3,69 € brez DDV)";
 
 export const CENIK_PODPORNIST_DESCRIPTION =
   "S paketom Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov ter nadaljnjem izboljševanju Strelka.";

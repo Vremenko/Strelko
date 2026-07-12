@@ -6,6 +6,7 @@ import {
   resolvePlansList,
 } from "../../lib/plans-modal";
 import { OB_SKODI_PER_TOKEN_GROSS_LABEL } from "../../lib/ob-skodi-tokens";
+import { PODPORNIST_MONTHLY_GROSS_LABEL } from "../../lib/podpornik-pricing";
 import { formatPlanGrossLabel } from "../../lib/pricing";
 import { seasonLabelSl } from "../../lib/season";
 import type { Plan } from "../../types";
@@ -34,7 +35,7 @@ function InsufficientCreditsUpsell({ plans }: { plans: Plan[] }) {
           <span className="plan-compare-badge">Sezona</span>
           <span className="plan-compare-name">{pod.name_sl}</span>
           <span className="plan-compare-price">
-            {formatPlanGrossLabel(pod, "8,50 €")}
+            {formatPlanGrossLabel(pod, PODPORNIST_MONTHLY_GROSS_LABEL)}
             {pod.price_suffix_sl || ""}
           </span>
           <span>Arhiv + widget</span>

@@ -15,7 +15,6 @@ import {
   CENIK_PODPORNIST_DESCRIPTION,
   CENIK_PODPORNIST_DISCLAIMER,
   CENIK_PODPORNIST_FEATURES,
-  CENIK_PODPORNIST_PRICE_EX_VAT,
   CENIK_ZETONI_DESCRIPTION,
   PRICING_PODPORNIST,
 } from "../lib/pricing-offers";
@@ -69,6 +68,7 @@ export function CenikPage() {
       <section className="pricing-plans" aria-label="Ponudbi">
         <div className="plan-grid plan-grid--2 pricing-plan-grid">
           <article className="plan-card pricing-plan-card pricing-surface-card">
+            <span className="pricing-plan-card__badge">Enkratni nakup</span>
             <h3 className="pricing-plan-card__title">Ob škodi</h3>
             <p className="pricing-plan-card__desc">{CENIK_ZETONI_DESCRIPTION}</p>
             <ObSkodiTokenPurchase
@@ -81,11 +81,11 @@ export function CenikPage() {
 
           <PricingPlanCard
             offer={PRICING_PODPORNIST}
+            badge="Mesečna naročnina"
             description={CENIK_PODPORNIST_DESCRIPTION}
             features={CENIK_PODPORNIST_FEATURES}
             disclaimer={CENIK_PODPORNIST_DISCLAIMER}
             hidePriceLabel
-            priceExVat={CENIK_PODPORNIST_PRICE_EX_VAT}
           >
             <button
               type="button"

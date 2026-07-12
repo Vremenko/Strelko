@@ -3233,6 +3233,61 @@ body.site-nav-open {
   color: var(--muted);
 }
 
+.pricing-plan-card__badge {
+  display: inline-block;
+  align-self: flex-start;
+  margin: 0 0 0.5rem;
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  color: rgba(5, 165, 206, 0.95);
+  background: rgba(5, 165, 206, 0.14);
+  border: 1px solid rgba(5, 165, 206, 0.32);
+}
+
+.pricing-plan-card__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pricing-plan-card__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  margin-top: auto;
+  padding-top: 1.35rem;
+}
+
+.pricing-plan-grid .pricing-plan-card__price {
+  margin-top: 1.2rem;
+}
+
+.pricing-plan-grid .pricing-plan-card__main .pricing-plan-card__features {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.pricing-plan-grid .pricing-plan-card__disclaimer {
+  margin: 0;
+}
+
+.pricing-plan-grid .pricing-plan-card .btn-block {
+  margin-top: 0;
+}
+
+.pricing-plan-grid .ob-skodi-purchase--cenik > .pricing-plan-card__price {
+  margin-top: 1.2rem;
+}
+
+.pricing-plan-grid .ob-skodi-purchase__cta {
+  margin-top: auto;
+  padding-top: 1.35rem;
+}
+
 .pricing-plan-card__features {
   margin: 0 0 1rem;
   font-size: 0.92rem;
@@ -3454,7 +3509,7 @@ body.site-nav-open {
 }
 
 .pricing-plan-card__amount {
-  font-size: 1.75rem;
+  font-size: 1.95rem;
   font-weight: 800;
   color: var(--accent);
 }
@@ -3466,8 +3521,8 @@ body.site-nav-open {
 }
 
 .pricing-plan-card__period {
-  margin-left: 0.25rem;
-  font-size: 1rem;
+  margin-left: 0.35rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--muted);
 }
@@ -3506,7 +3561,7 @@ body.site-nav-open {
 }
 
 .pricing-plan-card .btn-block {
-  margin-top: auto;
+  width: 100%;
 }
 
 .pricing-examples-list {

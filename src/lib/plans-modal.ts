@@ -1,5 +1,6 @@
 import type { Plan } from "../types";
 import { OB_SKODI_PER_TOKEN_GROSS_LABEL } from "./ob-skodi-tokens";
+import { PODPORNIST_MONTHLY_GROSS_LABEL } from "./podpornik-pricing";
 
 export function defaultPlansFallback(): Plan[] {
   return [
@@ -25,7 +26,7 @@ export function defaultPlansFallback(): Plan[] {
       id: "podpornik",
       name_sl: "Podpornik",
       tagline_sl: "Statistika strel in widget za vašo stran",
-      price_eur: "8,50",
+      price_eur: PODPORNIST_MONTHLY_GROSS_LABEL.replace(" €", ""),
       price_suffix_sl: " do konca sezone",
       billing_mode: "season_pass",
       monthly_credits: 5,
