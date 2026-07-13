@@ -6,7 +6,7 @@ export const COMPANY = {
   address: "Ženjak 4",
   postal: "2234 Benedikt",
   country: "Slovenija",
-  email: "podpora@meteoinfo.si",
+  email: "ekipa@meteoinfo.si",
   privacyEmail: "info@meteoinfo.si",
   website: "https://meteoinfo.si",
   privacyPolicyUrl: "https://map.meteoinfo.si/privacy-policy.html",

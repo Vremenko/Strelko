@@ -488,7 +488,7 @@ function getSelectedPlanMeta() {
     state.plans.find((p) => p.id === state.selectedPlan) || {
       id: state.selectedPlan,
       contact_only: state.selectedPlan === "enterprise",
-      contact_email: "podpora@meteoinfo.si",
+      contact_email: "ekipa@meteoinfo.si",
     }
   );
 }
@@ -501,7 +501,7 @@ function renderCreditsModal({
   const paymentsDisabled = !state.paymentsEnabled;
   const selectedMeta = getSelectedPlanMeta();
   const contactOnly = !!selectedMeta.contact_only;
-  const contactEmail = selectedMeta.contact_email || "podpora@meteoinfo.si";
+  const contactEmail = selectedMeta.contact_email || "ekipa@meteoinfo.si";
   const plans = state.plans.length
     ? state.plans
     : [
@@ -557,7 +557,7 @@ function renderCreditsModal({
           recommended: false,
           business: true,
           contact_only: true,
-          contact_email: "podpora@meteoinfo.si",
+          contact_email: "ekipa@meteoinfo.si",
         },
       ];
 
@@ -1235,7 +1235,7 @@ function refreshCreditsModalActions({
   if (!modal) return;
   const meta = getSelectedPlanMeta();
   const contactOnly = !!meta.contact_only;
-  const contactEmail = meta.contact_email || "podpora@meteoinfo.si";
+  const contactEmail = meta.contact_email || "ekipa@meteoinfo.si";
   const mailto = `mailto:${contactEmail}?subject=${encodeURIComponent("Strelko – po naročilu")}`;
 
   let note = modal.querySelector(".enterprise-contact-note");
