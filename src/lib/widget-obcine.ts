@@ -21,8 +21,8 @@ function buildWidgetParams(widget: WidgetState, size: WidgetPreviewSize): URLSea
 export function widgetPreviewPath(widget: WidgetState, size: WidgetPreviewSize): string {
   const params = buildWidgetParams(widget, size);
   return params.has("ob_mid") || params.has("scope")
-    ? `/widget/obcina-widget.html?${params}`
-    : `/widget/obcina-widget.html?size=${size === "full" ? "full" : "compact"}`;
+    ? `/widget/obcina.html?${params}`
+    : `/widget/obcina.html?size=${size === "full" ? "full" : "compact"}`;
 }
 
 export function widgetEmbedConfigKey(widget: WidgetState, size: WidgetPreviewSize): string {
