@@ -31,6 +31,14 @@ echo "Cache bust ?v=$VERSION in dist/index.html"
 
 docker cp "$ASSETS/." "$CONTAINER:/usr/share/nginx/html/assets/"
 docker cp "$HTML" "$CONTAINER:/usr/share/nginx/html/index.html"
+
+# Prerenderane podstrani (npr. cenik/index.html) za SEO / crawlerje
+while IFS= read -r -d '' prerendered; do
+  rel="${prerendered#$ROOT/dist/}"
+  dir=$(dirname "$rel")
+  docker exec "$CONTAINER" mkdir -p "/usr/share/nginx/html/$dir"
+  docker cp "$prerendered" "$CONTAINER:/usr/share/nginx/html/$rel"
+done < <(find "$ROOT/dist" -mindepth 2 -name index.html -not -path '*/widget/*' -print0)
 if [[ -f "$ROOT/dist/robots.txt" ]]; then
   docker cp "$ROOT/dist/robots.txt" "$CONTAINER:/usr/share/nginx/html/robots.txt"
 fi

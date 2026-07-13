@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && npm run prerender",
+    "prerender": "tsx scripts/prerender.ts",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -13,6 +14,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
+    "cheerio": "^1.2.0",
+    "tsx": "^4.19.4",
     "typescript": "^6.0.3",
     "vite": "^6.0.0"
   },
