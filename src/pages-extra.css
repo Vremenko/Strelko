@@ -1399,6 +1399,28 @@ label.field-labeled > span {
   margin-top: 1.25rem;
 }
 
+.auth-login-error {
+  margin-bottom: 0.75rem;
+}
+
+.auth-login-error .form-error {
+  margin-bottom: 0.35rem;
+}
+
+.auth-login-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.auth-forgot-lead {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .modal-close-btn {
   position: absolute;
   top: 0.65rem;

@@ -217,6 +217,7 @@ export interface ModalState {
   alerts: boolean;
   widget: boolean;
   forgotPassword: boolean;
+  forgotPasswordEmail: string;
   checkoutSuccess: {
     creditsAdded: number;
     balance: number;

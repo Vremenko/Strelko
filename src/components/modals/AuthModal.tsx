@@ -6,7 +6,9 @@ import {
   mapRegisterApiError,
   validateRegisterForm,
 } from "../../lib/auth-register";
+import { mapLoginApiError, type LoginErrorView } from "../../lib/auth-login";
 import { renderGoogleButton } from "../../lib/auth-google";
+import { api } from "../../api/client";
 import type { ApiError } from "../../types";
 
 export function AuthModal() {
@@ -15,7 +17,10 @@ export function AuthModal() {
   const mode = modals.auth;
   const googleRef = useRef<HTMLDivElement>(null);
   const loginGoogleRef = useRef(loginGoogle);
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState<LoginErrorView | null>(null);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [resendMessage, setResendMessage] = useState("");
   const [registerView, setRegisterView] = useState<"form" | "success">("form");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerFieldErrors, setRegisterFieldErrors] = useState<
@@ -31,6 +36,11 @@ export function AuthModal() {
       setRegisterEmail("");
       setRegisterFieldErrors({});
       setRegisterSubmitting(false);
+    }
+    if (!mode || mode !== "login") {
+      setLoginError(null);
+      setResendStatus("idle");
+      setResendMessage("");
     }
   }, [mode]);
 
@@ -48,13 +58,19 @@ export function AuthModal() {
 
         void renderGoogleButton(container, async (credential) => {
           try {
-            setLoginError("");
+            setLoginError(null);
             await loginGoogleRef.current(credential);
           } catch (e) {
-            setLoginError((e as Error).message || "Google prijava ni uspela.");
+            setLoginError({
+              message: (e as Error).message || "Google prijava ni uspela.",
+            });
           }
         }).catch((e) => {
-          if (!cancelled) setLoginError((e as Error).message || "Google prijava ni na voljo.");
+          if (!cancelled) {
+            setLoginError({
+              message: (e as Error).message || "Google prijava ni na voljo.",
+            });
+          }
         });
       });
     });
@@ -73,13 +89,32 @@ export function AuthModal() {
   const onLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") || "");
+    const email = String(fd.get("email") || "").trim();
     const password = String(fd.get("password") || "");
+    setLoginEmail(email);
     try {
-      setLoginError("");
+      setLoginError(null);
+      setResendStatus("idle");
+      setResendMessage("");
       await login(email, password);
     } catch (err) {
-      setLoginError((err as Error).message || "Napaka");
+      setLoginError(mapLoginApiError(err as ApiError));
+    }
+  };
+
+  const onResendVerification = async () => {
+    if (!loginEmail) return;
+    try {
+      setResendStatus("sending");
+      setResendMessage("");
+      const res = await api.resendVerification(loginEmail);
+      setResendStatus("sent");
+      setResendMessage(
+        res.message || "Če račun obstaja, smo poslali novo potrditveno sporočilo."
+      );
+    } catch {
+      setResendStatus("error");
+      setResendMessage("Potrditvenega sporočila trenutno ni bilo mogoče poslati. Poskusite znova.");
     }
   };
 
@@ -175,7 +210,13 @@ export function AuthModal() {
                   placeholder="E-pošta"
                   required
                   autoComplete="email"
-                  defaultValue={!isLogin ? registerEmail : undefined}
+                  value={isLogin ? loginEmail : undefined}
+                  defaultValue={!isLogin ? registerEmail || undefined : undefined}
+                  onChange={
+                    isLogin
+                      ? (e) => setLoginEmail(e.target.value)
+                      : undefined
+                  }
                   key={!isLogin ? `register-email-${registerEmail}` : "login-email"}
                   aria-invalid={registerFieldErrors.email ? true : undefined}
                   aria-describedby={registerFieldErrors.email ? "register-email-error" : undefined}
@@ -272,14 +313,54 @@ export function AuthModal() {
                 <p className="auth-field-error auth-field-error-terms">{registerFieldErrors.terms}</p>
               )}
 
-              {isLogin && loginError && <p className="form-error">{loginError}</p>}
+              {isLogin && loginError && (
+                <div className="auth-login-error">
+                  <p className="form-error">{loginError.message}</p>
+                  {loginError.suggestForgotPassword && (
+                    <p className="auth-login-hint">
+                      Ste pozabili geslo?{" "}
+                      <button
+                        type="button"
+                        className="btn-link"
+                        onClick={() => openForgotPassword(loginEmail)}
+                      >
+                        Ponastavite ga tukaj
+                      </button>
+                      .
+                    </p>
+                  )}
+                  {loginError.suggestEmailVerification && (
+                    <div className="auth-login-hint">
+                      <button
+                        type="button"
+                        className="btn-link"
+                        onClick={() => void onResendVerification()}
+                        disabled={!loginEmail || resendStatus === "sending"}
+                      >
+                        {resendStatus === "sending"
+                          ? "Pošiljam …"
+                          : "Pošlji novo potrditveno sporočilo"}
+                      </button>
+                      {resendMessage && (
+                        <p className={resendStatus === "error" ? "form-error" : "form-success"}>
+                          {resendMessage}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               {!isLogin && registerFieldErrors.form && (
                 <p className="form-error">{registerFieldErrors.form}</p>
               )}
 
               {isLogin && (
                 <p className="auth-forgot-row">
-                  <button type="button" className="btn-link" onClick={openForgotPassword}>
+                  <button
+                    type="button"
+                    className="btn-link"
+                    onClick={() => openForgotPassword(loginEmail)}
+                  >
                     Pozabljeno geslo?
                   </button>
                 </p>

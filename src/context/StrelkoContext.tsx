@@ -140,7 +140,7 @@ interface StrelkoContextValue extends StrelkoState {
   setSearchDateRange: (range: { from: string; to: string }) => void;
   openAuth: (mode: AuthMode) => void;
   closeAuth: () => void;
-  openForgotPassword: () => void;
+  openForgotPassword: (email?: string) => void;
   closeForgotPassword: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
@@ -303,6 +303,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     alerts: false,
     widget: false,
     forgotPassword: false,
+    forgotPasswordEmail: "",
     checkoutSuccess: null,
     creditsOptions: {},
   });
@@ -606,6 +607,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           alerts: false,
           widget: false,
           forgotPassword: false,
+          forgotPasswordEmail: "",
           checkoutSuccess: {
             creditsAdded: res.credits_added,
             balance: res.credits_balance,
@@ -986,14 +988,21 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           setPdfDownloadError(null);
         }
       },
-      openAuth: (mode) => setModals((m) => ({ ...m, auth: mode, forgotPassword: false })),
+      openAuth: (mode) =>
+        setModals((m) => ({ ...m, auth: mode, forgotPassword: false, forgotPasswordEmail: "" })),
       closeAuth: () => {
         clearAuthCheckoutIntent();
         setModals((m) => ({ ...m, auth: null }));
       },
-      openForgotPassword: () =>
-        setModals((m) => ({ ...m, auth: null, forgotPassword: true })),
-      closeForgotPassword: () => setModals((m) => ({ ...m, forgotPassword: false })),
+      openForgotPassword: (email) =>
+        setModals((m) => ({
+          ...m,
+          auth: null,
+          forgotPassword: true,
+          forgotPasswordEmail: email?.trim() || m.forgotPasswordEmail,
+        })),
+      closeForgotPassword: () =>
+        setModals((m) => ({ ...m, forgotPassword: false, forgotPasswordEmail: "" })),
       login: async (email, password) => {
         const tok = await api.login(email, password);
         setToken(tok.access_token);

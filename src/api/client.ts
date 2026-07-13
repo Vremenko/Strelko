@@ -134,6 +134,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, client_app: "strelko" }),
     }),
+  resendVerification: (email: string) =>
+    request<{ message?: string }>("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email, client_app: "strelko" }),
+    }),
   resetPassword: (token: string, password: string) =>
     request<{ message?: string }>("/auth/reset-password", {
       method: "POST",
