@@ -54,9 +54,9 @@ export function ZavarovalnicaPage() {
     <section className="zavarovalnica-page page--standard">
       <div className="page-header">
         <header className="zavarovalnica-hero">
-          <h2>
+          <h1>
             Vam je <em>strela</em> poškodovala klimatsko napravo, televizijo ali drugo elektroniko?
-          </h2>
+          </h1>
         </header>
       </div>
       <div className="zavarovalnica-intro">

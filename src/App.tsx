@@ -12,6 +12,7 @@ import { CenikPage } from "./pages/CenikPage";
 import { MojStrelkoPage } from "./pages/MojStrelkoPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import { LEGAL_PAGES, type LegalPageId } from "./lib/legal";
 
 export function App() {
@@ -35,6 +36,7 @@ export function App() {
                 <Route key={id} path={page.path} element={<LegalPage pageId={id} />} />
               )
             )}
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </StrelkoProvider>

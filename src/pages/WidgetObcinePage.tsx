@@ -76,7 +76,7 @@ export function WidgetObcinePage() {
   return (
     <section className="widget-obcine-page page--standard">
       <div className="widget-obcine-head page-header">
-        <h2>Widget udarov strel za spletne strani</h2>
+        <h1>Widget udarov strel za spletne strani</h1>
         <p className="widget-obcine-lead">
           Informativni widget za vdelavo na spletno stran. Za izbrano občino ali celotno Slovenijo
           prikazuje število udarov strel v zadnjih 24 urah in zadnjih 30 dneh ter čas zadnje

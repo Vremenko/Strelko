@@ -25,7 +25,7 @@ export function StatistikaPage() {
       <ArchiveEmbedHost />
       <section className="archive-charts-page page--standard">
         <div className="archive-charts-head page-header">
-          <h2>Statistika strel v Sloveniji</h2>
+          <h1>Statistika strel v Sloveniji</h1>
           <p className="archive-charts-lead">
             Pregled števila strel po dnevih, urah, statističnih regijah in občinah.
           </p>

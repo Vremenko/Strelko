@@ -1,6 +1,12 @@
-/** SEO meta podatki po poti — title, description, canonical, robots. */
+/** SEO meta podatki po poti — title, description, canonical, robots, OG/Twitter, JSON-LD. */
 
 export const SITE_ORIGIN = "https://strelko.meteoinfo.si";
+export const SITE_NAME = "Strelko";
+export const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png`;
+export const OG_IMAGE_ALT = "Strelko – pregled udarov strel v Sloveniji";
+export const OG_LOCALE = "sl_SI";
+export const ORGANIZATION_NAME = "Meteoinfo d.o.o.";
+export const ORGANIZATION_URL = "https://meteoinfo.si";
 
 export const SEO_FALLBACK = {
   title: "Strelko – pregled udarov strel v Sloveniji",
@@ -15,6 +21,21 @@ export type PageSeo = {
   description: string;
   canonical: string;
   robots: RobotsDirective;
+};
+
+export type SocialMeta = {
+  ogTitle: string;
+  ogDescription: string;
+  ogUrl: string;
+  ogImage: string;
+  ogImageAlt: string;
+  ogSiteName: string;
+  ogLocale: string;
+  ogType: "website";
+  twitterCard: "summary_large_image";
+  twitterTitle: string;
+  twitterDescription: string;
+  twitterImage: string;
 };
 
 const PUBLIC_ROUTES: Record<string, Omit<PageSeo, "robots">> = {
@@ -96,9 +117,29 @@ export const SITEMAP_PATHS = [
   "/pravice-potrosnikov",
 ] as const;
 
+/** Vse znane SPA poti (prerender + 200); neznane → HTTP 404 + noindex. */
+export const KNOWN_APP_PATHS = [
+  ...SITEMAP_PATHS,
+  "/moj-strelko",
+  "/verify-email",
+  "/reset-password",
+] as const;
+
+export const NOT_FOUND_SEO: PageSeo = {
+  title: "Stran ni najdena – Strelko",
+  description: "Zahtevana stran na strelko.meteoinfo.si ne obstaja. Vrnite se na domačo stran.",
+  canonical: `${SITE_ORIGIN}/`,
+  robots: "noindex, follow",
+};
+
 export function normalizePathname(pathname: string): string {
   const trimmed = pathname.replace(/\/+$/, "");
   return trimmed || "/";
+}
+
+export function isKnownAppPath(pathname: string): boolean {
+  const path = normalizePathname(pathname);
+  return (KNOWN_APP_PATHS as readonly string[]).includes(path);
 }
 
 function isCheckoutReturnState(search: string): boolean {
@@ -157,8 +198,68 @@ export function resolvePageSeo(pathname: string, search: string): PageSeo {
   }
 
   return {
-    ...SEO_FALLBACK,
+    ...NOT_FOUND_SEO,
     canonical: canonicalForPath(path),
-    robots: "noindex, follow",
   };
+}
+
+export function socialMetaFromPageSeo(seo: PageSeo): SocialMeta {
+  return {
+    ogTitle: seo.title,
+    ogDescription: seo.description,
+    ogUrl: seo.canonical,
+    ogImage: OG_IMAGE_URL,
+    ogImageAlt: OG_IMAGE_ALT,
+    ogSiteName: SITE_NAME,
+    ogLocale: OG_LOCALE,
+    ogType: "website",
+    twitterCard: "summary_large_image",
+    twitterTitle: seo.title,
+    twitterDescription: seo.description,
+    twitterImage: OG_IMAGE_URL,
+  };
+}
+
+export function siteJsonLdGraph(): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_ORIGIN}/#organization`,
+        name: ORGANIZATION_NAME,
+        url: ORGANIZATION_URL,
+        email: "ekipa@meteoinfo.si",
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_ORIGIN}/#website`,
+        name: SITE_NAME,
+        url: `${SITE_ORIGIN}/`,
+        inLanguage: "sl",
+        publisher: { "@id": `${SITE_ORIGIN}/#organization` },
+      },
+    ],
+  };
+}
+
+export function pageJsonLd(seo: PageSeo): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: seo.title,
+    description: seo.description,
+    url: seo.canonical,
+    inLanguage: "sl",
+    isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+  };
+}
+
+export function sitemapXml(lastmod: string): string {
+  const urls = SITEMAP_PATHS.map((routePath) => {
+    const loc = routePath === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${routePath}`;
+    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
+  }).join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }

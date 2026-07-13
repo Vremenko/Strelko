@@ -27,7 +27,19 @@ text = re.sub(r'(\/assets/index-[^"?]+\.(?:js|css))(?=")', rf'\1?v={ver}', text)
 open(path, "w", encoding="utf-8").write(text)
 PY
 
-echo "Cache bust ?v=$VERSION in dist/index.html"
+echo "Cache bust ?v=$VERSION v dist/index.html"
+
+# Enak cache-bust na prerenderanih podstraneh
+while IFS= read -r -d '' prerendered; do
+  python3 - "$prerendered" "$VERSION" <<'PY'
+import re, sys
+path, ver = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+text = re.sub(r'(\/assets/index-[^"?]+\.(?:js|css))\?v=[^"]*', r'\1', text)
+text = re.sub(r'(\/assets/index-[^"?]+\.(?:js|css))(?=")', rf'\1?v={ver}', text)
+open(path, "w", encoding="utf-8").write(text)
+PY
+done < <(find "$ROOT/dist" -mindepth 2 -name index.html -not -path '*/widget/*' -print0)
 
 docker cp "$ASSETS/." "$CONTAINER:/usr/share/nginx/html/assets/"
 docker cp "$HTML" "$CONTAINER:/usr/share/nginx/html/index.html"
@@ -50,6 +62,9 @@ if [[ -f "$ROOT/dist/favicon.png" ]]; then
 fi
 if [[ -f "$ROOT/dist/favicon.svg" ]]; then
   docker cp "$ROOT/dist/favicon.svg" "$CONTAINER:/usr/share/nginx/html/favicon.svg"
+fi
+if [[ -f "$ROOT/dist/og-image.png" ]]; then
+  docker cp "$ROOT/dist/og-image.png" "$CONTAINER:/usr/share/nginx/html/og-image.png"
 fi
 if [[ -d "$ROOT/dist/widget" ]]; then
   docker cp "$ROOT/dist/widget/." "$CONTAINER:/usr/share/nginx/html/widget/"

@@ -31,9 +31,9 @@ export function LandingPage() {
       <ArchiveEmbedHost />
       <section className="hero hero--landing">
         <HeroHouseIllustration />
-        <h2>
+        <h1>
           Preverite udare strel <em>v svoji bližini</em>
-        </h2>
+        </h1>
         <p className="lead lead-follow">
           Oglejte si zemljevid strel v Sloveniji, raziščite statistiko ali pripravite poročilo za
           zavarovalnico.

@@ -61,6 +61,29 @@ label.field-labeled > span {
   overflow: visible;
 }
 
+.hero h1 {
+  max-width: 720px;
+  margin: 0 auto 1.25rem;
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--text);
+  text-shadow: 0 0 40px var(--accent-glow);
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: clamp(1.2rem, 5.5vw, 1.75rem);
+    margin-bottom: 0.5rem;
+    padding: 0 0.25rem;
+  }
+}
+
 .hero--landing {
   padding-bottom: 0.5rem;
 }
@@ -395,7 +418,7 @@ label.field-labeled > span {
   padding-top: 0;
 }
 
-.zavarovalnica-page .page-header h2 {
+.zavarovalnica-page .page-header :is(h1, h2) {
   max-width: 32ch;
   margin-inline: auto;
   text-align: center;
@@ -999,7 +1022,7 @@ label.field-labeled > span {
 
 .archive-charts-head,
 .archive-charts-lead,
-.archive-charts-page .archive-charts-head h2 {
+.archive-charts-page .archive-charts-head :is(h1, h2) {
   text-align: left;
 }
 
