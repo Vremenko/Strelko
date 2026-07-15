@@ -4,11 +4,8 @@ export const OB_SKODI_MIN_QUANTITY = 3;
 export const OB_SKODI_TOKEN_PRICE_GROSS_EUR = 1.3;
 export const OB_SKODI_VAT_RATE = 0.22;
 
-/**
- * Backend checkout še ne sprejme izbrane količine — ne kličemo fiksnega paketa 4 žetonov.
- * Ko bo StormAPI pripravljen, nastavite na true in povežite quantity v checkout klicu.
- */
-export const OB_SKODI_VARIABLE_CHECKOUT_READY = false;
+/** Backend checkout sprejme izbrano količino žetonov (plan ob_skodi, polje quantity). */
+export const OB_SKODI_VARIABLE_CHECKOUT_READY = true;
 
 export interface ObSkodiOrderQuote {
   quantity: number;

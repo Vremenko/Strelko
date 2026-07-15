@@ -180,10 +180,10 @@ export const api = {
       body: JSON.stringify({ token, password }),
     }),
   whoami: () => request<import("../types").User>("/auth/whoami"),
-  checkout: (plan = "basic") =>
-    request<{ checkout_url: string }>("/strelko/checkout", {
+  checkout: (body: { plan: string; quantity?: number }) =>
+    request<{ checkout_url: string; session_id: string }>("/strelko/checkout", {
       method: "POST",
-      body: JSON.stringify({ plan }),
+      body: JSON.stringify(body),
     }),
   billingPortal: () =>
     request<{ portal_url: string }>("/strelko/billing-portal", { method: "POST", body: "{}" }),
@@ -230,7 +230,6 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(body),
     }),
-
   obcinaWidgetPreviewToken: (body: object) =>
     requestWithCredentials<import("../lib/widget-obcine").ObcinaWidgetPreviewToken>(
       "/strelko/obcina-widgets/preview-token",
@@ -252,5 +251,4 @@ export const api = {
     request<import("../lib/widget-obcine").ObcinaWidgetPublic>(
       `/strelko/obcina-widgets/public/${encodeURIComponent(publicKey)}`
     ),
-
 };

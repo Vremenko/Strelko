@@ -134,7 +134,7 @@ export const PRICING_FAQ = [
   },
   {
     q: "Kje dobim račune?",
-    a: "Potrdila in računi bodo po povezavi plačilnega sistema dostopni po e-pošti in v uporabniškem računu, ko bo ta funkcionalnost vklopljena.",
+    a: "V Moj Strelko odprite zavihek Plačila. Tam so prikazana vaša plačila, zneski in povezave do potrdil ali računov Stripe.",
   },
 ] as const;
 

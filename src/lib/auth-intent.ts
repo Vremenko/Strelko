@@ -1,4 +1,4 @@
-/** Shranjevanje namena prijave, checkout paketa in povratne poti (sessionStorage). */
+import { clampObSkodiQuantity } from "./ob-skodi-tokens";
 
 const AUTH_RETURN_KEY = "strelko_auth_return";
 const CHECKOUT_PLAN_KEY = "strelko_checkout_plan";
@@ -86,7 +86,10 @@ export function clearCheckoutPlanId(): void {
 
 export function setCheckoutQuantity(quantity: number): void {
   try {
-    sessionStorage.setItem(CHECKOUT_QUANTITY_KEY, String(Math.max(1, Math.floor(quantity))));
+    sessionStorage.setItem(
+      CHECKOUT_QUANTITY_KEY,
+      String(clampObSkodiQuantity(quantity))
+    );
   } catch {
     /* private browsing */
   }

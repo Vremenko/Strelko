@@ -12,7 +12,17 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { geocodeSuggest, isValidGeocodePlace, resolveGeocodePlace } from "../lib/geocode";
 import { getToken, setToken } from "../lib/utils";
-import { clearAuthCheckoutIntent, clearCheckoutIntent, clearCheckoutPlanId, consumeCheckoutPlanId, isCenikAuthReturn, peekAuthReturn, peekCheckoutPlanId } from "../lib/auth-intent";
+import {
+  clearAuthCheckoutIntent,
+  clearCheckoutIntent,
+  clearCheckoutPlanId,
+  clearCheckoutQuantity,
+  consumeCheckoutPlanId,
+  isCenikAuthReturn,
+  peekAuthReturn,
+  peekCheckoutPlanId,
+  peekCheckoutQuantity,
+} from "../lib/auth-intent";
 import { defaultSelectedPlanId } from "../lib/plans-modal";
 import {
   DEFAULT_SEARCH_RADIUS_KM,
@@ -154,7 +164,7 @@ interface StrelkoContextValue extends StrelkoState {
   saveAlerts: (body: object) => Promise<void>;
   openPremiumUpsell: () => void;
   openMeteoAlarmUpsell: () => void;
-  checkout: () => Promise<void>;
+  checkout: (quantity?: number) => Promise<void>;
   openBillingPortal: () => Promise<void>;
   acceptCookies: () => void;
   clearSearch: () => void;
@@ -642,8 +652,15 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     if (pendingPlan) {
       setSelectedPlanState(pendingPlan);
       try {
-        const { checkout_url } = await api.checkout(pendingPlan);
+        const pendingQty = peekCheckoutQuantity();
+        const { checkout_url } = await api.checkout({
+          plan: pendingPlan,
+          ...(pendingPlan === "ob_skodi" && pendingQty != null
+            ? { quantity: pendingQty }
+            : {}),
+        });
         consumeCheckoutPlanId();
+        clearCheckoutQuantity();
         window.location.href = checkout_url;
         return;
       } catch (e) {
@@ -1036,9 +1053,15 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setAlerts(await api.alerts());
         setModals((m) => ({ ...m, alerts: false }));
       },
-      checkout: async () => {
+      checkout: async (quantity?: number) => {
         clearCheckoutPlanId();
-        const { checkout_url } = await api.checkout(selectedPlan);
+        const plan = selectedPlan;
+        const resolvedQty = quantity ?? peekCheckoutQuantity();
+        const { checkout_url } = await api.checkout({
+          plan,
+          ...(plan === "ob_skodi" && resolvedQty != null ? { quantity: resolvedQty } : {}),
+        });
+        clearCheckoutQuantity();
         window.location.href = checkout_url;
       },
       openBillingPortal: async () => {

@@ -40,8 +40,7 @@ export function CenikPage() {
     if (user) {
       if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
       setSelectedPlan(planId);
-      setCheckoutQuantity(quantity);
-      void checkout();
+      void checkout(quantity);
       return;
     }
     if (!paymentsEnabled) return;
