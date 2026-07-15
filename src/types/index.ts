@@ -40,6 +40,26 @@ export interface Credits {
   widget_configured?: boolean;
 }
 
+export interface BillingHistoryItem {
+  id: string;
+  kind: "token_purchase" | "subscription" | "subscription_renewal" | "other";
+  occurred_at: string;
+  amount_cents: number;
+  currency: string;
+  amount_eur: string;
+  status: string;
+  status_sl: string;
+  description_sl: string;
+  plan_id?: string | null;
+  credits_added?: number | null;
+  document_url?: string | null;
+}
+
+export interface BillingHistory {
+  items: BillingHistoryItem[];
+  billing_portal_available: boolean;
+}
+
 export interface UserWidgetConfig {
   active: boolean;
   configured: boolean;

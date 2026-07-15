@@ -48,9 +48,19 @@ export function PortalOverview() {
             <div className="portal-card__service-head">
               <h3 className="portal-card__title">Paket Podpornik</h3>
               <span
-                className={`portal-badge ${podpornik.active ? "portal-badge--active" : "portal-badge--inactive"}`}
+                className={`portal-badge ${
+                  podpornik.cancelScheduled
+                    ? "portal-badge--cancel-pending"
+                    : podpornik.active
+                      ? "portal-badge--active"
+                      : "portal-badge--inactive"
+                }`}
               >
-                {podpornik.active ? "Aktiven" : "Ni aktiven"}
+                {podpornik.cancelScheduled
+                  ? "Preklicano"
+                  : podpornik.active
+                    ? "Aktiven"
+                    : "Ni aktiven"}
               </span>
             </div>
             <div className="portal-card__service-body">

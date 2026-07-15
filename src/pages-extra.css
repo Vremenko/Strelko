@@ -4527,6 +4527,33 @@ button:disabled.btn-primary {
   padding: 1.25rem !important;
 }
 
+.portal-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.portal-invoices-summary {
+  margin: 0 0 1rem;
+}
+
+.portal-invoices-table-wrap {
+  overflow-x: auto;
+}
+
+.portal-invoices-table__meta {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.portal-invoices-table a {
+  color: var(--blue);
+  font-weight: 500;
+}
+
 .portal-email {
   color: var(--muted);
   font-weight: 400;

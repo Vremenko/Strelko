@@ -187,6 +187,8 @@ export const api = {
     }),
   billingPortal: () =>
     request<{ portal_url: string }>("/strelko/billing-portal", { method: "POST", body: "{}" }),
+  billingHistory: () =>
+    request<import("../types").BillingHistory>("/strelko/billing/history"),
   verifyCheckout: (sessionId: string) =>
     request<{
       credits_added: number;
