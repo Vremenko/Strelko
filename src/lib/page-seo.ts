@@ -1,12 +1,27 @@
 /** SEO meta podatki po poti — title, description, canonical, robots, OG/Twitter, JSON-LD. */
 
+import { COMPANY, LEGAL_PAGES } from "./legal";
+import { PRICING_FAQ } from "./pricing-offers";
+import { OB_SKODI_TOKEN_PRICE_GROSS_EUR } from "./ob-skodi-tokens";
+import { PODPORNIST_MONTHLY_PRICE_GROSS_EUR } from "./podpornik-pricing";
+
 export const SITE_ORIGIN = "https://strelko.meteoinfo.si";
 export const SITE_NAME = "Strelko";
-export const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png`;
-export const OG_IMAGE_ALT = "Strelko – pregled udarov strel v Sloveniji";
+export const OG_IMAGE_DEFAULT = `${SITE_ORIGIN}/og-image.png`;
+export const OG_IMAGE_ALT_DEFAULT = "Strelko – pregled udarov strel v Sloveniji";
+export const OG_IMAGE_WIDTH = 1200;
+export const OG_IMAGE_HEIGHT = 630;
+export const APPLE_TOUCH_ICON_URL = `${SITE_ORIGIN}/pwa/apple-touch-icon.png`;
 export const OG_LOCALE = "sl_SI";
 export const ORGANIZATION_NAME = "Meteoinfo d.o.o.";
 export const ORGANIZATION_URL = "https://meteoinfo.si";
+export const ORGANIZATION_LOGO_URL = `${SITE_ORIGIN}/assets/strelko-logo.png`;
+export const THEME_COLOR = "#1a2744";
+
+/** @deprecated Uporabi OG_IMAGE_DEFAULT */
+export const OG_IMAGE_URL = OG_IMAGE_DEFAULT;
+/** @deprecated Uporabi OG_IMAGE_ALT_DEFAULT */
+export const OG_IMAGE_ALT = OG_IMAGE_ALT_DEFAULT;
 
 export const SEO_FALLBACK = {
   title: "Strelko – pregled udarov strel v Sloveniji",
@@ -100,6 +115,83 @@ const PUBLIC_ROUTES: Record<string, Omit<PageSeo, "robots">> = {
     canonical: `${SITE_ORIGIN}/pravice-potrosnikov`,
   },
 };
+
+const ROUTE_OG_IMAGES: Record<string, { image: string; alt: string }> = {
+  "/": {
+    image: `${SITE_ORIGIN}/og/home.png`,
+    alt: "Strelko – pregled udarov strel v Sloveniji",
+  },
+  "/pomoc-pri-zavarovalnici": {
+    image: `${SITE_ORIGIN}/og/zavarovalnica.png`,
+    alt: "Preverjanje udarov strel za zavarovalnico – Strelko",
+  },
+  "/statistika": {
+    image: `${SITE_ORIGIN}/og/statistika.png`,
+    alt: "Arhiv in statistika strel v Sloveniji – Strelko",
+  },
+  "/widget-obcine": {
+    image: `${SITE_ORIGIN}/og/widget.png`,
+    alt: "Widget udarov strel za spletno stran – Strelko",
+  },
+  "/cenik": {
+    image: `${SITE_ORIGIN}/og/cenik.png`,
+    alt: "Cenik žetonov in paketa Podpornik – Strelko",
+  },
+  "/impressum": {
+    image: `${SITE_ORIGIN}/og/impressum.png`,
+    alt: "Impressum – Strelko",
+  },
+  "/pogoji-uporabe": {
+    image: `${SITE_ORIGIN}/og/pogoji.png`,
+    alt: "Pogoji uporabe – Strelko",
+  },
+  "/zasebnost": {
+    image: `${SITE_ORIGIN}/og/zasebnost.png`,
+    alt: "Politika zasebnosti – Strelko",
+  },
+  "/piskotki": {
+    image: `${SITE_ORIGIN}/og/piskotki.png`,
+    alt: "Politika piškotkov – Strelko",
+  },
+  "/pravice-potrosnikov": {
+    image: `${SITE_ORIGIN}/og/pravice.png`,
+    alt: "Pravice potrošnikov – Strelko",
+  },
+};
+
+const LEGAL_PATHS = new Set(Object.values(LEGAL_PAGES).map((page) => page.path));
+
+const BREADCRUMB_LABELS: Record<string, string> = {
+  "/pomoc-pri-zavarovalnici": "Pomoč pri zavarovalnici",
+  "/statistika": "Statistika",
+  "/widget-obcine": "Widget občine",
+  "/cenik": "Cenik",
+  ...Object.fromEntries(
+    Object.values(LEGAL_PAGES).map((page) => [
+      page.path,
+      "navTitle" in page && typeof page.navTitle === "string" ? page.navTitle : page.title,
+    ])
+  ),
+};
+
+type SitemapEntry = {
+  path: string;
+  priority: number;
+  changefreq: "weekly" | "monthly" | "yearly";
+};
+
+const SITEMAP_ENTRIES: SitemapEntry[] = [
+  { path: "/", priority: 1.0, changefreq: "weekly" },
+  { path: "/pomoc-pri-zavarovalnici", priority: 0.9, changefreq: "monthly" },
+  { path: "/statistika", priority: 0.8, changefreq: "weekly" },
+  { path: "/widget-obcine", priority: 0.7, changefreq: "monthly" },
+  { path: "/cenik", priority: 0.8, changefreq: "monthly" },
+  { path: "/impressum", priority: 0.3, changefreq: "yearly" },
+  { path: "/pogoji-uporabe", priority: 0.3, changefreq: "yearly" },
+  { path: "/zasebnost", priority: 0.3, changefreq: "yearly" },
+  { path: "/piskotki", priority: 0.3, changefreq: "yearly" },
+  { path: "/pravice-potrosnikov", priority: 0.3, changefreq: "yearly" },
+];
 
 const NOINDEX_PATHS = new Set(["/moj-strelko", "/verify-email", "/reset-password"]);
 
@@ -203,20 +295,26 @@ export function resolvePageSeo(pathname: string, search: string): PageSeo {
   };
 }
 
-export function socialMetaFromPageSeo(seo: PageSeo): SocialMeta {
+export function resolveOgImage(pathname: string): { image: string; alt: string } {
+  const path = normalizePathname(pathname);
+  return ROUTE_OG_IMAGES[path] ?? { image: OG_IMAGE_DEFAULT, alt: OG_IMAGE_ALT_DEFAULT };
+}
+
+export function socialMetaFromPageSeo(seo: PageSeo, pathname: string): SocialMeta {
+  const og = resolveOgImage(pathname);
   return {
     ogTitle: seo.title,
     ogDescription: seo.description,
     ogUrl: seo.canonical,
-    ogImage: OG_IMAGE_URL,
-    ogImageAlt: OG_IMAGE_ALT,
+    ogImage: og.image,
+    ogImageAlt: og.alt,
     ogSiteName: SITE_NAME,
     ogLocale: OG_LOCALE,
     ogType: "website",
     twitterCard: "summary_large_image",
     twitterTitle: seo.title,
     twitterDescription: seo.description,
-    twitterImage: OG_IMAGE_URL,
+    twitterImage: og.image,
   };
 }
 
@@ -228,8 +326,20 @@ export function siteJsonLdGraph(): Record<string, unknown> {
         "@type": "Organization",
         "@id": `${SITE_ORIGIN}/#organization`,
         name: ORGANIZATION_NAME,
+        legalName: COMPANY.legalName,
         url: ORGANIZATION_URL,
         email: "ekipa@meteoinfo.si",
+        logo: {
+          "@type": "ImageObject",
+          url: ORGANIZATION_LOGO_URL,
+        },
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: COMPANY.address,
+          postalCode: COMPANY.postal.split(" ")[0],
+          addressLocality: COMPANY.postal.split(" ").slice(1).join(" "),
+          addressCountry: "SI",
+        },
       },
       {
         "@type": "WebSite",
@@ -243,22 +353,118 @@ export function siteJsonLdGraph(): Record<string, unknown> {
   };
 }
 
-export function pageJsonLd(seo: PageSeo): Record<string, unknown> {
+function breadcrumbLabelForPath(path: string, seo: PageSeo): string | null {
+  if (path === "/") return null;
+  return BREADCRUMB_LABELS[path] ?? seo.title.replace(/\s*–\s*Strelko\s*$/u, "").trim();
+}
+
+function breadcrumbJsonLd(path: string, seo: PageSeo): Record<string, unknown> | null {
+  const label = breadcrumbLabelForPath(path, seo);
+  if (!label) return null;
+
   return {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: seo.title,
-    description: seo.description,
-    url: seo.canonical,
-    inLanguage: "sl",
-    isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+    "@type": "BreadcrumbList",
+    "@id": `${seo.canonical}#breadcrumb`,
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: SITE_NAME,
+        item: `${SITE_ORIGIN}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: label,
+        item: seo.canonical,
+      },
+    ],
   };
 }
 
+function cenikOfferNodes(): Record<string, unknown>[] {
+  const seller = { "@id": `${SITE_ORIGIN}/#organization` };
+  const pageUrl = `${SITE_ORIGIN}/cenik`;
+
+  return [
+    {
+      "@type": "Offer",
+      "@id": `${pageUrl}#offer-ob-skodi`,
+      name: "Ob škodi – žeton",
+      description: "Žeton za preverjanje udarov strel in izdelavo PDF-poročila.",
+      price: OB_SKODI_TOKEN_PRICE_GROSS_EUR,
+      priceCurrency: "EUR",
+      availability: "https://schema.org/InStock",
+      url: pageUrl,
+      seller,
+    },
+    {
+      "@type": "Offer",
+      "@id": `${pageUrl}#offer-podpornik`,
+      name: "Podpornik",
+      description: "Mesečna naročnina z dostopom do arhiva, statistik in widgeta.",
+      price: PODPORNIST_MONTHLY_PRICE_GROSS_EUR,
+      priceCurrency: "EUR",
+      availability: "https://schema.org/InStock",
+      url: pageUrl,
+      seller,
+    },
+  ];
+}
+
+function cenikFaqJsonLd(): Record<string, unknown> {
+  const pageUrl = `${SITE_ORIGIN}/cenik`;
+  return {
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: PRICING_FAQ.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  };
+}
+
+export function pageJsonLd(pathname: string, seo: PageSeo): Record<string, unknown> {
+  const path = normalizePathname(pathname);
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "WebPage",
+      "@id": `${seo.canonical}#webpage`,
+      name: seo.title,
+      description: seo.description,
+      url: seo.canonical,
+      inLanguage: "sl",
+      isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+    },
+  ];
+
+  const breadcrumb = breadcrumbJsonLd(path, seo);
+  if (breadcrumb && (LEGAL_PATHS.has(path) || BREADCRUMB_LABELS[path])) {
+    graph.push(breadcrumb);
+  }
+
+  if (path === "/cenik") {
+    graph.push(...cenikOfferNodes(), cenikFaqJsonLd());
+  }
+
+  return { "@context": "https://schema.org", "@graph": graph };
+}
+
 export function sitemapXml(lastmod: string): string {
-  const urls = SITEMAP_PATHS.map((routePath) => {
-    const loc = routePath === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${routePath}`;
-    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
+  const urls = SITEMAP_ENTRIES.map((entry) => {
+    const loc = entry.path === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${entry.path}`;
+    return [
+      "  <url>",
+      `    <loc>${loc}</loc>`,
+      `    <lastmod>${lastmod}</lastmod>`,
+      `    <changefreq>${entry.changefreq}</changefreq>`,
+      `    <priority>${entry.priority.toFixed(1)}</priority>`,
+      "  </url>",
+    ].join("\n");
   }).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;

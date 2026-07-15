@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as cheerio from "cheerio";
 import {
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
   pageJsonLd,
   resolvePageSeo,
   KNOWN_APP_PATHS,
@@ -67,7 +69,7 @@ function upsertJsonLd($: cheerio.CheerioAPI, id: string, data: Record<string, un
 
 function renderRouteHtml(template: string, routePath: string): string {
   const seo = resolvePageSeo(routePath, "");
-  const social = socialMetaFromPageSeo(seo);
+  const social = socialMetaFromPageSeo(seo, routePath);
 
   const $ = cheerio.load(template);
   $("title").text(seo.title);
@@ -80,6 +82,8 @@ function renderRouteHtml(template: string, routePath: string): string {
   upsertProperty($, "og:url", social.ogUrl);
   upsertProperty($, "og:image", social.ogImage);
   upsertProperty($, "og:image:alt", social.ogImageAlt);
+  upsertProperty($, "og:image:width", String(OG_IMAGE_WIDTH));
+  upsertProperty($, "og:image:height", String(OG_IMAGE_HEIGHT));
   upsertProperty($, "og:site_name", social.ogSiteName);
   upsertProperty($, "og:locale", social.ogLocale);
   upsertProperty($, "og:type", social.ogType);
@@ -95,7 +99,7 @@ function renderRouteHtml(template: string, routePath: string): string {
   } else {
     $("#strelko-site-jsonld").remove();
   }
-  upsertJsonLd($, "strelko-page-jsonld", pageJsonLd(seo));
+  upsertJsonLd($, "strelko-page-jsonld", pageJsonLd(routePath, seo));
 
   $("#app").html(renderPrerenderSnapshotHtml(routePath));
 
@@ -129,6 +133,40 @@ async function main(): Promise<void> {
     console.log("prerender: og-image.png");
   } catch {
     console.warn("prerender: og-image.png ni na voljo v public/");
+  }
+
+  const ogDir = path.join(PUBLIC, "og");
+  try {
+    const ogFiles = await fs.readdir(ogDir);
+    await fs.mkdir(path.join(DIST, "og"), { recursive: true });
+    for (const file of ogFiles) {
+      if (!file.endsWith(".png")) continue;
+      await fs.copyFile(path.join(ogDir, file), path.join(DIST, "og", file));
+    }
+    console.log(`prerender: og/ (${ogFiles.filter((f) => f.endsWith(".png")).length} slik)`);
+  } catch {
+    console.warn("prerender: public/og/ ni na voljo");
+  }
+
+  const pwaDir = path.join(PUBLIC, "pwa");
+  try {
+    const pwaFiles = await fs.readdir(pwaDir);
+    await fs.mkdir(path.join(DIST, "pwa"), { recursive: true });
+    for (const file of pwaFiles) {
+      if (!file.endsWith(".png")) continue;
+      await fs.copyFile(path.join(pwaDir, file), path.join(DIST, "pwa", file));
+    }
+    console.log(`prerender: pwa/ (${pwaFiles.filter((f) => f.endsWith(".png")).length} ikon)`);
+  } catch {
+    console.warn("prerender: public/pwa/ ni na voljo");
+  }
+
+  const manifest = path.join(PUBLIC, "site.webmanifest");
+  try {
+    await fs.copyFile(manifest, path.join(DIST, "site.webmanifest"));
+    console.log("prerender: site.webmanifest");
+  } catch {
+    console.warn("prerender: site.webmanifest ni na voljo");
   }
 
   console.log(`prerender: uspešno (${KNOWN_APP_PATHS.length} strani)`);

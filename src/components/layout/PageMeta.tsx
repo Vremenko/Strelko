@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
   pageJsonLd,
   resolvePageSeo,
   socialMetaFromPageSeo,
@@ -54,7 +56,7 @@ export function PageMeta() {
 
   useEffect(() => {
     const seo = resolvePageSeo(pathname, search);
-    const social = socialMetaFromPageSeo(seo);
+    const social = socialMetaFromPageSeo(seo, pathname);
 
     document.title = seo.title;
     upsertMeta("description", seo.description);
@@ -66,6 +68,8 @@ export function PageMeta() {
     upsertProperty("og:url", social.ogUrl);
     upsertProperty("og:image", social.ogImage);
     upsertProperty("og:image:alt", social.ogImageAlt);
+    upsertProperty("og:image:width", String(OG_IMAGE_WIDTH));
+    upsertProperty("og:image:height", String(OG_IMAGE_HEIGHT));
     upsertProperty("og:site_name", social.ogSiteName);
     upsertProperty("og:locale", social.ogLocale);
     upsertProperty("og:type", social.ogType);
@@ -76,7 +80,7 @@ export function PageMeta() {
     upsertMeta("twitter:image", social.twitterImage);
     upsertMeta("twitter:image:alt", social.ogImageAlt);
 
-    upsertJsonLd(pageJsonLd(seo));
+    upsertJsonLd(pageJsonLd(pathname, seo));
   }, [pathname, search]);
 
   return null;

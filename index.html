@@ -16,8 +16,10 @@
       content="Preverite zaznane udare strel v Sloveniji, raziščite arhiv in statistiko ter pripravite informativno PDF-poročilo za zavarovalnico."
     />
     <meta property="og:url" content="https://strelko.meteoinfo.si/" />
-    <meta property="og:image" content="https://strelko.meteoinfo.si/og-image.png" />
+    <meta property="og:image" content="https://strelko.meteoinfo.si/og/home.png" />
     <meta property="og:image:alt" content="Strelko – pregled udarov strel v Sloveniji" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Strelko" />
     <meta property="og:locale" content="sl_SI" />
     <meta property="og:type" content="website" />
@@ -27,8 +29,11 @@
       name="twitter:description"
       content="Preverite zaznane udare strel v Sloveniji, raziščite arhiv in statistiko ter pripravite informativno PDF-poročilo za zavarovalnico."
     />
-    <meta name="twitter:image" content="https://strelko.meteoinfo.si/og-image.png" />
+    <meta name="twitter:image" content="https://strelko.meteoinfo.si/og/home.png" />
     <meta name="twitter:image:alt" content="Strelko – pregled udarov strel v Sloveniji" />
+    <meta name="theme-color" content="#1a2744" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png" sizes="180x180" />
     <style id="prerender-snapshot-style">
       .prerender-snapshot {
         position: absolute;
@@ -57,8 +62,20 @@
             "@type": "Organization",
             "@id": "https://strelko.meteoinfo.si/#organization",
             "name": "Meteoinfo d.o.o.",
+            "legalName": "Meteoinfo, vremenske informacije, raziskave in storitve, d.o.o.",
             "url": "https://meteoinfo.si",
-            "email": "ekipa@meteoinfo.si"
+            "email": "ekipa@meteoinfo.si",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://strelko.meteoinfo.si/assets/strelko-logo.png"
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Ženjak 4",
+              "postalCode": "2234",
+              "addressLocality": "Benedikt",
+              "addressCountry": "SI"
+            }
           },
           {
             "@type": "WebSite",

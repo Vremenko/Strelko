@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && npm run prerender",
+    "build": "tsc --noEmit && npm run seo-assets && vite build && npm run prerender",
+    "seo-assets": "python3 scripts/generate-seo-assets.py",
     "prerender": "tsx scripts/prerender.ts",
     "preview": "vite preview"
   },

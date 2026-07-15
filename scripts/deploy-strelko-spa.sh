@@ -66,6 +66,17 @@ fi
 if [[ -f "$ROOT/dist/og-image.png" ]]; then
   docker cp "$ROOT/dist/og-image.png" "$CONTAINER:/usr/share/nginx/html/og-image.png"
 fi
+if [[ -d "$ROOT/dist/og" ]]; then
+  docker exec "$CONTAINER" mkdir -p /usr/share/nginx/html/og
+  docker cp "$ROOT/dist/og/." "$CONTAINER:/usr/share/nginx/html/og/"
+fi
+if [[ -d "$ROOT/dist/pwa" ]]; then
+  docker exec "$CONTAINER" mkdir -p /usr/share/nginx/html/pwa
+  docker cp "$ROOT/dist/pwa/." "$CONTAINER:/usr/share/nginx/html/pwa/"
+fi
+if [[ -f "$ROOT/dist/site.webmanifest" ]]; then
+  docker cp "$ROOT/dist/site.webmanifest" "$CONTAINER:/usr/share/nginx/html/site.webmanifest"
+fi
 if [[ -d "$ROOT/dist/widget" ]]; then
   docker cp "$ROOT/dist/widget/." "$CONTAINER:/usr/share/nginx/html/widget/"
 fi
