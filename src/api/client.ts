@@ -39,6 +39,41 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+async function requestWithCredentials<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+      ...(options.headers as Record<string, string>),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const detail = (data as { detail?: unknown }).detail;
+    let message = res.statusText;
+    if (typeof detail === "string") {
+      message = detail;
+    } else if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+      const structured = detail as { message?: string };
+      if (typeof structured.message === "string") {
+        message = structured.message;
+      }
+    } else if (Array.isArray(detail) && detail.length) {
+      message = detail
+        .map((item) => (typeof item?.msg === "string" ? item.msg : ""))
+        .filter(Boolean)
+        .join(" ");
+    }
+    const err = new Error(message) as import("../types").ApiError;
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data as T;
+}
+
 export const api = {
   preview: (body: object) =>
     request("/strelko/preview", { method: "POST", body: JSON.stringify(body) }),
@@ -193,4 +228,27 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(body),
     }),
+
+  obcinaWidgetPreviewToken: (body: object) =>
+    requestWithCredentials<import("../lib/widget-obcine").ObcinaWidgetPreviewToken>(
+      "/strelko/obcina-widgets/preview-token",
+      { method: "POST", body: JSON.stringify(body) }
+    ),
+  listObcinaWidgets: () =>
+    request<import("../lib/widget-obcine").ObcinaWidgetList>("/strelko/obcina-widgets"),
+  createObcinaWidget: (body: object) =>
+    request<import("../lib/widget-obcine").ObcinaWidgetPublic>("/strelko/obcina-widgets", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  patchObcinaWidget: (publicKey: string, body: object) =>
+    request<import("../lib/widget-obcine").ObcinaWidgetPublic>(
+      `/strelko/obcina-widgets/${encodeURIComponent(publicKey)}`,
+      { method: "PATCH", body: JSON.stringify(body) }
+    ),
+  verifyObcinaWidgetPublic: (publicKey: string) =>
+    request<import("../lib/widget-obcine").ObcinaWidgetPublic>(
+      `/strelko/obcina-widgets/public/${encodeURIComponent(publicKey)}`
+    ),
+
 };

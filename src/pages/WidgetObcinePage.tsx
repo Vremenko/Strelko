@@ -1,25 +1,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useStrelko } from "../context/StrelkoContext";
+import { api } from "../api/client";
 import { LockedContent } from "../components/LockedContent";
+import { useStrelko } from "../context/StrelkoContext";
 import { isPodpornikActive } from "../lib/portal-account";
 import { STRELKO_OPEN_ACCESS } from "../lib/season";
 import {
-  copyWidgetEmbedCode,
+  copyTextToClipboard,
   ensureWidgetResizeListener,
+  findMatchingObcinaWidget,
   NATIONAL_WIDGET_SCOPE,
-  newWidgetEmbedFrameId,
+  resolveVerifiedEmbedForWidget,
+  type ObcinaWidgetPublic,
   widgetEmbedConfigKey,
-  widgetEmbedHtml,
-  widgetPreviewPath,
+  widgetPreviewBody,
 } from "../lib/widget-obcine";
 
 const DEFAULT_OB_MID = 11026516;
-const COPY_CONFIRM_MS = 2000;
+const COPY_CONFIRM_MS = 2500;
+
+type VerifiedEmbedState = {
+  widget: ObcinaWidgetPublic;
+  html: string;
+  frameId: string;
+  configKey: string;
+};
 
 export function WidgetObcinePage() {
   const { widget, setWidget, loadWidgetObcine, loadWidgetSelection, credits } = useStrelko();
   const [copyConfirmed, setCopyConfirmed] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
+  const [embedError, setEmbedError] = useState<string | null>(null);
+  const [previewSrc, setPreviewSrc] = useState("about:blank");
+  const [verifiedEmbed, setVerifiedEmbed] = useState<VerifiedEmbedState | null>(null);
+  const [embedPreparing, setEmbedPreparing] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewRequestRef = useRef(0);
 
   useEffect(() => {
     void loadWidgetObcine();
@@ -36,18 +52,6 @@ export function WidgetObcinePage() {
     };
   }, []);
 
-  const handleCopyEmbedCode = useCallback(async (code: string) => {
-    const copied = await copyWidgetEmbedCode(code);
-    if (!copied) return;
-
-    if (copyResetRef.current) clearTimeout(copyResetRef.current);
-    setCopyConfirmed(true);
-    copyResetRef.current = setTimeout(() => {
-      setCopyConfirmed(false);
-      copyResetRef.current = null;
-    }, COPY_CONFIRM_MS);
-  }, []);
-
   const size = widget.publicWidgetPreviewSize;
   const isFull = size === "full";
   const selected =
@@ -56,22 +60,115 @@ export function WidgetObcinePage() {
       : String(widget.publicWidgetObMid || DEFAULT_OB_MID);
   const ready =
     widget.publicWidgetScope === NATIONAL_WIDGET_SCOPE || !!widget.publicWidgetObMid;
-  const previewSrc = ready ? widgetPreviewPath(widget, size) : "about:blank";
-  const embedConfigKey = widgetEmbedConfigKey(widget, size);
-  const frameIdRef = useRef({ key: "", id: newWidgetEmbedFrameId(size) });
-
-  if (frameIdRef.current.key !== embedConfigKey) {
-    frameIdRef.current = {
-      key: embedConfigKey,
-      id: newWidgetEmbedFrameId(size),
-    };
-  }
-
-  const embedCode = useMemo(
-    () => (ready ? widgetEmbedHtml(widget, size, frameIdRef.current.id) : "Izberite občino …"),
-    [ready, embedConfigKey, size, widget]
-  );
   const canEmbed = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
+
+  const embedConfigKey = widgetEmbedConfigKey(widget, size);
+
+  const embedDisplayedForCurrentConfig =
+    !!verifiedEmbed && verifiedEmbed.configKey === embedConfigKey;
+
+  useEffect(() => {
+    if (!canEmbed) {
+      setVerifiedEmbed(null);
+      setEmbedError(null);
+      setCopyConfirmed(false);
+      return;
+    }
+
+    setVerifiedEmbed((prev) => (prev && prev.configKey === embedConfigKey ? prev : null));
+    setEmbedError(null);
+    setCopyError(null);
+    setCopyConfirmed(false);
+  }, [canEmbed, embedConfigKey]);
+
+  useEffect(() => {
+    if (!ready) {
+      setPreviewSrc("about:blank");
+      return;
+    }
+
+    const requestId = ++previewRequestRef.current;
+    const body = widgetPreviewBody(widget, size);
+
+    const run = async () => {
+      setPreviewLoading(true);
+      try {
+        const tokenOut = await api.obcinaWidgetPreviewToken(body);
+        if (previewRequestRef.current !== requestId) return;
+        setPreviewSrc(tokenOut.preview_path);
+      } catch {
+        if (previewRequestRef.current !== requestId) return;
+        setPreviewSrc("about:blank");
+      } finally {
+        if (previewRequestRef.current === requestId) {
+          setPreviewLoading(false);
+        }
+      }
+    };
+
+    void run();
+  }, [ready, embedConfigKey, widget, size]);
+
+  const handleCopyEmbedCode = useCallback(async () => {
+    if (!ready || !canEmbed || embedPreparing) return;
+    setEmbedPreparing(true);
+    setEmbedError(null);
+    setCopyError(null);
+    setCopyConfirmed(false);
+
+    try {
+      const list = await api.listObcinaWidgets();
+      let row = findMatchingObcinaWidget(list.widgets, widget, size);
+      const desiredTheme = widget.publicWidgetTheme || "dark";
+
+      if (row) {
+        if ((row.theme || "dark") !== desiredTheme) {
+          row = await api.patchObcinaWidget(row.public_key, { theme: desiredTheme });
+        }
+      } else {
+        row = await api.createObcinaWidget(widgetPreviewBody(widget, size));
+      }
+
+      const resolved = await resolveVerifiedEmbedForWidget(
+        row,
+        embedConfigKey,
+        (publicKey) => api.verifyObcinaWidgetPublic(publicKey)
+      );
+      if (!resolved) {
+        setVerifiedEmbed(null);
+        setEmbedError("Embed kode ni bilo mogoče pripraviti. Poskusite znova.");
+        return;
+      }
+
+      try {
+        await copyTextToClipboard(resolved.html);
+      } catch {
+        setVerifiedEmbed(null);
+        setCopyError("Kopiranje ni uspelo. Dovolite dostop do odložišča ali poskusite znova.");
+        return;
+      }
+
+      setVerifiedEmbed(resolved);
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+      setCopyConfirmed(true);
+      copyResetRef.current = setTimeout(() => {
+        setCopyConfirmed(false);
+        copyResetRef.current = null;
+      }, COPY_CONFIRM_MS);
+    } catch {
+      setVerifiedEmbed(null);
+      setEmbedError("Embed kode ni bilo mogoče pripraviti. Poskusite znova.");
+    } finally {
+      setEmbedPreparing(false);
+    }
+  }, [ready, canEmbed, embedPreparing, widget, size, embedConfigKey]);
+
+  const textareaValue = useMemo(() => {
+    if (!ready) return "Izberite občino …";
+    if (embedPreparing) return "Pripravljam …";
+    if (embedDisplayedForCurrentConfig && verifiedEmbed) return verifiedEmbed.html;
+    return "Kliknite »Kopiraj kodo«.";
+  }, [ready, embedPreparing, embedDisplayedForCurrentConfig, verifiedEmbed]);
 
   return (
     <section className="widget-obcine-page page--standard">
@@ -161,7 +258,7 @@ export function WidgetObcinePage() {
               key={previewSrc}
               id="public-widget-iframe"
               className={`widget-obcine-iframe${isFull ? " widget-obcine-iframe--full" : " widget-obcine-iframe--compact"}`}
-              src={previewSrc}
+              src={previewLoading ? "about:blank" : previewSrc}
               title="Predogled widgeta"
             />
           </div>
@@ -170,21 +267,36 @@ export function WidgetObcinePage() {
           </label>
           {canEmbed ? (
             <>
+              {embedError ? (
+                <p className="widget-obcine-embed-error" role="alert">
+                  {embedError}
+                </p>
+              ) : null}
               <textarea
                 id="public-widget-embed-code"
                 className="widget-embed-code widget-obcine-embed-code"
                 readOnly
+                spellCheck={false}
+                autoComplete="off"
                 rows={4}
-                value={embedCode}
+                value={textareaValue}
               />
-              <button
-                type="button"
-                className={`btn btn-ghost btn-sm widget-copy-btn${copyConfirmed ? " widget-copy-btn--copied" : ""}`}
-                id="public-widget-copy"
-                onClick={() => void handleCopyEmbedCode(embedCode)}
-              >
-                {copyConfirmed ? "Kopirano" : "Kopiraj kodo"}
-              </button>
+              <div className="widget-obcine-embed-actions">
+                <button
+                  type="button"
+                  className={`btn btn-ghost btn-sm widget-copy-btn${copyConfirmed ? " widget-copy-btn--copied" : ""}`}
+                  id="public-widget-copy"
+                  disabled={!ready || embedPreparing}
+                  onClick={() => void handleCopyEmbedCode()}
+                >
+                  {embedPreparing ? "Pripravljam …" : copyConfirmed ? "Koda kopirana" : "Kopiraj kodo"}
+                </button>
+              </div>
+              {copyError ? (
+                <p className="widget-obcine-embed-error" role="alert">
+                  {copyError}
+                </p>
+              ) : null}
             </>
           ) : (
             <div className="locked-content-surface locked-content-surface--widget-embed">

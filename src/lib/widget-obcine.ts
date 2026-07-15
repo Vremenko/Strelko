@@ -3,30 +3,74 @@ import type { WidgetState } from "../types";
 export type WidgetPreviewSize = "compact" | "full";
 export const NATIONAL_WIDGET_SCOPE = "slovenija" as const;
 
-function buildWidgetParams(widget: WidgetState, size: WidgetPreviewSize): URLSearchParams {
-  const params = new URLSearchParams();
+export type ObcinaWidgetPublic = {
+  public_key: string;
+  ob_mid?: number | null;
+  scope?: string | null;
+  theme: "dark" | "light";
+  size: WidgetPreviewSize;
+  embed_path: string;
+  active: boolean;
+};
+
+export type ObcinaWidgetPreviewToken = {
+  token: string;
+  preview_path: string;
+  expires_in_sec: number;
+};
+
+export type ObcinaWidgetList = {
+  widgets: ObcinaWidgetPublic[];
+};
+
+export function widgetPreviewBody(widget: WidgetState, size: WidgetPreviewSize) {
   if (widget.publicWidgetScope === NATIONAL_WIDGET_SCOPE) {
-    params.set("scope", NATIONAL_WIDGET_SCOPE);
-    params.set("label", "SLOVENIJA");
-  } else {
-    const mid = widget.publicWidgetObMid;
-    if (mid) params.set("ob_mid", String(mid));
+    return { scope: NATIONAL_WIDGET_SCOPE, theme: widget.publicWidgetTheme || "dark", size };
   }
-  params.set("theme", widget.publicWidgetTheme || "dark");
-  params.set("size", size === "full" ? "full" : "compact");
-  params.set("api", `${location.origin}/widget/api`);
-  return params;
+  const mid = widget.publicWidgetObMid;
+  return {
+    ob_mid: mid ? Number(mid) : undefined,
+    theme: widget.publicWidgetTheme || "dark",
+    size,
+  };
 }
 
-export function widgetPreviewPath(widget: WidgetState, size: WidgetPreviewSize): string {
-  const params = buildWidgetParams(widget, size);
-  return params.has("ob_mid") || params.has("scope")
-    ? `/widget/obcina.html?${params}`
-    : `/widget/obcina.html?size=${size === "full" ? "full" : "compact"}`;
+export function widgetProductionPreviewPath(publicKey: string): string {
+  return `/widget/obcina.html?id=${encodeURIComponent(publicKey)}`;
 }
 
 export function widgetEmbedConfigKey(widget: WidgetState, size: WidgetPreviewSize): string {
   return [size, widget.publicWidgetScope ?? "", widget.publicWidgetObMid ?? "", widget.publicWidgetTheme].join("|");
+}
+
+export function widgetTargetConfigKey(
+  size: WidgetPreviewSize,
+  obMid: number | string | null | undefined,
+  scope: string | null | undefined
+): string {
+  return [size, scope ?? "", obMid ?? ""].join("|");
+}
+
+export function findMatchingObcinaWidget(
+  widgets: ObcinaWidgetPublic[],
+  widget: WidgetState,
+  size: WidgetPreviewSize
+): ObcinaWidgetPublic | null {
+  const targetKey = widgetTargetConfigKey(
+    size,
+    widget.publicWidgetObMid,
+    widget.publicWidgetScope === NATIONAL_WIDGET_SCOPE ? NATIONAL_WIDGET_SCOPE : null
+  );
+  return (
+    widgets.find((row) => {
+      const rowKey = widgetTargetConfigKey(
+        row.size,
+        row.ob_mid,
+        row.scope === NATIONAL_WIDGET_SCOPE ? NATIONAL_WIDGET_SCOPE : null
+      );
+      return rowKey === targetKey;
+    }) ?? null
+  );
 }
 
 export function newWidgetEmbedFrameId(size: WidgetPreviewSize): string {
@@ -34,15 +78,80 @@ export function newWidgetEmbedFrameId(size: WidgetPreviewSize): string {
   return `strele-obcina-${full ? "full" : "compact"}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+const PUBLIC_KEY_HEX_RE = /^[a-f0-9]{32}$/;
+
+export function isValidObcinaWidgetPublicKey(publicKey: string): boolean {
+  return PUBLIC_KEY_HEX_RE.test(publicKey.trim());
+}
+
+export function expectedObcinaEmbedPath(publicKey: string): string {
+  return widgetProductionPreviewPath(publicKey.trim());
+}
+
+export function assertObcinaWidgetEmbedRecord(widget: ObcinaWidgetPublic): void {
+  const key = widget.public_key.trim();
+  if (!isValidObcinaWidgetPublicKey(key)) {
+    throw new Error("Ključ widgeta ni veljaven.");
+  }
+  if (widget.embed_path !== expectedObcinaEmbedPath(key)) {
+    throw new Error("Pot embed kode se ne ujema s ključem.");
+  }
+}
+
+export function assertObcinaEmbedHtml(html: string, publicKey: string): void {
+  const key = publicKey.trim();
+  if (!isValidObcinaWidgetPublicKey(key)) {
+    throw new Error("Ključ widgeta ni veljaven.");
+  }
+  const srcMatch = html.match(/src="([^"]+)"/);
+  if (!srcMatch) {
+    throw new Error("Embed koda ne vsebuje iframe URL-ja.");
+  }
+  const url = new URL(srcMatch[1], location.origin);
+  if (!url.pathname.endsWith("/widget/obcina.html")) {
+    throw new Error("Embed koda ne vsebuje pravilne poti widgeta.");
+  }
+  if (url.searchParams.get("id") !== key) {
+    throw new Error("Embed koda ne vsebuje pravilnega ključa widgeta.");
+  }
+  for (const param of ["ob_mid", "theme", "size", "api", "token", "scope"]) {
+    if (url.searchParams.has(param)) {
+      throw new Error("Embed koda vsebuje nedovoljene parametre.");
+    }
+  }
+}
+
+export function buildVerifiedEmbedHtml(widget: ObcinaWidgetPublic): { html: string; frameId: string } {
+  assertObcinaWidgetEmbedRecord(widget);
+  const frameId = newWidgetEmbedFrameId(widget.size);
+  const html = widgetEmbedHtml(widget, frameId);
+  assertObcinaEmbedHtml(html, widget.public_key);
+  return { html, frameId };
+}
+
+export async function resolveVerifiedEmbedForWidget(
+  widget: ObcinaWidgetPublic,
+  configKey: string,
+  verifyPublic: (publicKey: string) => Promise<unknown>
+): Promise<{ widget: ObcinaWidgetPublic; html: string; frameId: string; configKey: string } | null> {
+  try {
+    assertObcinaWidgetEmbedRecord(widget);
+    await verifyPublic(widget.public_key);
+    const { html, frameId } = buildVerifiedEmbedHtml(widget);
+    return { widget, html, frameId, configKey };
+  } catch {
+    return null;
+  }
+}
+
 export function widgetEmbedHtml(
-  widget: WidgetState,
-  size: WidgetPreviewSize,
+  production: ObcinaWidgetPublic,
   frameId: string
 ): string {
-  const full = size === "full";
-  const theme = widget.publicWidgetTheme || "dark";
+  const full = production.size === "full";
+  const theme = production.theme || "dark";
   const bg = theme === "dark" ? "#333333" : "#f7f7f8";
-  const src = `${location.origin}${widgetPreviewPath(widget, size)}`;
+  const src = `${location.origin}${widgetProductionPreviewPath(production.public_key)}`;
   return `<div style="width:100%;max-width:${full ? "960" : "450"}px;margin:0 auto"><iframe id="${frameId}" src="${src}" title="Udari strel v občini — Strelko" style="width:100%;max-width:${full ? "960" : "450"}px;height:${full ? "640" : "420"}px;border:none;border-radius:14px;display:block;margin:0 auto;background:${bg}"></iframe><script>(function(){var f=document.getElementById("${frameId}");if(!f)return;window.addEventListener("message",function(ev){if(!ev.data||ev.data.type!=="strele-embed-resize"||ev.source!==f.contentWindow)return;var h=Math.max(320,Math.min(1400,+ev.data.height||0));if(h>0)f.style.height=h+"px";});})();<\/script></div>`;
 }
 
@@ -64,22 +173,9 @@ export function ensureWidgetResizeListener(): void {
   });
 }
 
-export async function copyWidgetEmbedCode(code: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(code);
-      return true;
-    }
-    const ta = document.createElement("textarea");
-    ta.value = code;
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
+export async function copyTextToClipboard(text: string): Promise<void> {
+  if (!navigator.clipboard?.writeText) {
+    throw new Error("Brskalnik ne podpira varnega kopiranja. Poskusite znova v novem brskalniku.");
   }
+  await navigator.clipboard.writeText(text);
 }
