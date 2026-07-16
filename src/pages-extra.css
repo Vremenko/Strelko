@@ -212,7 +212,7 @@ label.field-labeled > span {
   color: var(--text);
 }
 
-.page--standard .page-header h2 em {
+.page--standard .page-header :is(h1, h2) em {
   font-style: normal;
   color: var(--accent);
 }
