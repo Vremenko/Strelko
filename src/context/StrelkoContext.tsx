@@ -33,7 +33,6 @@ import {
 import { NATIONAL_WIDGET_SCOPE } from "../lib/widget-obcine";
 import {
   buildIdempotencyKey,
-  readSavedQueryIdFromStorage,
   savedQueryOutToSearchResult,
   writeSavedQueryIdToStorage,
 } from "../lib/saved-queries";
@@ -61,18 +60,6 @@ import type {
 
 const DEFAULT_OB_MID = 11026516;
 const SEARCH_RESULT_STORAGE_KEY = "strelko_search_result_v1";
-
-function readSearchResultFromStorage(): SearchResult | null {
-  try {
-    const raw = sessionStorage.getItem(SEARCH_RESULT_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as SearchResult;
-    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.daily)) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
 
 function writeSearchResultToStorage(res: SearchResult | null): void {
   try {
@@ -217,16 +204,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [previewTokenNotice, setPreviewTokenNotice] = useState<InsufficientTokensDetail | null>(
     null
   );
-  const [searchResult, setSearchResultState] = useState<SearchResult | null>(() =>
-    window.location.pathname === "/pomoc-pri-zavarovalnici"
-      ? readSearchResultFromStorage()
-      : null
-  );
-  const [savedQueryId, setSavedQueryIdState] = useState<string | null>(() =>
-    window.location.pathname === "/pomoc-pri-zavarovalnici"
-      ? readSavedQueryIdFromStorage()
-      : null
-  );
+  const [searchResult, setSearchResultState] = useState<SearchResult | null>(null);
+  const [savedQueryId, setSavedQueryIdState] = useState<string | null>(null);
   const [activeQueryPdf, setActiveQueryPdf] = useState<{
     queryId: string;
     pdf_tokens_cost: number;
@@ -544,15 +523,14 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     clearSearchDisplayState();
   }, [location.pathname, clearSearchDisplayState]);
 
+  /* Običajen prihod na /pomoc-pri-zavarovalnici (brez ?query=): vedno prazen obrazec.
+     Neposredna povezava z ID poizvedbe ostane v spodnjem effectu. */
   useEffect(() => {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
-    if (searchResult) return;
-    const stored = readSearchResultFromStorage();
-    if (!stored) return;
-    applySearchResult(stored);
-    const storedId = readSavedQueryIdFromStorage();
-    if (storedId) setSavedQueryIdState(storedId);
-  }, [searchResult, applySearchResult, location.pathname]);
+    const qid = new URLSearchParams(location.search).get("query");
+    if (qid) return;
+    clearSearchState();
+  }, [location.pathname, location.search, clearSearchState]);
 
   useEffect(() => {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
@@ -725,11 +703,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       if (!out.replay) {
         void loadSavedQueries();
       }
-      const stayOn =
-        location.pathname === "/pomoc-pri-zavarovalnici"
-          ? "/pomoc-pri-zavarovalnici"
-          : "/";
-      if (location.pathname !== stayOn) navigate(stayOn);
+      const resultsPath = `/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`;
+      if (location.pathname === "/pomoc-pri-zavarovalnici") {
+        navigate(resultsPath, { replace: true });
+      } else if (location.pathname !== "/") {
+        navigate(resultsPath);
+      }
     } catch (e) {
       const err = e as ApiError;
       if (err.status === 402) {
@@ -901,11 +880,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
               if (!out.replay) {
                 void loadSavedQueries();
               }
-              const stayOn =
-                location.pathname === "/pomoc-pri-zavarovalnici"
-                  ? "/pomoc-pri-zavarovalnici"
-                  : "/";
-              if (location.pathname !== stayOn) navigate(stayOn);
+              const resultsPath = `/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`;
+              if (location.pathname === "/pomoc-pri-zavarovalnici") {
+                navigate(resultsPath, { replace: true });
+              } else if (location.pathname !== "/") {
+                navigate(resultsPath);
+              }
               return;
             } catch (e) {
               const err = e as ApiError;

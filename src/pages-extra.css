@@ -453,6 +453,19 @@ label.field-labeled > span {
   margin-top: clamp(2.75rem, 2rem + 1.5vw, 4.25rem);
 }
 
+.zavarovalnica-recent {
+  margin-top: clamp(2.25rem, 1.75rem + 1.5vw, 3.5rem);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.zavarovalnica-recent__title {
+  margin: 0 0 1rem;
+  font-size: clamp(1.15rem, 1.05rem + 0.35vw, 1.35rem);
+  font-weight: 800;
+  color: var(--text);
+}
+
 .zavarovalnica-main-grid {
   display: flex;
   flex-direction: column;

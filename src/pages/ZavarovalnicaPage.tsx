@@ -3,6 +3,7 @@ import { SearchCard } from "../components/SearchCard";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { ResultsView } from "../components/ResultsView";
+import { ZavarovalnicaRecentQueries } from "../components/ZavarovalnicaRecentQueries";
 import { useStrelko } from "../context/StrelkoContext";
 
 export function ZavarovalnicaPage() {
@@ -92,6 +93,7 @@ export function ZavarovalnicaPage() {
           </div>
         </aside>
       </div>
+      <ZavarovalnicaRecentQueries />
     </section>
   );
 }
