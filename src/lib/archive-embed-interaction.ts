@@ -309,8 +309,10 @@ export function initArchiveDaysOverlay() {
     overlay.hidden = true;
     overlay.innerHTML =
       '<select id="stat-days-overlay-select" aria-label="Obdobje">' +
+      '<option value="1">Danes</option>' +
       '<option value="7">7 dni</option><option value="14">14 dni</option>' +
-      '<option value="30">30 dni</option><option value="90">90 dni</option></select>';
+      '<option value="30">30 dni</option><option value="90">90 dni</option>' +
+      '<option value="custom">Po meri</option></select>';
     wrap.insertBefore(overlay, iframe);
     control = overlay.querySelector("select");
     const wrapRect = wrap.getBoundingClientRect();
@@ -321,8 +323,8 @@ export function initArchiveDaysOverlay() {
     overlay.style.left = `${(+data.left || 0) + iframeRect.left - wrapRect.left}px`;
     overlay.style.width = `${+data.width || 0}px`;
     overlay.style.height = `${+data.height || 0}px`;
-    const days = String(data.days || 30);
-    if (control && control.value !== days) control.value = days;
+    const nextValue = data.custom ? "custom" : String(data.days || 30);
+    if (control && control.value !== nextValue) control.value = nextValue;
     overlay.hidden = false;
   };
 
@@ -331,6 +333,10 @@ export function initArchiveDaysOverlay() {
     if (wrapId && activeWrapId && wrapId !== activeWrapId) return;
     statGrafiTabActive = false;
     removeOverlay();
+    for (const id of ["archive-embed", "archive-embed-full"]) {
+      const el = document.getElementById(id);
+      if (el) el.style.pointerEvents = "";
+    }
     activeIframe = null;
     activeWrapId = null;
   };
@@ -389,8 +395,18 @@ export function initArchiveDaysOverlay() {
     "change",
     (ev) => {
       if (ev.target?.id !== "stat-days-overlay-select") return;
+      const value = String(ev.target.value || "");
+      if (value === "custom") {
+        activeIframe?.contentWindow?.postMessage(
+          { type: "strele-embed-open-period-picker" },
+          "*"
+        );
+        return;
+      }
+      const days = Number(value);
+      if (!Number.isFinite(days) || days <= 0) return;
       activeIframe?.contentWindow?.postMessage(
-        { type: "strele-embed-set-days", days: Number(ev.target.value) },
+        { type: "strele-embed-set-days", days },
         "*"
       );
     },
@@ -400,6 +416,26 @@ export function initArchiveDaysOverlay() {
   window.addEventListener("message", (ev) => {
     const data = ev.data;
     if (!data || typeof data !== "object") return;
+
+    if (
+      data.type === "strele-embed-period-picker-open" ||
+      data.type === "strele-embed-period-picker-close"
+    ) {
+      const frame = ["archive-embed", "archive-embed-full"].find((id) => {
+        const el = document.getElementById(id);
+        return el && el.contentWindow === ev.source;
+      });
+      if (!frame) return;
+      const el = document.getElementById(frame);
+      if (!el) return;
+      if (data.type === "strele-embed-period-picker-open") {
+        el.style.pointerEvents = "auto";
+        if (control) control.value = "custom";
+      } else {
+        el.style.pointerEvents = "";
+      }
+      return;
+    }
 
     if (data.type === "strele-embed-resize") {
       const frame = ["archive-embed", "archive-embed-full", "archive-map-iframe"].find((id) => {

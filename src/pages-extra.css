@@ -1075,7 +1075,7 @@ label.field-labeled > span {
 .stat-days-overlay select {
   width: 100%;
   height: 100%;
-  max-width: 6rem;
+  max-width: 7.25rem;
   box-sizing: border-box;
   font: inherit;
   font-size: 0.95rem;
@@ -1108,7 +1108,7 @@ label.field-labeled > span {
 
 @media (max-width: 639px) {
   .stat-days-overlay select {
-    max-width: 5.75rem;
+    max-width: 6.75rem;
     min-height: 32px;
     font-size: 0.8125rem;
     padding-right: 1.1rem;
