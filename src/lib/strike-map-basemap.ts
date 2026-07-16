@@ -7,7 +7,6 @@ import {
   MAPTILER_KEY,
   MAPTILER_OVERLAY_PANE,
   MAP_LAYERS_STORAGE_KEY,
-  SATELLITE_ATTRIBUTION,
   STREKO_VECTOR_PANE,
   STYLE_BASE_DARK,
   STYLE_BASE_LIGHT,
@@ -134,17 +133,31 @@ function maptilerLayerContainer(layer: ReturnType<typeof maptilerLayer>): HTMLEl
   return host.getContainer?.()?.parentElement ?? null;
 }
 
+function mapForLayer(layer: L.Layer): L.Map | null {
+  return (layer as L.Layer & { _map?: L.Map | null })._map ?? null;
+}
+
+function bindMaptilerAttributionSync(layer: ReturnType<typeof maptilerLayer>): void {
+  const resync = () => {
+    const map = mapForLayer(layer);
+    if (map) syncStrikeMapAttribution(map);
+  };
+  layer.on("add", resync);
+  layer.on("ready", () => {
+    removeInjectedMapControls(maptilerLayerContainer(layer));
+    resync();
+  });
+}
+
 function createMaptilerBaseLayer(styleId: string): ReturnType<typeof maptilerLayer> {
   const layer = maptilerLayer({
     apiKey: MAPTILER_KEY,
     style: maptilerStyleUrl(styleId),
+    attribution: "",
     attributionControl: false,
   } as Parameters<typeof maptilerLayer>[0]);
 
-  layer.on("ready", () => {
-    removeInjectedMapControls(maptilerLayerContainer(layer));
-  });
-
+  bindMaptilerAttributionSync(layer);
   return layer;
 }
 
@@ -159,19 +172,20 @@ function createKrajiLabelsLayer(styleId: string): ReturnType<typeof maptilerLaye
 
   layer.on("ready", () => {
     hideNonLabelLayers(layer);
-    removeInjectedMapControls(maptilerLayerContainer(layer));
   });
   layer.on("add", () => {
     removeInjectedMapControls(maptilerLayerContainer(layer));
   });
+  bindMaptilerAttributionSync(layer);
 
   return layer;
 }
 
 function createSatelliteLayer(): L.TileLayer {
+  // Attribution is applied exclusively via syncStrikeMapAttribution (avoids duplicates).
   return L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }
+    { attribution: "", maxZoom: 19 }
   );
 }
 
@@ -333,17 +347,12 @@ export function initStrikeMapBasemap(
 
   loadCountryBorders(map, state, mobile);
 
-  const onMaptilerLayerChange = (layer: L.Layer) => {
-    if (!isMaptilerSdkLayer(layer)) return;
-    syncStrikeMapAttribution(map);
-  };
-
-  map.on("layeradd", (event) => {
+  map.on("layeradd", () => {
     removeInjectedMapControls(container);
-    onMaptilerLayerChange(event.layer);
+    syncStrikeMapAttribution(map);
   });
-  map.on("layerremove", (event) => {
-    onMaptilerLayerChange(event.layer);
+  map.on("layerremove", () => {
+    syncStrikeMapAttribution(map);
   });
 
   applyMapThemeAttributes(container, state._layersPanel, state);

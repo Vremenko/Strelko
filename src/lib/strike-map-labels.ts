@@ -12,14 +12,26 @@ export const MAP_LAYERS_STORAGE_KEY = "strelko_map_layers";
 export const MAPTILER_OVERLAY_PANE = "maptilerOverlayPane";
 export const STREKO_VECTOR_PANE = "strelkoVectorPane";
 export const MAPTILER_ATTRIBUTION =
-  '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> ' +
-  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>';
+  '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank" rel="noopener">MapTiler</a> ' +
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 /** Hardcoded string injected by @maptiler/leaflet-maptilersdk on layer add. */
 export const MAPTILER_SDK_ATTRIBUTION =
   '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
   '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+/** Official World Imagery copyrightText from Esri MapServer. */
 export const SATELLITE_ATTRIBUTION =
-  '&copy; <a href="https://www.esri.com/">Esri</a>';
+  'Source: <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Vantor, Earthstar Geographics, and the GIS User Community';
+/** Previous short credit — cleared so it cannot linger after upgrades. */
+const SATELLITE_ATTRIBUTION_LEGACY = '&copy; <a href="https://www.esri.com/">Esri</a>';
+
+export function isMaptilerSdkLayer(layer: L.Layer): boolean {
+  return typeof (layer as { getMaptilerSDKMap?: () => unknown }).getMaptilerSDKMap === "function";
+}
+
+export function isSatelliteTileLayer(layer: L.Layer): boolean {
+  const tile = layer as L.TileLayer & { _url?: string };
+  return typeof tile._url === "string" && tile._url.includes("World_Imagery");
+}
 
 export function syncStrikeMapAttribution(map: L.Map): void {
   const ctrl = map.attributionControl;
@@ -29,13 +41,21 @@ export function syncStrikeMapAttribution(map: L.Map): void {
   for (let i = 0; i < 6; i += 1) {
     ctrl.removeAttribution(MAPTILER_SDK_ATTRIBUTION);
     ctrl.removeAttribution(MAPTILER_ATTRIBUTION);
+    ctrl.removeAttribution(SATELLITE_ATTRIBUTION);
+    ctrl.removeAttribution(SATELLITE_ATTRIBUTION_LEGACY);
   }
 
   let hasMaptilerLayer = false;
+  let hasSatelliteLayer = false;
   map.eachLayer((layer) => {
     if (isMaptilerSdkLayer(layer)) hasMaptilerLayer = true;
+    if (isSatelliteTileLayer(layer)) hasSatelliteLayer = true;
   });
 
+  // Satellite first, then MapTiler/OSM for label overlays when both are active.
+  if (hasSatelliteLayer) {
+    ctrl.addAttribution(SATELLITE_ATTRIBUTION);
+  }
   if (hasMaptilerLayer) {
     ctrl.addAttribution(MAPTILER_ATTRIBUTION);
   }
@@ -46,10 +66,6 @@ export function removeInjectedMapControls(container: HTMLElement | null): void {
   [".maptiler-ctrl", ".maplibregl-ctrl", ".maplibregl-ctrl-group"].forEach((selector) => {
     container.querySelectorAll(selector).forEach((node) => node.remove());
   });
-}
-
-export function isMaptilerSdkLayer(layer: L.Layer): boolean {
-  return typeof (layer as { getMaptilerSDKMap?: () => unknown }).getMaptilerSDKMap === "function";
 }
 
 export function ensureStrikeMapPanes(map: L.Map): void {

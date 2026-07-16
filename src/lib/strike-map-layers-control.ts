@@ -4,6 +4,7 @@ import {
   LAYER_NAME_MAP,
   LAYER_NAME_SATELLITE,
   removeInjectedMapControls,
+  syncStrikeMapAttribution,
 } from "./strike-map-labels";
 import {
   applyMapThemeAttributes,
@@ -234,6 +235,7 @@ export function addStrikeMapLayerControls(map: L.Map, state: StrikeMapBasemapSta
     saveLayerPrefs(state);
     applyMapThemeAttributes(map.getContainer(), state._layersPanel, state);
     removeInjectedMapControls(map.getContainer());
+    syncStrikeMapAttribution(map);
   });
 
   map.on("overlayadd", (event: L.LayersControlEvent) => {
@@ -241,6 +243,7 @@ export function addStrikeMapLayerControls(map: L.Map, state: StrikeMapBasemapSta
       state.labelsOn = true;
       syncKrajiLabels(map, state);
       saveLayerPrefs(state);
+      syncStrikeMapAttribution(map);
     }
   });
 
@@ -248,6 +251,7 @@ export function addStrikeMapLayerControls(map: L.Map, state: StrikeMapBasemapSta
     if (event.name === LAYER_NAME_LABELS) {
       state.labelsOn = false;
       saveLayerPrefs(state);
+      syncStrikeMapAttribution(map);
     }
   });
 

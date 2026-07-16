@@ -1692,6 +1692,10 @@ label.field-labeled > span {
   background: rgba(26, 26, 26, 0.82) !important;
   color: var(--muted) !important;
   font-size: 10px !important;
+  line-height: 1.25 !important;
+  max-width: min(100%, 42rem);
+  white-space: normal;
+  pointer-events: auto;
 }
 
 #strike-map.leaflet-container .leaflet-control-attribution a {
