@@ -2,14 +2,15 @@ import { useRef } from "react";
 import { useStrelko } from "../context/StrelkoContext";
 import { openSearchDatePicker } from "../lib/search-date-picker";
 import {
+  SEARCH_ARCHIVE_MIN_ISO,
   SEARCH_RADIUS_OPTIONS,
   adjustRangeFromEnd,
   adjustRangeFromStart,
   formatSearchDateLabel,
   maxEndDateForStart,
-  rollingWindowMin,
   searchPeriodHint,
   todayIso,
+  validateSearchPeriod,
 } from "../lib/search-dates";
 
 interface SearchOptionsProps {
@@ -53,14 +54,14 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
 
   const busy = disabled || loading;
   const today = todayIso();
-  const windowMin = rollingWindowMin(today);
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
 
-  const fromMin = windowMin;
+  const fromMin = SEARCH_ARCHIVE_MIN_ISO;
   const fromMax = today;
   const toMin = searchDateFrom;
   const toMax = maxEndDateForStart(searchDateFrom, today);
+  const periodError = validateSearchPeriod(searchDateFrom, searchDateTo, today);
 
   const onRadiusChange = (value: string) => {
     setSearchRadiusKm(Number(value));
@@ -145,7 +146,13 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
           </div>
         </label>
       </div>
-      <p className="search-options-hint">{searchPeriodHint()}</p>
+      {periodError ? (
+        <p className="search-options-error" role="alert">
+          {periodError}
+        </p>
+      ) : (
+        <p className="search-options-hint">{searchPeriodHint()}</p>
+      )}
     </div>
   );
 }

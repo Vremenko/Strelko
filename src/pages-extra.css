@@ -573,6 +573,20 @@ label.field-labeled > span {
   gap: 1rem;
 }
 
+.zavarovalnica-page .search-options-error {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #f0a0a0;
+}
+
+.zavarovalnica-page .search-options-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 .zavarovalnica-page .search-card-body label.field-labeled > span,
 .zavarovalnica-page label.field-labeled > span {
   margin: 0 0 0.5rem;

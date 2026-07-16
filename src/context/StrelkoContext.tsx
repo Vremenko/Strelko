@@ -944,8 +944,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       setSearchRadiusKm,
       setSearchDateRange: (range) => {
-        setSearchDateFrom(range.from);
-        setSearchDateTo(range.to);
+        const clamped = clampSearchRange(range);
+        setSearchDateFrom(clamped.from);
+        setSearchDateTo(clamped.to);
       },
       openPremiumUpsell: () => {
         setSelectedPlanState(defaultSelectedPlanId(plans));
