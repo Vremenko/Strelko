@@ -584,6 +584,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     if (checkout !== "success") return;
     const sid = params.get("session_id");
     if (!sid || !getToken()) return;
+    const planFromUrl = params.get("plan");
+    const planHint: "ob_skodi" | "podpornik" | null =
+      planFromUrl === "ob_skodi" || planFromUrl === "podpornik"
+        ? planFromUrl
+        : peekCheckoutPlanId();
     void (async () => {
       try {
         const res = await api.verifyCheckout(sid);
@@ -607,13 +612,25 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         clearCheckoutIntent();
       } catch (e) {
         const err = e as ApiError;
+        await refreshUser().catch(() => {
+          /* stanje žetonov po napaki še vedno poskusimo osvežiti */
+        });
+        let resolvedPlan: "ob_skodi" | "podpornik" | null = planHint;
+        if (!resolvedPlan && err.data && typeof err.data === "object") {
+          const apiPlan = (err.data as { plan_id?: string }).plan_id;
+          if (apiPlan === "ob_skodi" || apiPlan === "podpornik") {
+            resolvedPlan = apiPlan;
+          }
+        }
+        const fallback =
+          resolvedPlan === "podpornik"
+            ? "Naročnine ni bilo mogoče potrditi. Če je bila kartica bremenjena, kontaktirajte podporo."
+            : "Nakupa žetonov ni bilo mogoče dokončati. Če je bila kartica obremenjena, žetonov ne kupujte znova in kontaktirajte podporo.";
         setModals((m) => ({
           ...m,
           credits: true,
           creditsOptions: {
-            checkoutError:
-              err.message ||
-              "Naročnine ni bilo mogoče potrditi. Če je bila kartica bremenjena, kontaktirajte podporo.",
+            checkoutError: err.message || fallback,
           },
         }));
       }
