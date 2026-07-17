@@ -1166,6 +1166,52 @@ label.field-labeled > span {
   touch-action: pan-y;
 }
 
+/* Zaklep Po urah: absolute v wrap (ne fixed) — scrolla z stranjo; iframe PE:none. */
+.archive-charts-embed-wrap--hourly-lock {
+  position: relative;
+}
+
+.archive-hourly-lock-overlay {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  pointer-events: auto;
+  background: #1a1a1a;
+  transform: none;
+}
+
+.archive-hourly-lock-overlay .locked-content,
+.archive-hourly-lock-overlay .archive-hourly-locked {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 1.25rem 1rem;
+  box-sizing: border-box;
+  transform: none;
+}
+
+.archive-hourly-lock-overlay .locked-content__inner {
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding-inline: 0.25rem;
+  box-sizing: border-box;
+  text-align: center;
+  transform: none;
+}
+
 .archive-map-iframe {
   display: block;
   width: 100%;

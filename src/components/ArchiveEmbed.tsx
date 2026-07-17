@@ -16,7 +16,11 @@ import {
   setMapLockPortalActive,
 } from "../lib/map-period-access";
 import { isPodpornikActive } from "../lib/portal-account";
-import { ensureHourlyLockPortal } from "../lib/archive-hourly-lock";
+import {
+  ensureHourlyLockPortal,
+  measureHourlyLockBox,
+  type HourlyLockBox,
+} from "../lib/archive-hourly-lock";
 import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
 import { LockedContent } from "./LockedContent";
 import type { StatTab } from "../types";
@@ -98,36 +102,48 @@ export function ArchiveChartEmbed({
     scope === "preview" ? "Dnevni graf strel — Slovenija" : "Arhiv strel — Slovenija";
   const { show, wrapRef } = useLazyShow(visible);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [hourlyLockMount, setHourlyLockMount] = useState<HTMLElement | null>(null);
+  /**
+   * CTA v parent (absolute v wrap): iframe ostane pointer-events:none → scroll deluje.
+   * Meritev upošteva iframe vs parent koordinatni sistem (brez zamika levo).
+   */
+  const [hourlyLockBox, setHourlyLockBox] = useState<HourlyLockBox | null>(null);
 
-  const syncHourlyLockPortal = useCallback(() => {
+  const syncHourlyLockOverlay = useCallback(() => {
     if (scope !== "full" || hourlyAccess || !visible) {
-      setHourlyLockMount(null);
+      setHourlyLockBox(null);
       return;
     }
     const iframe = iframeRef.current;
+    const wrap = wrapRef.current;
     const mount = iframe?.contentDocument
       ? ensureHourlyLockPortal(iframe.contentDocument)
       : null;
-    setHourlyLockMount(mount);
+    if (!iframe || !wrap || !mount) {
+      setHourlyLockBox(null);
+      return;
+    }
+    setHourlyLockBox(measureHourlyLockBox(wrap, iframe, mount));
   }, [hourlyAccess, scope, visible]);
 
   useEffect(() => {
     if (scope !== "full" || hourlyAccess || !visible) {
-      setHourlyLockMount(null);
+      setHourlyLockBox(null);
       return;
     }
     const onMessage = (ev: MessageEvent) => {
       const iframe = iframeRef.current;
       if (!iframe || ev.source !== iframe.contentWindow) return;
-      const data = ev.data;
-      if (data?.type === "strele-embed-resize") {
-        syncHourlyLockPortal();
+      if (ev.data?.type === "strele-embed-resize") {
+        syncHourlyLockOverlay();
       }
     };
     window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, [hourlyAccess, scope, visible, syncHourlyLockPortal]);
+    window.addEventListener("resize", syncHourlyLockOverlay);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.removeEventListener("resize", syncHourlyLockOverlay);
+    };
+  }, [hourlyAccess, scope, visible, syncHourlyLockOverlay]);
 
   useLayoutEffect(() => {
     if (scope !== "full") return;
@@ -137,14 +153,15 @@ export function ArchiveChartEmbed({
     }
     if (show) {
       activateStatDaysOverlayForGrafi(wrapId, iframeId);
+      syncHourlyLockOverlay();
     }
-  }, [visible, show, scope, wrapId, iframeId]);
+  }, [visible, show, scope, wrapId, iframeId, syncHourlyLockOverlay]);
 
   return (
     <>
       <div
         ref={wrapRef}
-        className={`archive-charts-embed-wrap${scope === "full" ? " archive-charts-embed-wrap--full" : ""}${visible ? "" : " stat-panel--hidden"}`}
+        className={`archive-charts-embed-wrap${scope === "full" ? " archive-charts-embed-wrap--full" : ""}${hourlyLockBox ? " archive-charts-embed-wrap--hourly-lock" : ""}${visible ? "" : " stat-panel--hidden"}`}
         id={wrapId}
         data-embed-src={src}
         data-embed-scope={scope}
@@ -163,10 +180,14 @@ export function ArchiveChartEmbed({
             scrolling="no"
             style={{ overflow: "hidden" }}
             onLoad={() => {
-              syncHourlyLockPortal();
-              if (scope === "full" && visible) {
-                activateStatDaysOverlayForGrafi(wrapId, iframeId);
-              }
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  syncHourlyLockOverlay();
+                  if (scope === "full" && visible) {
+                    activateStatDaysOverlayForGrafi(wrapId, iframeId);
+                  }
+                });
+              });
             }}
           />
         ) : (
@@ -174,10 +195,20 @@ export function ArchiveChartEmbed({
             Nalagam {scope === "preview" ? "statistiko" : "grafe"} …
           </p>
         )}
+        {hourlyLockBox ? (
+          <div
+            className="archive-hourly-lock-overlay"
+            style={{
+              top: hourlyLockBox.top,
+              left: hourlyLockBox.left,
+              width: hourlyLockBox.width,
+              height: hourlyLockBox.height,
+            }}
+          >
+            <LockedContent mode="supporter" inset className="archive-hourly-locked" />
+          </div>
+        ) : null}
       </div>
-      {scope === "full" && !hourlyAccess && visible && hourlyLockMount
-        ? createPortal(<LockedContent mode="supporter" inset className="archive-hourly-locked" />, hourlyLockMount)
-        : null}
       {scope === "full" && !fullAccess && visible ? (
         <div className="archive-locked-charts charts-layout">
           {LOCKED_OBCINA_CHARTS.map((chart) => (

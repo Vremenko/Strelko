@@ -1,117 +1,38 @@
-/** Portal zaklenjenega grafa Po urah znotraj statistike embed iframe. */
+/** Meritev / lupina zaklenjenega grafa Po urah (CTA je v parent DOM). */
 
 export const HOURLY_LOCK_PORTAL_ID = "strelko-hourly-lock-root";
 const HOURLY_LOCK_STYLE_ID = "strelko-hourly-lock-styles";
 
-/** Enak vizualni jezik kot map-embed zaklep (iframe nima SPA CSS). */
+export type HourlyLockBox = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+
+/** Lupina v iframe — samo velikost; vsebina CTA je overlay v parent (scroll PE:none). */
 const HOURLY_LOCK_PORTAL_CSS = `
 #${HOURLY_LOCK_PORTAL_ID} {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  flex: 1 1 auto;
-  align-self: stretch;
-  box-sizing: border-box;
-  padding: 1.25rem 1rem;
-  background: #1a1a1a;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content,
-#${HOURLY_LOCK_PORTAL_ID} .archive-hourly-locked {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 100%;
   height: 100%;
   min-height: 0;
   margin: 0;
   padding: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
   box-sizing: border-box;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content__inner {
-  max-width: 42rem;
-  width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  box-sizing: border-box;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content__icon {
-  display: block;
-  font-size: 1.35rem;
-  line-height: 1;
-  margin: 0 0 0.35rem;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content__title {
-  margin: 0 0 0.65rem;
-  padding: 0;
-  font-size: 1.05rem;
-  line-height: 1.35;
-  font-weight: 600;
-  color: #f2f2f2;
-  text-align: center;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content__text {
-  margin: 0 0 1rem;
-  padding: 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: #999999;
-  text-align: center;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content__actions {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  justify-content: center;
-  gap: 0.6rem;
-  width: min(100%, 320px);
-  margin: 0 auto;
-}
-#${HOURLY_LOCK_PORTAL_ID} .locked-content__actions .btn-ghost {
-  display: none !important;
-}
-#${HOURLY_LOCK_PORTAL_ID} a.btn,
-#${HOURLY_LOCK_PORTAL_ID} .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  font-family: inherit;
-  width: 100%;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  appearance: none;
-}
-#${HOURLY_LOCK_PORTAL_ID} a.btn-primary,
-#${HOURLY_LOCK_PORTAL_ID} .btn-primary {
-  background: linear-gradient(135deg, #fbb006, #d99a05);
-  color: #1a1508;
-  text-decoration: none;
-}
-#${HOURLY_LOCK_PORTAL_ID} a.btn-primary:visited,
-#${HOURLY_LOCK_PORTAL_ID} a.btn-primary:hover,
-#${HOURLY_LOCK_PORTAL_ID} a.btn-primary:focus {
-  color: #1a1508;
-  text-decoration: none;
+  background: #1a1a1a;
 }
 `;
 
 export function ensureHourlyLockPortal(doc: Document): HTMLElement | null {
   const mount = doc.getElementById(HOURLY_LOCK_PORTAL_ID);
   if (!mount) return null;
+
+  const host = mount.parentElement;
+  if (host) {
+    host.style.position = "relative";
+    host.style.overflow = "hidden";
+  }
 
   if (!doc.getElementById(HOURLY_LOCK_STYLE_ID)) {
     const style = doc.createElement("style");
@@ -121,4 +42,47 @@ export function ensureHourlyLockPortal(doc: Document): HTMLElement | null {
   }
 
   return mount;
+}
+
+/**
+ * Pozicija mounta glede na wrap (za position:absolute v wrap).
+ * getBoundingClientRect() na elementu v iframe je lahko v koordinatah iframe-a
+ * ALI starša — izberemo pravilno formulo, da ni zamika levo/gor.
+ */
+export function measureHourlyLockBox(
+  wrap: HTMLElement,
+  iframe: HTMLIFrameElement,
+  mount: HTMLElement
+): HourlyLockBox | null {
+  const wrapRect = wrap.getBoundingClientRect();
+  const iframeRect = iframe.getBoundingClientRect();
+  const mountRect = mount.getBoundingClientRect();
+  if (mountRect.width < 8 || mountRect.height < 8) return null;
+
+  const iframeTopInWrap = iframeRect.top - wrapRect.top + wrap.scrollTop;
+  const iframeLeftInWrap = iframeRect.left - wrapRect.left + wrap.scrollLeft;
+
+  // Parent-viewport: mount leži znotraj iframe pravokotnika (isti koordinatni sistem).
+  const mountInParentViewport =
+    mountRect.top >= iframeRect.top - 1 &&
+    mountRect.left >= iframeRect.left - 1 &&
+    mountRect.bottom <= iframeRect.bottom + 1 &&
+    mountRect.right <= iframeRect.right + 1;
+
+  if (mountInParentViewport) {
+    return {
+      top: mountRect.top - wrapRect.top + wrap.scrollTop,
+      left: mountRect.left - wrapRect.left + wrap.scrollLeft,
+      width: mountRect.width,
+      height: mountRect.height,
+    };
+  }
+
+  // Iframe-local: mountRect je relativen na viewport iframe dokumenta.
+  return {
+    top: iframeTopInWrap + mountRect.top,
+    left: iframeLeftInWrap + mountRect.left,
+    width: mountRect.width,
+    height: mountRect.height,
+  };
 }
