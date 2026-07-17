@@ -4,7 +4,7 @@ import { Footer, Disclaimer } from "./components/layout/Footer";
 import { CookieBanner } from "./components/layout/CookieBanner";
 import { AuthModal } from "./components/modals/AuthModal";
 import { AlertsModal } from "./components/modals/AlertsModal";
-import { CreditsModal, CheckoutSuccessModal } from "./components/modals/CreditsModal";
+import { CheckoutSuccessModal } from "./components/modals/CreditsModal";
 import { WidgetSetupModal } from "./components/modals/WidgetSetupModal";
 import { ForgotPasswordModal } from "./components/modals/ForgotPasswordModal";
 import { useAuthReturn } from "./hooks/useAuthReturn";
@@ -23,7 +23,6 @@ export function AppLayout() {
       <CookieBanner />
       <AuthModal />
       <AlertsModal />
-      <CreditsModal />
       <CheckoutSuccessModal />
       <WidgetSetupModal />
       <ForgotPasswordModal />

@@ -1,7 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useStrelko } from "../../context/StrelkoContext";
 import { portalTabPath } from "../../lib/auth-intent";
-import { getPodpornikOverview, tokenBalanceLabel } from "../../lib/portal-account";
+import {
+  getPodpornikOverview,
+  isSubscriptionNotRestorableError,
+  tokenBalanceLabel,
+} from "../../lib/portal-account";
 import { tokensSpentSummaryLabel } from "../../lib/ob-skodi-tokens";
 
 function queryCountLabel(count: number): string {
@@ -12,7 +17,15 @@ function queryCountLabel(count: number): string {
 }
 
 export function PortalOverview() {
-  const { credits, savedQueries, savedQueriesLoading, openBillingPortal } = useStrelko();
+  const {
+    credits,
+    savedQueries,
+    savedQueriesLoading,
+    openBillingPortal,
+    restoreSubscription,
+  } = useStrelko();
+  const navigate = useNavigate();
+  const [restoreBusy, setRestoreBusy] = useState(false);
 
   const tokenBalance = tokenBalanceLabel(credits);
   const podpornik = getPodpornikOverview(credits);
@@ -20,6 +33,24 @@ export function PortalOverview() {
   const tokensSpent = savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0);
   const queriesStat =
     savedQueriesLoading && queryCount === 0 ? "Nalagam …" : queryCountLabel(queryCount);
+
+  const onRestore = async () => {
+    if (restoreBusy) return;
+    setRestoreBusy(true);
+    try {
+      await restoreSubscription();
+    } catch (e) {
+      if (isSubscriptionNotRestorableError(e)) {
+        navigate("/cenik");
+        return;
+      }
+      window.alert(
+        (e as Error).message || "Naročnine trenutno ni mogoče obnoviti. Poskusite znova."
+      );
+    } finally {
+      setRestoreBusy(false);
+    }
+  };
 
   return (
     <div className="portal-panel">
@@ -77,8 +108,27 @@ export function PortalOverview() {
               )}
             </div>
             <div className="portal-card__service-footer">
-              {podpornik.canCancel ? (
+              {podpornik.canRestore ? (
                 <>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    disabled={restoreBusy}
+                    onClick={() => void onRestore()}
+                  >
+                    {restoreBusy ? "Obnavljam …" : "Obnovi naročnino"}
+                  </button>
+                  {podpornik.cancelNotice ? (
+                    <p className="portal-card__cancel-notice">{podpornik.cancelNotice}</p>
+                  ) : null}
+                </>
+              ) : podpornik.canCancel ? (
+                <>
+                  {podpornik.renewalNotice ? (
+                    <p className="portal-card__cancel-notice portal-card__renewal-notice">
+                      {podpornik.renewalNotice}
+                    </p>
+                  ) : null}
                   <button
                     type="button"
                     className="btn btn-ghost btn-block portal-card__cancel-btn"

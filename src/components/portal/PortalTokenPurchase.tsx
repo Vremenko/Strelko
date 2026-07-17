@@ -5,13 +5,12 @@ import { ObSkodiTokenPurchase } from "../pricing/ObSkodiTokenPurchase";
 
 /** Nakup žetonov Ob škodi — neodvisna storitev, ne naročnina. */
 export function PortalTokenPurchase() {
-  const { credits, paymentsEnabled, setSelectedPlan, checkout } = useStrelko();
+  const { credits, paymentsEnabled, checkout } = useStrelko();
   const tokenBalance = tokenBalanceLabel(credits);
 
   const handlePurchase = (quantity: number) => {
     if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
-    setSelectedPlan("ob_skodi");
-    void checkout(quantity);
+    void checkout(quantity, "ob_skodi");
   };
 
   return (

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStrelko } from "../../context/StrelkoContext";
 import { formatPlaceName } from "../../lib/utils";
 
@@ -9,8 +10,8 @@ export function AlertsModal() {
     selected,
     closeAlerts,
     saveAlerts,
-    openCredits,
   } = useStrelko();
+  const navigate = useNavigate();
 
   const a = alerts || {};
   const eligible = !!a.sms_eligible;
@@ -56,11 +57,11 @@ export function AlertsModal() {
   return (
     <div className="modal-overlay" id="alerts-modal">
       <div className="modal modal-plans">
-        <h3>MeteoAlarm opozorila</h3>
+        <h3>SMS opozorila – strele v bližini</h3>
         {!eligible ? (
           <>
             <p className="form-error">
-              Opozorila so vključena v paketih <strong>Premium</strong> in <strong>Poslovni</strong>.
+              SMS opozorila so vključena v paketu <strong>Podpornik</strong> (ali za ekipo Meteoinfo).
             </p>
             <button
               type="button"
@@ -68,32 +69,24 @@ export function AlertsModal() {
               style={{ width: "100%", marginBottom: "0.75rem" }}
               onClick={() => {
                 closeAlerts();
-                openCredits();
+                navigate("/cenik");
               }}
             >
-              Izberi paket
+              Odpri cenik
             </button>
           </>
         ) : (
           <>
             <p style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-              Obvestilo po SMS, ko ARSO / MeteoAlarm izda opozorilo v bližini shranjene lokacije.
-              Vir:{" "}
-              <a
-                href="https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-slovenia"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                MeteoAlarm SI
-              </a>
-              .
+              Ko se v izbranem radiju pojavi nova strela, prejmete SMS. Ena lokacija
+              dobi največ <strong>eno obvestilo na dan</strong> (brez ponavljanja/spama).
             </p>
             <p style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
               SMS ta mesec: <strong>{a.sms_sent_this_month ?? 0}</strong> / {a.sms_monthly_limit ?? 0}
               {emailAvailable && (
                 <>
                   {" "}
-                  · E-pošta: <strong>{a.emails_sent_this_month ?? 0}</strong> /{" "}
+                  · E-pošta (MeteoAlarm): <strong>{a.emails_sent_this_month ?? 0}</strong> /{" "}
                   {a.email_monthly_limit ?? 0}
                 </>
               )}
@@ -108,9 +101,9 @@ export function AlertsModal() {
               disabled={!eligible}
               onChange={(e) => setAlertEnabled(e.target.checked)}
             />
-            Vklopi SMS opozorila
+            Vklopi SMS ob strelah v bližini
           </label>
-          <label htmlFor="alert-phone">Mobilna številka (E.164, npr. +38640123456)</label>
+          <label htmlFor="alert-phone">Mobilna številka (npr. +38640123456)</label>
           <input
             id="alert-phone"
             type="tel"
@@ -128,7 +121,7 @@ export function AlertsModal() {
                   disabled={!eligible || !emailOk}
                   onChange={(e) => setEmailEnabled(e.target.checked)}
                 />
-                Vklopi e-poštna opozorila
+                Vklopi e-poštna MeteoAlarm opozorila
               </label>
               {eligible && !emailOk && (
                 <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: "0 0 0.5rem" }}>

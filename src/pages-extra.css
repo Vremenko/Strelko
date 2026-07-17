@@ -1300,7 +1300,6 @@ label.field-labeled > span {
 .locked-content-surface--widget-embed {
   min-height: 10.75rem;
 }
-
 .archive-locked-chart-panel .chart-wrap.tall.locked-content-surface {
   position: relative;
   min-width: 0;
@@ -2859,7 +2858,7 @@ body.site-nav-open {
 .location-picker-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 2600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3487,31 +3486,6 @@ body.site-nav-open {
   margin-top: 1.2rem;
 }
 
-.pricing-plan-card__price-note {
-  margin: 0.1rem 0 0.35rem;
-  font-size: 0.84rem;
-  line-height: 1.45;
-  font-weight: 500;
-  color: #b3b3b3;
-}
-
-.pricing-plan-card__cta-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  width: 100%;
-}
-
-.pricing-plan-card__renewal-note {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  font-weight: 600;
-  color: #d0d0d0;
-  text-align: center;
-}
-
-
 .pricing-plan-grid .pricing-plan-card__main .pricing-plan-card__features {
   flex: 1;
   margin-bottom: 0;
@@ -3560,6 +3534,33 @@ body.site-nav-open {
   font-weight: 600;
   line-height: 1.5;
   color: var(--text);
+}
+
+.pricing-plan-card__active-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pricing-plan-card__active-note {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1px solid rgba(46, 125, 50, 0.28);
+  background: rgba(46, 125, 50, 0.08);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.plan-card.is-disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.plan-ribbon--muted {
+  background: rgba(120, 120, 120, 0.18);
+  color: var(--muted);
 }
 
 .pricing-explainer-grid {
@@ -3761,6 +3762,30 @@ body.site-nav-open {
 
 .pricing-plan-card__price {
   margin: 0.5rem 0 0.15rem;
+}
+
+.pricing-plan-card__price-note {
+  margin: 0.1rem 0 0.35rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #b3b3b3;
+}
+
+.pricing-plan-card__cta-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.pricing-plan-card__renewal-note {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #d0d0d0;
+  text-align: center;
 }
 
 .pricing-plan-card__amount {
@@ -4222,6 +4247,15 @@ body.site-nav-open {
   margin-top: 0.7rem;
 }
 
+/* Razmik med besedilom o podaljševanju in gumbom Prekliči (~9 px). */
+.portal-card__renewal-notice {
+  margin-bottom: 0.55rem;
+}
+
+.portal-card__cancel-btn {
+  flex-shrink: 0;
+}
+
 .portal-card--usage {
   display: flex;
   flex-wrap: wrap;
@@ -4679,6 +4713,24 @@ button:disabled.btn-primary {
   margin-bottom: 0.75rem;
 }
 
+.portal-invoices-manage-btn.btn-primary {
+  flex-shrink: 0;
+}
+
+.portal-invoices-manage-btn.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.portal-invoices-manage-btn.btn-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.portal-invoices-manage-btn.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .portal-invoices-summary {
   margin: 0 0 1rem;
 }
@@ -4692,28 +4744,25 @@ button:disabled.btn-primary {
   font-size: 0.85em;
 }
 
-
 .portal-invoices-table a,
 .portal-invoices-table__doc-btn {
-  color: var(--accent);
-  font-weight: 700;
-  text-decoration: none;
+  color: var(--blue);
+  font-weight: 500;
 }
 
 .portal-invoices-table__doc-btn {
-  display: inline;
-  padding: 0;
-  border: 0;
   background: none;
+  border: none;
+  padding: 0;
   font: inherit;
   cursor: pointer;
+  text-decoration: underline;
 }
 
 .portal-invoices-table__doc-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: wait;
 }
-
 
 .portal-email {
   color: var(--muted);
@@ -4829,3 +4878,5 @@ button:disabled.btn-primary {
   color: var(--accent);
   font-size: 1rem;
 }
+
+/* Strelko admin panel (/admin) */

@@ -187,6 +187,11 @@ export const api = {
     }),
   billingPortal: () =>
     request<{ portal_url: string }>("/strelko/billing-portal", { method: "POST", body: "{}" }),
+  restoreSubscription: () =>
+    request<import("../types").Credits>("/strelko/subscription/restore", {
+      method: "POST",
+      body: "{}",
+    }),
   billingHistory: (opts?: { page?: number; page_size?: number }) => {
     const page = opts?.page ?? 0;
     const pageSize = opts?.page_size ?? 8;

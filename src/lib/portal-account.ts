@@ -52,20 +52,27 @@ export function canSubscribePodpornik(credits?: Credits | null): boolean {
   return !isPodpornikActive(credits);
 }
 
+export const PODPORNIK_RENEWAL_NOTICE =
+  "Naročnina se samodejno podaljšuje vsak mesec do preklica.";
+
 export function getPodpornikOverview(credits?: Credits | null): {
   active: boolean;
   cancelScheduled: boolean;
   canCancel: boolean;
+  canRestore: boolean;
   expiryLabel: string | null;
   cancelNotice: string | null;
+  renewalNotice: string | null;
 } {
   if (!isPodpornikActive(credits)) {
     return {
       active: false,
       cancelScheduled: false,
       canCancel: false,
+      canRestore: false,
       expiryLabel: null,
       cancelNotice: null,
+      renewalNotice: null,
     };
   }
 
@@ -75,23 +82,38 @@ export function getPodpornikOverview(credits?: Credits | null): {
   const expiryRaw = periodEnd || seasonEnd;
   const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
   const canManageBilling = Boolean(credits?.billing_portal_available);
-  /** Gumb samo, ko Stripe portal res deluje (aktivna plačilna naročnina). */
-  const canCancel = !cancelScheduled && canManageBilling;
+  const hasStripeSub = Boolean(credits?.has_subscription);
+  /** Gumb Prekliči, ko ni načrtovanega preklica in obstaja Stripe naročnina/portal. */
+  const canCancel = !cancelScheduled && (canManageBilling || hasStripeSub);
+  /** Obnovi: še velja, nastavljen preklic ob koncu, Stripe sub še obstaja. */
+  const canRestore = cancelScheduled && (canManageBilling || hasStripeSub);
 
   return {
     active: true,
     cancelScheduled,
     canCancel,
+    canRestore,
     expiryLabel: expiryFormatted ? `Velja do ${expiryFormatted}` : null,
     cancelNotice: cancelScheduled
       ? "Naročnina se ne bo samodejno podaljšala."
-      : canManageBilling
-        ? null
-        : "Samodejno podaljševanje lahko prekinete po e-pošti na podpora@meteoinfo.si.",
+      : !canManageBilling
+        ? "Samodejno podaljševanje lahko prekinete po e-pošti na podpora@meteoinfo.si."
+        : null,
+    renewalNotice: canCancel ? PODPORNIK_RENEWAL_NOTICE : null,
   };
 }
 
 export function tokenBalanceLabel(credits?: Credits | null): string {
   if (credits?.credits_balance == null) return "—";
   return tokenCountLabel(credits.credits_balance);
+}
+
+/** Ali API odgovor pomeni, da obnovitev ni mogoča → nova naročnina na ceniku. */
+export function isSubscriptionNotRestorableError(err: unknown): boolean {
+  const data = (err as { data?: { detail?: unknown } } | null)?.data;
+  const detail = data?.detail;
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    return (detail as { code?: string }).code === "subscription_not_restorable";
+  }
+  return false;
 }

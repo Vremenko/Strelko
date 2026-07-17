@@ -39,6 +39,7 @@ import {
 } from "../lib/saved-queries";
 import { parseInsufficientTokensDetail } from "../lib/query-billing";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
+import { canSubscribePodpornik } from "../lib/portal-account";
 import type {
   AlertsSettings,
   ApiError,
@@ -152,8 +153,9 @@ interface StrelkoContextValue extends StrelkoState {
   saveAlerts: (body: object) => Promise<void>;
   openPremiumUpsell: () => void;
   openMeteoAlarmUpsell: () => void;
-  checkout: (quantity?: number) => Promise<void>;
+  checkout: (quantity?: number, planOverride?: string) => Promise<void>;
   openBillingPortal: () => Promise<void>;
+  restoreSubscription: () => Promise<void>;
   acceptCookies: () => void;
   clearSearch: () => void;
   setWidget: (patch: Partial<StrelkoState["widget"]>) => void;
@@ -312,6 +314,39 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     checkoutSuccess: null,
     creditsOptions: {},
   });
+
+  /** Stari modal »Izberite paket« je ukinjen — vedno na Cenik. */
+  const goToCenik = useCallback(
+    (notice?: string) => {
+      setModals((m) => ({ ...m, credits: false, creditsOptions: {} }));
+      navigate("/cenik", notice ? { state: { cenikNotice: notice } } : undefined);
+    },
+    [navigate]
+  );
+
+  const openCreditsNotice = useCallback(
+    (opts: ModalState["creditsOptions"] = {}) => {
+      if (opts.checkoutError) {
+        goToCenik(opts.checkoutError);
+        return;
+      }
+      if (opts.insufficientCredits) {
+        goToCenik(
+          "Za podroben pregled potrebujete vsaj 1 žeton. Kupite žetone ali aktivirajte paket Podpornik na ceniku."
+        );
+        return;
+      }
+      if (opts.meteoalarmUpsell) {
+        goToCenik(
+          "MeteoAlarm SMS opozorila so vključena v paketu Podpornik. Aktivacijo najdete na ceniku."
+        );
+        return;
+      }
+      goToCenik();
+    },
+    [goToCenik]
+  );
+
   const [cookieAccepted, setCookieAccepted] = useState(
     () => localStorage.getItem("strelko_cookie_consent") === "1"
   );
@@ -595,11 +630,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       : window.location.pathname;
     window.history.replaceState({}, "", cleanUrl);
     if (checkout === "cancel") {
-      setModals((m) => ({
-        ...m,
-        credits: true,
-        creditsOptions: { checkoutError: "Plačilo je bilo preklicano." },
-      }));
+      goToCenik("Plačilo je bilo preklicano.");
       return;
     }
     if (checkout !== "success") return;
@@ -613,7 +644,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const res = await api.verifyCheckout(sid);
-        setCredits({ credits_balance: res.credits_balance });
+        setCredits((c) => ({ ...(c || {}), credits_balance: res.credits_balance }));
         await refreshUser();
         setModals({
           auth: null,
@@ -647,16 +678,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           resolvedPlan === "podpornik"
             ? "Naročnine ni bilo mogoče potrditi. Če je bila kartica bremenjena, kontaktirajte podporo."
             : "Nakupa žetonov ni bilo mogoče dokončati. Če je bila kartica obremenjena, žetonov ne kupujte znova in kontaktirajte podporo.";
-        setModals((m) => ({
-          ...m,
-          credits: true,
-          creditsOptions: {
-            checkoutError: err.message || fallback,
-          },
-        }));
+        goToCenik(err.message || fallback);
       }
     })();
-  }, [refreshUser, credits?.plan_name_sl]);
+  }, [refreshUser, credits?.plan_name_sl, goToCenik]);
 
   const afterAuth = useCallback(async () => {
     await refreshUser();
@@ -666,6 +691,18 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
     const pendingPlan = peekCheckoutPlanId();
     if (pendingPlan) {
+      if (pendingPlan === "podpornik") {
+        try {
+          const currentCredits = await api.credits();
+          if (!canSubscribePodpornik(currentCredits)) {
+            clearCheckoutIntent();
+            goToCenik("Paket Podpornik je že aktiven.");
+            return;
+          }
+        } catch {
+          /* nadaljuj z običajnim checkoutom */
+        }
+      }
       setSelectedPlanState(pendingPlan);
       try {
         const pendingQty = peekCheckoutQuantity();
@@ -682,16 +719,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         clearCheckoutIntent();
         const err = e as ApiError;
-        setModals((m) => ({
-          ...m,
-          credits: true,
-          creditsOptions: {
-            checkoutError: err.message || "Checkout trenutno ni na voljo.",
-          },
-        }));
+        goToCenik(err.message || "Checkout trenutno ni na voljo.");
       }
     }
-  }, [refreshUser]);
+  }, [refreshUser, goToCenik]);
 
   async function runFullSearchInner(place?: GeocodeResult) {
     const target = place ?? selected;
@@ -756,11 +787,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       const err = e as ApiError;
       if (err.status === 402) {
         setSelectedPlanState(defaultSelectedPlanId(plans));
-        setModals((m) => ({
-          ...m,
-          credits: true,
-          creditsOptions: { insufficientCredits: true },
-        }));
+        openCreditsNotice({ insufficientCredits: true });
       } else if (err.status === 401) {
         setToken(null);
         setModals((m) => ({ ...m, auth: "login" }));
@@ -978,18 +1005,14 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       openPremiumUpsell: () => {
         setSelectedPlanState(defaultSelectedPlanId(plans));
-        setModals((m) => ({ ...m, credits: true, creditsOptions: {} }));
+        goToCenik();
       },
       openMeteoAlarmUpsell: () => {
         setSelectedPlanState(defaultSelectedPlanId(plans));
         if (alerts?.sms_eligible) {
           setModals((m) => ({ ...m, alerts: true }));
         } else {
-          setModals((m) => ({
-            ...m,
-            credits: true,
-            creditsOptions: { meteoalarmUpsell: true },
-          }));
+          openCreditsNotice({ meteoalarmUpsell: true });
         }
       },
       runFullSearch: async () => {
@@ -1069,8 +1092,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCredits(null);
         clearSearchState();
       },
-      openCredits: (opts = {}) =>
-        setModals((m) => ({ ...m, credits: true, creditsOptions: opts })),
+      openCredits: (opts = {}) => openCreditsNotice(opts),
       closeCredits: () =>
         setModals((m) => ({ ...m, credits: false, creditsOptions: {} })),
       closeCheckoutSuccess: () =>
@@ -1082,16 +1104,28 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setAlerts(await api.alerts());
         setModals((m) => ({ ...m, alerts: false }));
       },
-      checkout: async (quantity?: number) => {
+      checkout: async (quantity?: number, planOverride?: string) => {
         clearCheckoutPlanId();
-        const plan = selectedPlan;
+        const plan = planOverride ?? selectedPlan;
+        if (planOverride) {
+          setSelectedPlanState(planOverride);
+        }
+        if (plan === "podpornik" && !canSubscribePodpornik(credits)) {
+          goToCenik("Paket Podpornik je že aktiven.");
+          return;
+        }
         const resolvedQty = quantity ?? peekCheckoutQuantity();
-        const { checkout_url } = await api.checkout({
-          plan,
-          ...(plan === "ob_skodi" && resolvedQty != null ? { quantity: resolvedQty } : {}),
-        });
-        clearCheckoutQuantity();
-        window.location.href = checkout_url;
+        try {
+          const { checkout_url } = await api.checkout({
+            plan,
+            ...(plan === "ob_skodi" && resolvedQty != null ? { quantity: resolvedQty } : {}),
+          });
+          clearCheckoutQuantity();
+          window.location.href = checkout_url;
+        } catch (e) {
+          const err = e as ApiError;
+          goToCenik(err.message || "Checkout trenutno ni na voljo.");
+        }
       },
       openBillingPortal: async () => {
         try {
@@ -1103,6 +1137,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
             "Portal za upravljanje naročnine trenutno ni na voljo.";
           window.alert(message);
         }
+      },
+      restoreSubscription: async () => {
+        const updated = await api.restoreSubscription();
+        setCredits(updated);
+        await refreshUser();
       },
       acceptCookies: () => {
         localStorage.setItem("strelko_cookie_consent", "1");
@@ -1120,12 +1159,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (!credits?.widget_active) {
+          if (!canSubscribePodpornik(credits)) {
+            window.alert("Paket Podpornik je že aktiven.");
+            return;
+          }
           setSelectedPlanState("podpornik");
-          setModals((m) => ({
-            ...m,
-            credits: true,
-            creditsOptions: {},
-          }));
+          goToCenik();
           return;
         }
         try {
@@ -1183,6 +1222,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       resetWidget,
       afterAuth,
       navigate,
+      goToCenik,
+      openCreditsNotice,
       location.pathname,
       clearSearch,
       loadSavedQueries,

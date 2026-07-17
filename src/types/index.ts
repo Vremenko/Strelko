@@ -19,8 +19,10 @@ export interface GeocodeResult {
 }
 
 export interface User {
-  id: number;
+  id?: number;
+  public_id?: string;
   email: string;
+  role?: "member" | "vip" | "team" | "admin";
   is_active?: boolean;
 }
 
@@ -32,6 +34,8 @@ export interface Credits {
   billing_portal_available?: boolean;
   subscription_cancel_at_period_end?: boolean;
   subscription_current_period_end?: string;
+  subscription_period_start?: string;
+  subscription_period_end?: string;
   season_pass_expires_at?: string;
   pdf_reports_available?: boolean;
   archive_full_access?: boolean;

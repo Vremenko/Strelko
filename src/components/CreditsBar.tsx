@@ -1,8 +1,9 @@
+import { Link } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
 import { isPodpornikActive, tokenBalanceLabel } from "../lib/portal-account";
 
 export function CreditsBar() {
-  const { user, credits, openCredits } = useStrelko();
+  const { user, credits } = useStrelko();
   if (!user) return null;
 
   return (
@@ -17,9 +18,9 @@ export function CreditsBar() {
           </>
         ) : null}
       </span>
-      <button type="button" className="btn btn-primary btn-sm" onClick={() => openCredits()}>
-        Paketi
-      </button>
+      <Link to="/cenik" className="btn btn-primary btn-sm">
+        Cenik
+      </Link>
     </div>
   );
 }

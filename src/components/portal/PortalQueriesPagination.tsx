@@ -4,12 +4,15 @@ interface PortalQueriesPaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  /** Privzeto: Strani poizvedb */
+  ariaLabel?: string;
 }
 
 export function PortalQueriesPagination({
   currentPage,
   totalPages,
   onPageChange,
+  ariaLabel = "Strani poizvedb",
 }: PortalQueriesPaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -22,7 +25,7 @@ export function PortalQueriesPagination({
   };
 
   return (
-    <nav className="portal-queries-pagination" aria-label="Strani poizvedb">
+    <nav className="portal-queries-pagination" aria-label={ariaLabel}>
       <button
         type="button"
         className="portal-pagination__nav"

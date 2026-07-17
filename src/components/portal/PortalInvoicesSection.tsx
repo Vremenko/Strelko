@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
-import { useStrelko } from "../../context/StrelkoContext";
 import type { BillingHistoryItem } from "../../types";
 import { PortalQueriesPagination } from "./PortalQueriesPagination";
 
@@ -73,7 +72,6 @@ async function openFiscalInvoicePdfInTab(
 
 /** Plačila in računi — zavihek Plačila v Moj Strelko. */
 export function PortalInvoicesSection() {
-  const { openBillingPortal } = useStrelko();
   const [items, setItems] = useState<BillingHistoryItem[]>([]);
   const [billingPortalAvailable, setBillingPortalAvailable] = useState(false);
   const [totalPaidEur, setTotalPaidEur] = useState("0,00 €");
@@ -83,6 +81,7 @@ export function PortalInvoicesSection() {
   const [listLoading, setListLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openingInvoiceId, setOpeningInvoiceId] = useState<number | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
   const [page, setPage] = useState(0);
   const pendingScrollRef = useRef<{ x: number; y: number } | null>(null);
   const requestIdRef = useRef(0);
@@ -145,6 +144,31 @@ export function PortalInvoicesSection() {
     window.scrollTo(saved.x, saved.y);
   }, [listLoading, page, items]);
 
+  const openManageSubscription = useCallback(async () => {
+    if (portalBusy) return;
+    setPortalBusy(true);
+    const tab = window.open("about:blank", "_blank");
+    try {
+      const { portal_url } = await api.billingPortal();
+      if (tab && !tab.closed) {
+        tab.location.href = portal_url;
+      } else {
+        window.alert(
+          "Portal za upravljanje naročnine trenutno ni na voljo. Dovolite pojavna okna in poskusite znova."
+        );
+      }
+    } catch (e) {
+      if (tab && !tab.closed) {
+        tab.close();
+      }
+      window.alert(
+        (e as Error).message || "Portal za upravljanje naročnine trenutno ni na voljo."
+      );
+    } finally {
+      setPortalBusy(false);
+    }
+  }, [portalBusy]);
+
   return (
     <section className="portal-section portal-section--invoices" aria-labelledby="portal-invoices-title">
       <div className="portal-section__head">
@@ -154,8 +178,10 @@ export function PortalInvoicesSection() {
         {billingPortalAvailable ? (
           <button
             type="button"
-            className="btn btn-ghost"
-            onClick={() => void openBillingPortal()}
+            className="btn btn-primary portal-invoices-manage-btn"
+            disabled={portalBusy}
+            aria-busy={portalBusy}
+            onClick={() => void openManageSubscription()}
           >
             Upravljaj naročnino
           </button>

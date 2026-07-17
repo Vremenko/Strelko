@@ -7,6 +7,8 @@ interface PricingPlanCardProps {
   features?: readonly string[];
   footerNote?: string;
   disclaimer?: string;
+  /** Manjše obvestilo neposredno pod ceno (npr. samodejno podaljševanje). */
+  priceNote?: string;
   hidePriceLabel?: boolean;
   priceExVat?: string;
   children?: React.ReactNode;
@@ -19,6 +21,7 @@ export function PricingPlanCard({
   features,
   footerNote,
   disclaimer,
+  priceNote,
   hidePriceLabel = false,
   priceExVat,
   children,
@@ -37,6 +40,7 @@ export function PricingPlanCard({
             <span className="pricing-plan-card__period">{offer.pricePeriod}</span>
           ) : null}
         </p>
+        {priceNote ? <p className="pricing-plan-card__price-note">{priceNote}</p> : null}
         {!hidePriceLabel ? <p className="pricing-plan-card__label">{offer.priceLabel}</p> : null}
         <p className="pricing-plan-card__ex-vat">{exVatLabel}</p>
         <ul className="plan-features pricing-plan-card__features">
