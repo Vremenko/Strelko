@@ -3404,6 +3404,31 @@ body.site-nav-open {
   margin-top: 1.2rem;
 }
 
+.pricing-plan-card__price-note {
+  margin: 0.1rem 0 0.35rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #b3b3b3;
+}
+
+.pricing-plan-card__cta-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.pricing-plan-card__renewal-note {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #d0d0d0;
+  text-align: center;
+}
+
+
 .pricing-plan-grid .pricing-plan-card__main .pricing-plan-card__features {
   flex: 1;
   margin-bottom: 0;
@@ -4580,10 +4605,28 @@ button:disabled.btn-primary {
   font-size: 0.85em;
 }
 
-.portal-invoices-table a {
-  color: var(--blue);
-  font-weight: 500;
+
+.portal-invoices-table a,
+.portal-invoices-table__doc-btn {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
 }
+
+.portal-invoices-table__doc-btn {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.portal-invoices-table__doc-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 
 .portal-email {
   color: var(--muted);

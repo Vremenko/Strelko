@@ -187,8 +187,52 @@ export const api = {
     }),
   billingPortal: () =>
     request<{ portal_url: string }>("/strelko/billing-portal", { method: "POST", body: "{}" }),
-  billingHistory: () =>
-    request<import("../types").BillingHistory>("/strelko/billing/history"),
+  billingHistory: (opts?: { page?: number; page_size?: number }) => {
+    const page = opts?.page ?? 0;
+    const pageSize = opts?.page_size ?? 8;
+    const q = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    });
+    return request<import("../types").BillingHistory>(`/strelko/billing/history?${q}`);
+  },
+  downloadInvoicePdf: async (invoiceId: number) => {
+    const res = await fetch(
+      `${API_BASE}/strelko/invoices/${invoiceId}/pdf?t=${Date.now()}`,
+      {
+        headers: { ...authHeaders() },
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const detail = (data as { detail?: unknown }).detail;
+      let message = res.statusText;
+      if (typeof detail === "string") {
+        message = detail;
+      }
+      const err = new Error(message) as import("../types").ApiError;
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    const disposition = res.headers.get("Content-Disposition") || "";
+    const rawName =
+      /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1] ||
+      /filename="([^"]+)"/i.exec(disposition)?.[1] ||
+      /filename=([^;]+)/i.exec(disposition)?.[1] ||
+      "";
+    let filename = "racun.pdf";
+    if (rawName) {
+      try {
+        filename = decodeURIComponent(rawName.trim().replace(/^["']|["']$/g, ""));
+      } catch {
+        filename = rawName.trim().replace(/^["']|["']$/g, "");
+      }
+    }
+    const buf = await res.arrayBuffer();
+    return new File([buf], filename, { type: "application/pdf" });
+  },
   verifyCheckout: (sessionId: string) =>
     request<{
       credits_added: number;

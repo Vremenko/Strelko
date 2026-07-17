@@ -53,11 +53,19 @@ export interface BillingHistoryItem {
   plan_id?: string | null;
   credits_added?: number | null;
   document_url?: string | null;
+  fiscal_invoice_id?: number | null;
+  fiscal_status_sl?: string | null;
 }
 
 export interface BillingHistory {
   items: BillingHistoryItem[];
   billing_portal_available: boolean;
+  page?: number;
+  page_size?: number;
+  total_count?: number;
+  total_pages?: number;
+  total_paid_cents?: number;
+  total_paid_eur?: string;
 }
 
 export interface UserWidgetConfig {

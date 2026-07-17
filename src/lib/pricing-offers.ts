@@ -72,6 +72,10 @@ export const PRICING_PODPORNIST: PricingOffer = {
 export const CENIK_PODPORNIST_DESCRIPTION =
   "S paketom Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov.";
 
+/** Obvestilo neposredno nad gumbom na kartici Podpornik (cenik). */
+export const CENIK_PODPORNIST_RENEWAL_NOTE =
+  "Naročnina se samodejno obnavlja vsak mesec do preklica.";
+
 export const CENIK_PODPORNIST_FEATURES = [
   "Celoten arhiv strel po dnevih, urah, statističnih regijah in občinah",
   "Napredni statistični prikazi",
@@ -127,6 +131,10 @@ export const PRICING_FAQ = [
   {
     q: "Ali žetoni potečejo?",
     a: "Ne. Kupljeni žetoni ostanejo na vašem računu, dokler jih ne porabite.",
+  },
+  {
+    q: "Ali lahko imam več naročnin Podpornik?",
+    a: "Ne. Če imate paket že aktiven, nove naročnine ni mogoče skleniti.",
   },
   {
     q: "Kako prekličem naročnino Podpornik?",

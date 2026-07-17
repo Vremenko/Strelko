@@ -1,3 +1,5 @@
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { ObSkodiTokenPurchase } from "../components/pricing/ObSkodiTokenPurchase";
 import { PricingPlanCard } from "../components/pricing/PricingPlanCard";
 import { PricingPurchaseInfo } from "../components/pricing/PricingPurchaseInfo";
@@ -12,22 +14,43 @@ import {
 } from "../lib/auth-intent";
 import { isObSkodiPurchaseAllowed } from "../lib/ob-skodi-tokens";
 import {
+  canSubscribePodpornik,
+  getPodpornikOverview,
+} from "../lib/portal-account";
+import {
   CENIK_PODPORNIST_DESCRIPTION,
   CENIK_PODPORNIST_DISCLAIMER,
   CENIK_PODPORNIST_FEATURES,
+  CENIK_PODPORNIST_RENEWAL_NOTE,
   CENIK_ZETONI_DESCRIPTION,
   PRICING_PODPORNIST,
 } from "../lib/pricing-offers";
 
+type CenikLocationState = { cenikNotice?: string } | null;
+
 export function CenikPage() {
-  const { user, openAuth, paymentsEnabled, setSelectedPlan, checkout } = useStrelko();
+  const { user, credits, openAuth, paymentsEnabled, checkout, openBillingPortal } =
+    useStrelko();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const state = location.state as CenikLocationState;
+    const msg = state?.cenikNotice?.trim();
+    if (!msg) return;
+    setNotice(msg);
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [location.pathname, location.search, location.state, navigate]);
+
+  const podpornikActive = Boolean(user && canSubscribePodpornik(credits) === false);
+  const podpornikOverview = getPodpornikOverview(credits);
 
   const handlePodpornikCta = () => {
-    if (!paymentsEnabled) return;
+    if (!paymentsEnabled || podpornikActive) return;
     const planId = checkoutPlanForTab("narocnina");
     if (user) {
-      setSelectedPlan(planId);
-      void checkout();
+      void checkout(undefined, planId);
       return;
     }
     setAuthReturn(CENIK_RETURN_PATH);
@@ -39,8 +62,7 @@ export function CenikPage() {
     const planId = checkoutPlanForTab("zetoni");
     if (user) {
       if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
-      setSelectedPlan(planId);
-      void checkout(quantity);
+      void checkout(quantity, planId);
       return;
     }
     if (!paymentsEnabled) return;
@@ -52,17 +74,23 @@ export function CenikPage() {
 
   const podpornikCtaLabel = !paymentsEnabled
     ? "Naročnina bo kmalu na voljo"
-    : user
-      ? "Postanite podpornik"
-      : "Postanite podpornik — prijava";
+    : podpornikActive
+      ? "Paket Podpornik je aktiven"
+      : "Postanite podpornik za 4,20 € na mesec";
 
-  const podpornikDisabled = !paymentsEnabled;
+  const podpornikDisabled = !paymentsEnabled || podpornikActive;
 
   return (
     <article className="pricing-page page--standard">
       <header className="page-header pricing-page-header">
         <h1>Cenik</h1>
       </header>
+
+      {notice ? (
+        <p className="form-error pricing-cenik-notice" role="alert">
+          {notice}
+        </p>
+      ) : null}
 
       <section className="pricing-plans" aria-label="Ponudbi">
         <div className="plan-grid plan-grid--2 pricing-plan-grid">
@@ -86,15 +114,38 @@ export function CenikPage() {
             disclaimer={CENIK_PODPORNIST_DISCLAIMER}
             hidePriceLabel
           >
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
-              onClick={handlePodpornikCta}
-              disabled={podpornikDisabled}
-              aria-disabled={podpornikDisabled}
-            >
-              {podpornikCtaLabel}
-            </button>
+            {podpornikActive ? (
+              <div className="pricing-plan-card__active-block">
+                {podpornikOverview.expiryLabel ? (
+                  <p className="pricing-plan-card__active-note">{podpornikOverview.expiryLabel}</p>
+                ) : null}
+                <Link to="/moj-strelko" className="btn btn-ghost btn-block">
+                  Odpri Moj Strelko
+                </Link>
+                {credits?.billing_portal_available ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => void openBillingPortal()}
+                  >
+                    Upravljaj naročnino
+                  </button>
+                ) : null}
+              </div>
+            ) : (
+              <div className="pricing-plan-card__cta-block">
+                <p className="pricing-plan-card__renewal-note">{CENIK_PODPORNIST_RENEWAL_NOTE}</p>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  onClick={handlePodpornikCta}
+                  disabled={podpornikDisabled}
+                  aria-disabled={podpornikDisabled}
+                >
+                  {podpornikCtaLabel}
+                </button>
+              </div>
+            )}
           </PricingPlanCard>
         </div>
       </section>
