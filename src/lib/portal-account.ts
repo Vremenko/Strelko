@@ -48,6 +48,10 @@ export function isPodpornikActive(credits?: Credits | null): boolean {
   return false;
 }
 
+export function canSubscribePodpornik(credits?: Credits | null): boolean {
+  return !isPodpornikActive(credits);
+}
+
 export function getPodpornikOverview(credits?: Credits | null): {
   active: boolean;
   cancelScheduled: boolean;
@@ -70,18 +74,20 @@ export function getPodpornikOverview(credits?: Credits | null): {
   const seasonEnd = credits?.season_pass_expires_at;
   const expiryRaw = periodEnd || seasonEnd;
   const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
-  const canManageBilling = Boolean(
-    credits?.billing_portal_available || credits?.has_subscription
-  );
-  /** Gumb: aktivni Podpornik brez že načrtovanega preklica. Stripe portal deluje le ob plačilni naročnini. */
-  const canCancel = !cancelScheduled && (canManageBilling || Boolean(seasonEnd));
+  const canManageBilling = Boolean(credits?.billing_portal_available);
+  /** Gumb samo, ko Stripe portal res deluje (aktivna plačilna naročnina). */
+  const canCancel = !cancelScheduled && canManageBilling;
 
   return {
     active: true,
     cancelScheduled,
     canCancel,
     expiryLabel: expiryFormatted ? `Velja do ${expiryFormatted}` : null,
-    cancelNotice: cancelScheduled ? "Naročnina se ne bo samodejno podaljšala." : null,
+    cancelNotice: cancelScheduled
+      ? "Naročnina se ne bo samodejno podaljšala."
+      : canManageBilling
+        ? null
+        : "Samodejno podaljševanje lahko prekinete po e-pošti na podpora@meteoinfo.si.",
   };
 }
 

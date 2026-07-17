@@ -3,6 +3,7 @@ import { useStrelko } from "../../context/StrelkoContext";
 import { portalTabPath } from "../../lib/auth-intent";
 import { getPodpornikOverview, tokenBalanceLabel } from "../../lib/portal-account";
 import { tokensSpentSummaryLabel } from "../../lib/ob-skodi-tokens";
+import { PortalTokenPurchase } from "./PortalTokenPurchase";
 
 function queryCountLabel(count: number): string {
   if (count === 1) return "1 poizvedba";
@@ -12,7 +13,8 @@ function queryCountLabel(count: number): string {
 }
 
 export function PortalOverview() {
-  const { credits, savedQueries, savedQueriesLoading, openBillingPortal } = useStrelko();
+  const { credits, savedQueries, savedQueriesLoading, openBillingPortal, alerts, openAlerts } =
+    useStrelko();
 
   const tokenBalance = tokenBalanceLabel(credits);
   const podpornik = getPodpornikOverview(credits);
@@ -20,6 +22,8 @@ export function PortalOverview() {
   const tokensSpent = savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0);
   const queriesStat =
     savedQueriesLoading && queryCount === 0 ? "Nalagam …" : queryCountLabel(queryCount);
+  const smsEligible = !!alerts?.sms_eligible;
+  const smsActive = !!alerts?.alert_enabled && !!alerts?.alert_phone;
 
   return (
     <div className="portal-panel">
@@ -78,13 +82,18 @@ export function PortalOverview() {
             </div>
             <div className="portal-card__service-footer">
               {podpornik.canCancel ? (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-block portal-card__cancel-btn"
-                  onClick={() => void openBillingPortal()}
-                >
-                  Prekliči naročnino
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-block portal-card__cancel-btn"
+                    onClick={() => void openBillingPortal()}
+                  >
+                    Prekliči naročnino
+                  </button>
+                  <p className="portal-card__cancel-notice">
+                    Prekinitev je mogoča tudi po e-pošti na podpora@meteoinfo.si.
+                  </p>
+                </>
               ) : podpornik.cancelNotice ? (
                 <p className="portal-card__cancel-notice">{podpornik.cancelNotice}</p>
               ) : !podpornik.active ? (
@@ -94,7 +103,64 @@ export function PortalOverview() {
               ) : null}
             </div>
           </article>
+
+          <article className="portal-card portal-card--service">
+            <div className="portal-card__service-head">
+              <h3 className="portal-card__title">SMS opozorila</h3>
+              <span
+                className={`portal-badge ${
+                  smsActive ? "portal-badge--active" : smsEligible ? "portal-badge--inactive" : "portal-badge--inactive"
+                }`}
+              >
+                {smsActive ? "Vklopljeno" : smsEligible ? "Na voljo" : "Ni na voljo"}
+              </span>
+            </div>
+            <div className="portal-card__service-body">
+              {smsEligible ? (
+                <>
+                  <p className="portal-card__hint">
+                    Obvestilo po SMS, ko se v izbranem radiju pojavi strela. Največ 1× na dan na
+                    lokacijo.
+                  </p>
+                  {alerts?.saved_label ? (
+                    <p className="portal-overview-stat-sub">
+                      Lokacija: <strong>{alerts.saved_label}</strong>
+                      {alerts.alert_radius_km != null ? ` · ${alerts.alert_radius_km} km` : null}
+                    </p>
+                  ) : (
+                    <p className="portal-overview-stat-sub">Lokacija še ni nastavljena.</p>
+                  )}
+                </>
+              ) : (
+                <p className="portal-card__hint">
+                  Vključeno v paketu Podpornik — nastavite telefon, lokacijo in radij.
+                </p>
+              )}
+            </div>
+            <div className="portal-card__service-footer">
+              {smsEligible ? (
+                <button type="button" className="btn btn-ghost btn-block" onClick={openAlerts}>
+                  {smsActive ? "Uredi opozorila" : "Nastavi opozorila"}
+                </button>
+              ) : (
+                <Link to="/cenik" className="btn btn-ghost btn-block">
+                  Aktiviraj Podpornik
+                </Link>
+              )}
+            </div>
+          </article>
         </div>
+      </section>
+
+      <section className="portal-overview-section" aria-labelledby="portal-tokens-heading">
+        <h2 id="portal-tokens-heading" className="portal-overview-section__title">
+          Nakup žetonov
+        </h2>
+        <p className="portal-card__hint portal-overview-section__lead">
+          Žetone lahko kadar koli dokupite — tudi ob aktivnem paketu Podpornik. Novi žetoni se
+          prištejejo obstoječemu stanju.
+        </p>
+        <PortalTokenPurchase />
       </section>
 
       <section className="portal-overview-section" aria-labelledby="portal-usage-heading">
