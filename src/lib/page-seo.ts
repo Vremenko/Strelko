@@ -159,6 +159,10 @@ const ROUTE_OG_IMAGES: Record<string, { image: string; alt: string }> = {
     image: `${SITE_ORIGIN}/og/piskotki.png`,
     alt: "Politika piškotkov – Strelko",
   },
+  "/viri-podatkov": {
+    image: `${SITE_ORIGIN}/og/viri-podatkov.png`,
+    alt: "Viri podatkov – Strelko",
+  },
   "/pravice-potrosnikov": {
     image: `${SITE_ORIGIN}/og/pravice.png`,
     alt: "Pravice potrošnikov – Strelko",
@@ -200,7 +204,7 @@ const SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: "/pravice-potrosnikov", priority: 0.3, changefreq: "yearly" },
 ];
 
-const NOINDEX_PATHS = new Set(["/moj-strelko", "/verify-email", "/reset-password"]);
+const NOINDEX_PATHS = new Set(["/moj-strelko", "/admin", "/verify-email", "/reset-password"]);
 
 /** Javne poti za sitemap.xml (brez query, hash ali zasebnih poti). */
 export const SITEMAP_PATHS = [
@@ -221,6 +225,7 @@ export const SITEMAP_PATHS = [
 export const KNOWN_APP_PATHS = [
   ...SITEMAP_PATHS,
   "/moj-strelko",
+  "/admin",
   "/verify-email",
   "/reset-password",
 ] as const;

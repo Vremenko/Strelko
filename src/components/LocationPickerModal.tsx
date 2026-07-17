@@ -57,21 +57,43 @@ export function LocationPickerModal({
     setGeoErrorMessage(GEO_ERROR_GENERIC);
   }, [open, view]);
 
-  useEffect(() => {
-    if (!open || !view || !mapHostRef.current) return;
+  useLayoutEffect(() => {
+    if (!open || !view) return;
 
-    const handle = createPickLocationMap(
-      mapHostRef.current,
-      view.center,
-      view.zoom,
-      view.marker,
-      (lat, lon) => setPicked({ lat, lon })
-    );
-    mapHandleRef.current = handle;
+    let handle: ReturnType<typeof createPickLocationMap> | null = null;
+    let cancelled = false;
+    let rafId = 0;
+
+    const mountMap = () => {
+      if (cancelled || !mapHostRef.current) return false;
+
+      handle?.destroy();
+      handle = createPickLocationMap(
+        mapHostRef.current,
+        view.center,
+        view.zoom,
+        view.marker,
+        (lat, lon) => setPicked({ lat, lon })
+      );
+      mapHandleRef.current = handle;
+      return true;
+    };
+
+    if (!mountMap()) {
+      rafId = window.requestAnimationFrame(() => {
+        if (!mountMap()) {
+          rafId = window.requestAnimationFrame(mountMap);
+        }
+      });
+    }
 
     return () => {
-      handle.destroy();
-      mapHandleRef.current = null;
+      cancelled = true;
+      window.cancelAnimationFrame(rafId);
+      handle?.destroy();
+      if (mapHandleRef.current === handle) {
+        mapHandleRef.current = null;
+      }
     };
   }, [open, view]);
 

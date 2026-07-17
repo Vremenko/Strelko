@@ -13,6 +13,7 @@ import { MojStrelkoPage } from "./pages/MojStrelkoPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { AdminPage } from "./pages/AdminPage";
 import { LEGAL_PAGES, type LegalPageId } from "./lib/legal";
 
 export function App() {
@@ -29,6 +30,7 @@ export function App() {
             <Route path="/pomoc-pri-zavarovalnici" element={<ZavarovalnicaPage />} />
             <Route path="/cenik" element={<CenikPage />} />
             <Route path="/moj-strelko" element={<MojStrelkoPage />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/statistika" element={<StatistikaPage />} />
             <Route path="/widget-obcine" element={<WidgetObcinePage />} />
             {(Object.entries(LEGAL_PAGES) as [LegalPageId, (typeof LEGAL_PAGES)[LegalPageId]][]).map(

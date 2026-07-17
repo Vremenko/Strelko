@@ -55,6 +55,24 @@ export function IconLocationPin() {
   );
 }
 
+export function IconLatitude() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <ellipse cx="12" cy="12" rx="8" ry="3" stroke="currentColor" strokeWidth="1.5" />
+      <ellipse cx="12" cy="12" rx="8" ry="6" stroke="currentColor" strokeWidth="1.5" opacity="0.45" />
+    </svg>
+  );
+}
+
+export function IconLongitude() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <ellipse cx="12" cy="12" rx="3" ry="8" stroke="currentColor" strokeWidth="1.5" />
+      <ellipse cx="12" cy="12" rx="6" ry="8" stroke="currentColor" strokeWidth="1.5" opacity="0.45" />
+    </svg>
+  );
+}
+
 export function IconInsurance() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">

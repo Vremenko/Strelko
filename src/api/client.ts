@@ -301,3 +301,141 @@ export const api = {
       `/strelko/obcina-widgets/public/${encodeURIComponent(publicKey)}`
     ),
 };
+
+function adminQuery(params: Record<string, string | number | boolean | undefined>): string {
+  const q = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === "") continue;
+    q.set(key, String(value));
+  }
+  const s = q.toString();
+  return s ? `?${s}` : "";
+}
+
+export const adminApi = {
+  summary: () => request<import("../types").AdminStrelkoSummary>("/admin/strelko/summary"),
+  listInvoices: (params: {
+    furs_status?: string;
+    user_id?: number;
+    email?: string;
+    limit?: number;
+    offset?: number;
+  }) =>
+    request<{ items: import("../types").AdminStrelkoInvoice[]; total: number }>(
+      `/admin/strelko/invoices${adminQuery(params)}`
+    ),
+  downloadInvoicePdf: async (invoiceId: number) => {
+    const res = await fetch(`${API_BASE}/admin/strelko/invoices/${invoiceId}/pdf`, {
+      headers: { ...authHeaders() },
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(
+        typeof (data as { detail?: string }).detail === "string"
+          ? (data as { detail: string }).detail
+          : res.statusText
+      );
+    }
+    return res.blob();
+  },
+  retryFurs: (invoiceId: number) =>
+    request<{ ok: boolean; message?: string }>(
+      `/admin/strelko/invoices/${invoiceId}/retry-furs`,
+      { method: "POST", body: "{}" }
+    ),
+  resendEmail: (invoiceId: number) =>
+    request<{ ok: boolean; message?: string }>(
+      `/admin/strelko/invoices/${invoiceId}/resend-email`,
+      { method: "POST", body: "{}" }
+    ),
+  reconcile: (params: {
+    lookback_days?: number;
+    auto_issue?: boolean;
+    send_email?: boolean;
+  }) =>
+    request<import("../types").AdminStrelkoReconcileResult>(
+      `/admin/strelko/reconcile${adminQuery(params)}`,
+      { method: "POST", body: "{}" }
+    ),
+  issueMissing: (refType: string, refId: string) =>
+    request<{ ok: boolean; message?: string; invoice_number?: string }>(
+      "/admin/strelko/issue-missing",
+      { method: "POST", body: JSON.stringify({ ref_type: refType, ref_id: refId }) }
+    ),
+  listUsers: (params: {
+    email?: string;
+    page?: number;
+    page_size?: number;
+    limit?: number;
+    offset?: number;
+  }) =>
+    request<import("../types").AdminStrelkoUserList>(`/admin/strelko/users${adminQuery(params)}`),
+  userSuggest: (q: string, limit = 8) =>
+    request<{ items: { id: number; email: string }[] }>(
+      `/admin/strelko/users/suggest${adminQuery({ q, limit })}`
+    ),
+  getUser: (userId: number) =>
+    request<import("../types").AdminStrelkoUserDetail>(`/admin/strelko/users/${userId}`),
+  grantCredits: (userId: number, amount: number, note?: string) =>
+    request<{ credits_balance: number; amount_granted: number }>(
+      `/admin/strelko/users/${userId}/grant-credits`,
+      { method: "POST", body: JSON.stringify({ amount, note: note || null }) }
+    ),
+  activatePodpornik: (userId: number, expiresOn: string) =>
+    request<{
+      ok: boolean;
+      podpornik_active: boolean;
+      podpornik_manual: boolean;
+      season_pass_expires_at?: string | null;
+      message?: string;
+    }>(`/admin/strelko/users/${userId}/activate-podpornik`, {
+      method: "POST",
+      body: JSON.stringify({ expires_on: expiresOn }),
+    }),
+  cancelPodpornik: (userId: number) =>
+    request<{
+      ok: boolean;
+      mode: string;
+      cancel_at_period_end?: boolean | null;
+      podpornik_active: boolean;
+      season_pass_expires_at?: string | null;
+      message: string;
+    }>(`/admin/strelko/users/${userId}/cancel-podpornik`, { method: "POST" }),
+  deleteUser: (userId: number, confirmEmail: string) =>
+    request<{ ok: boolean; deleted_user_id: number; message?: string }>(
+      `/admin/strelko/users/${userId}`,
+      { method: "DELETE", body: JSON.stringify({ confirm_email: confirmEmail }) }
+    ),
+  smsSummary: () =>
+    request<import("../types").AdminStrelkoSmsSummary>("/admin/strelko/sms/summary"),
+  smsScenarios: () =>
+    request<import("../types").AdminStrelkoSmsScenarioList>("/admin/strelko/sms/scenarios"),
+  smsPreview: (userId: number, scenarioId = "standard") =>
+    request<import("../types").AdminStrelkoSmsPreview>(
+      `/admin/strelko/sms/preview?user_id=${userId}&scenario_id=${encodeURIComponent(scenarioId)}`
+    ),
+  smsNotifications: (params?: { limit?: number; offset?: number }) =>
+    request<{ items: import("../types").AdminStrelkoSmsNotification[]; total: number }>(
+      `/admin/strelko/sms/notifications${adminQuery(params || {})}`
+    ),
+  smsSubscribers: (params?: { limit?: number; offset?: number }) =>
+    request<{ items: import("../types").AdminStrelkoSmsSubscriber[]; total: number }>(
+      `/admin/strelko/sms/subscribers${adminQuery(params || {})}`
+    ),
+  upsertSmsSubscriber: (body: import("../types").AdminStrelkoSmsSubscriberUpsert) =>
+    request<{ ok: boolean; message: string; subscriber: import("../types").AdminStrelkoSmsSubscriber }>(
+      "/admin/strelko/sms/subscribers",
+      { method: "POST", body: JSON.stringify(body) }
+    ),
+  removeSmsSubscriber: (userId: number) =>
+    request<{ ok: boolean; message: string; subscriber: import("../types").AdminStrelkoSmsSubscriber }>(
+      `/admin/strelko/sms/subscribers/${userId}`,
+      { method: "DELETE" }
+    ),
+  sendSms: (body: { user_id: number; scenario_id?: string }) =>
+    request<import("../types").AdminStrelkoSmsSendResult>("/admin/strelko/sms/send", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+};
