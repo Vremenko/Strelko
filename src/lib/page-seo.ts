@@ -108,6 +108,12 @@ const PUBLIC_ROUTES: Record<string, Omit<PageSeo, "robots">> = {
       "Informacije o piškotkih in podobnih tehnologijah, ki jih uporablja strelko.meteoinfo.si.",
     canonical: `${SITE_ORIGIN}/piskotki`,
   },
+  "/viri-podatkov": {
+    title: "Viri podatkov – Strelko",
+    description:
+      "Izvor in omejitve podatkov o strelah v aplikaciji Strelko (LEELA, Met Office, DHMZ).",
+    canonical: `${SITE_ORIGIN}/viri-podatkov`,
+  },
   "/pravice-potrosnikov": {
     title: "Pravice potrošnikov – Strelko",
     description:
@@ -190,6 +196,7 @@ const SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: "/pogoji-uporabe", priority: 0.3, changefreq: "yearly" },
   { path: "/zasebnost", priority: 0.3, changefreq: "yearly" },
   { path: "/piskotki", priority: 0.3, changefreq: "yearly" },
+  { path: "/viri-podatkov", priority: 0.3, changefreq: "yearly" },
   { path: "/pravice-potrosnikov", priority: 0.3, changefreq: "yearly" },
 ];
 
@@ -206,6 +213,7 @@ export const SITEMAP_PATHS = [
   "/pogoji-uporabe",
   "/zasebnost",
   "/piskotki",
+  "/viri-podatkov",
   "/pravice-potrosnikov",
 ] as const;
 

@@ -76,7 +76,9 @@ export function CenikPage() {
     ? "Naročnina bo kmalu na voljo"
     : podpornikActive
       ? "Paket Podpornik je aktiven"
-      : "Postanite podpornik za 4,20 € na mesec";
+      : !user
+        ? "Za aktivacijo paketa Podpornik se prijavite."
+        : "Postanite podpornik za 4,20 € na mesec";
 
   const podpornikDisabled = !paymentsEnabled || podpornikActive;
 
@@ -119,7 +121,7 @@ export function CenikPage() {
                 {podpornikOverview.expiryLabel ? (
                   <p className="pricing-plan-card__active-note">{podpornikOverview.expiryLabel}</p>
                 ) : null}
-                <Link to="/moj-strelko" className="btn btn-ghost btn-block">
+                <Link to="/moj-strelko" className="btn btn-moj-strelko btn-block">
                   Odpri Moj Strelko
                 </Link>
                 {credits?.billing_portal_available ? (

@@ -44,6 +44,7 @@ const HEADINGS: Record<string, string> = {
   "/pogoji-uporabe": "Pogoji uporabe",
   "/zasebnost": "Politika zasebnosti",
   "/piskotki": "Politika piškotkov",
+  "/viri-podatkov": "Viri podatkov",
   "/pravice-potrosnikov": "Pravice potrošnikov",
   "/moj-strelko": "Moj Strelko",
   "/verify-email": "Potrditev e-poštnega naslova",

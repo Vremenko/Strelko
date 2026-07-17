@@ -91,7 +91,9 @@ export function ObSkodiTokenPurchase({
   const ctaLabel = (() => {
     if (!paymentsEnabled) return obSkodiPurchaseCtaLabel(quantity, false);
     if (!loggedIn) {
-      return `Prijava ali registracija — ${tokenCountLabel(order.quantity, "accusative")}`;
+      return isCenik
+        ? "Za nakup žetonov se prijavite."
+        : `Prijava ali registracija — ${tokenCountLabel(order.quantity, "accusative")}`;
     }
     return obSkodiPurchaseCtaLabel(quantity, purchaseReady);
   })();

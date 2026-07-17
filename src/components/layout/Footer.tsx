@@ -46,9 +46,6 @@ export function Footer() {
         </a>
         <nav className="legal-footer-nav" aria-label="Pravne informacije">
           {legalLinks}
-          <a href={COMPANY.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
-            Zasebnost Meteoinfo
-          </a>
         </nav>
       </div>
     </footer>

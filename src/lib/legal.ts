@@ -844,6 +844,26 @@ export const LEGAL_PAGES = {
       },
     ],
   },
+  dataSources: {
+    path: "/viri-podatkov",
+    title: "Viri podatkov",
+    updated: "17. 7. 2026",
+    sections: [
+      {
+        title: "Podatki o strelah",
+        body: `
+          <p>Podatki o zaznanih atmosferskih razelektritvah izvirajo iz sistema <strong>LEELA</strong> britanske državne meteorološke službe <strong>Met Office</strong>. Podatke obdeluje in posreduje <strong>Hrvaški državni hidrometeorološki zavod (DHMZ)</strong>, Meteoinfo pa jih dodatno obdela in prikaže v aplikaciji Strelko.</p>
+          <p>Sistem LEELA zaznava radijske impulze, ki nastanejo ob atmosferskih razelektritvah. Na podlagi razlik v času prihoda signala do več senzorjev se določita približen čas in lokacija zaznane razelektritve.</p>`,
+      },
+      {
+        title: "Omejitve podatkov",
+        body: `
+          <p>Podatki so informativne narave. Zaradi načina zaznavanja, razporeditve merilnih postaj, kakovosti sprejema in postopkov obdelave ni mogoče zagotoviti, da bo zaznana vsaka atmosferska razelektritev.</p>
+          <p>Prikazana lokacija in čas udara strel lahko nekoliko odstopata od dejanskega dogodka. Različni sistemi zaznavanja lahko zato za isto nevihto prikažejo različno število udarov ali nekoliko drugačne lokacije.</p>
+          <p>Podatki v aplikaciji Strelko ne predstavljajo uradne evidence in jih je treba uporabljati skupaj z drugimi razpoložljivimi informacijami.</p>`,
+      },
+    ],
+  },
   consumer: {
     path: "/pravice-potrosnikov",
     title: "Pravice potrošnikov",

@@ -29,6 +29,7 @@ OG_PAGES: list[tuple[str, str, str]] = [
     ("pogoji", "Pogoji uporabe", "Pravila uporabe storitve Strelko"),
     ("zasebnost", "Zasebnost", "Politika varstva osebnih podatkov"),
     ("piskotki", "Piškotki", "Politika piškotkov in shrambe"),
+    ("viri-podatkov", "Viri podatkov", "Izvor in omejitve podatkov o strelah"),
     ("pravice", "Pravice potrošnikov", "Povzetek potrošniških pravic"),
 ]
 

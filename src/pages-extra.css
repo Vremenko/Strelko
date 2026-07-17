@@ -4218,6 +4218,10 @@ body.site-nav-open {
   color: var(--muted);
 }
 
+.portal-card__cancel-btn + .portal-card__cancel-notice {
+  margin-top: 0.7rem;
+}
+
 .portal-card--usage {
   display: flex;
   flex-wrap: wrap;
