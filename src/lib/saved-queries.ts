@@ -97,6 +97,15 @@ export function formatQueryExecutedAt(iso: string): string {
   }
 }
 
+/** Naslov poizvedbe, shranjene iz izbora na zemljevidu (SearchCard). */
+export const MAP_PICKER_QUERY_LABEL = "Izbrana lokacija na zemljevidu";
+
+/** Slovenian decimal comma, 5 places — from stored lat/lon only. */
+export function formatStoredQueryCoordinates(lat: number, lon: number): string {
+  const fmt = (n: number) => n.toFixed(5).replace(".", ",");
+  return `Koordinate: ${fmt(lat)}, ${fmt(lon)}`;
+}
+
 /** npr. 1 strela, 2 streli, 4 strele, 10 strel */
 export function strikeCountLabel(count: number): string {
   const n = Math.abs(Math.floor(count));

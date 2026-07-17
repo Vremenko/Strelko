@@ -6,22 +6,47 @@ import { ResultsView } from "../components/ResultsView";
 import { ZavarovalnicaRecentQueries } from "../components/ZavarovalnicaRecentQueries";
 import { useStrelko } from "../context/StrelkoContext";
 
-export function ZavarovalnicaPage() {
-  const { searchResult, previewScreen, loading } = useStrelko();
-  const awayFromForm =
-    Boolean(searchResult) || previewScreen === "teaser" || previewScreen === "no-strikes";
-  const wasAwayFromFormRef = useRef(awayFromForm);
+const RESULTS_ID = "zavarovalnica-results";
 
-  useEffect(() => {
-    if (awayFromForm !== wasAwayFromFormRef.current) {
+function scrollElementAfterPaint(elementId: string) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById(elementId)?.scrollIntoView({ behavior: "auto", block: "start" });
+    });
+  });
+}
+
+function scrollWindowTopAfterPaint() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    }
-    wasAwayFromFormRef.current = awayFromForm;
-  }, [awayFromForm]);
+    });
+  });
+}
+
+export function ZavarovalnicaPage() {
+  const { searchResult, previewScreen, loading, savedQueryId } = useStrelko();
+  const showForm =
+    !searchResult && previewScreen !== "teaser" && previewScreen !== "no-strikes";
+  const wasShowingFormRef = useRef(showForm);
+
+  /* Uspešen rezultat: en sam pomik na začetek rezultata (šele po renderju, ne med nalaganjem). */
+  useEffect(() => {
+    if (!searchResult || loading) return;
+    scrollElementAfterPaint(RESULTS_ID);
+  }, [savedQueryId, searchResult, loading]);
+
+  /* Nova poizvedba / zaprtje predogleda: po izrisu obrazca stran povsem na vrh. */
+  useEffect(() => {
+    const returnedToForm = showForm && !wasShowingFormRef.current;
+    wasShowingFormRef.current = showForm;
+    if (!returnedToForm || loading) return;
+    scrollWindowTopAfterPaint();
+  }, [showForm, loading]);
 
   if (searchResult) {
     return (
-      <section className="zavarovalnica-page page--standard">
+      <section id={RESULTS_ID} className="zavarovalnica-page page--standard">
         <ErrorBoundary
           fallback={
             <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>

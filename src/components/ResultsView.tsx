@@ -134,7 +134,6 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
 
   const r = searchResult;
   const panelClass = zavarovalnica ? " results-panel--zavarovalnica" : "";
-  const backTo = zavarovalnica ? "/pomoc-pri-zavarovalnici" : "/";
   const daily = Array.isArray(r.daily) ? r.daily : [];
   const nearestKm = nearestStrikeKm(daily);
   const periodLabel = formatResultsPeriodLabel(r.radius_km, {
@@ -282,9 +281,15 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
             errorMessage={pdfDownloadError}
           />
         )}
-        <Link to={backTo} className="btn btn-ghost" onClick={clearSearch}>
-          Nova poizvedba
-        </Link>
+        {zavarovalnica ? (
+          <button type="button" className="btn btn-ghost" onClick={clearSearch}>
+            Nova poizvedba
+          </button>
+        ) : (
+          <Link to="/" className="btn btn-ghost" onClick={clearSearch}>
+            Nova poizvedba
+          </Link>
+        )}
       </div>
     </section>
   );

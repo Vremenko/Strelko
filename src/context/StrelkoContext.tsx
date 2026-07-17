@@ -284,6 +284,21 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [searchDateFrom, setSearchDateFrom] = useState(defaultRange.from);
   const [searchDateTo, setSearchDateTo] = useState(defaultRange.to);
   const [loading, setLoading] = useState(false);
+  const clearSearch = useCallback(() => {
+    const onZavarovalnica = location.pathname === "/pomoc-pri-zavarovalnici";
+    const qid = onZavarovalnica
+      ? new URLSearchParams(location.search).get("query")
+      : null;
+    if (qid) {
+      suppressQueryHydrationRef.current = true;
+      openQueryInFlightRef.current = null;
+    }
+    setLoading(false);
+    clearSearchState();
+    if (qid) {
+      navigate("/pomoc-pri-zavarovalnici", { replace: true });
+    }
+  }, [location.pathname, location.search, navigate, clearSearchState]);
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [widget, setWidgetState] = useState(initialWidget);
   const [userWidget, setUserWidget] = useState<UserWidgetConfig | null>(null);
@@ -304,6 +319,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const refreshUserInFlightRef = useRef<Promise<void> | null>(null);
   const runPreviewInFlightRef = useRef(false);
   const openQueryInFlightRef = useRef<string | null>(null);
+  /** Prepreči, da bi ?query= po »Nova poizvedba« takoj znova odprl rezultat. */
+  const suppressQueryHydrationRef = useRef(false);
   const suggestSeqRef = useRef(0);
   const lastSuggestionsRef = useRef<GeocodeResult[]>([]);
 
@@ -530,6 +547,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
     const qid = new URLSearchParams(location.search).get("query");
     if (qid) return;
+    suppressQueryHydrationRef.current = false;
+    openQueryInFlightRef.current = null;
     clearSearchState();
   }, [location.pathname, location.search, clearSearchState]);
 
@@ -537,6 +556,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
     const qid = new URLSearchParams(location.search).get("query");
     if (!qid || !user) return;
+    if (suppressQueryHydrationRef.current) return;
     if (savedQueryId === qid && searchResult) return;
     void openSavedQuery(qid);
   }, [
@@ -1088,7 +1108,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("strelko_cookie_consent", "1");
         setCookieAccepted(true);
       },
-      clearSearch: clearSearchState,
+      clearSearch,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
       loadWidgetObcine,
       loadWidgetSelection,
@@ -1164,7 +1184,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       afterAuth,
       navigate,
       location.pathname,
-      clearSearchState,
+      clearSearch,
       loadSavedQueries,
       openSavedQuery,
       setSavedQueryId,

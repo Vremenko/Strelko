@@ -289,6 +289,7 @@ export function SearchCard({
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    event.stopPropagation();
     if (showOptions) {
       const err = validateSearchPeriod(searchDateFrom, searchDateTo);
       if (err) return;
@@ -354,7 +355,12 @@ export function SearchCard({
           ) : null}
         </div>
       )}
-      <form className="search-card-body" onSubmit={onSubmit}>
+      <form
+        className="search-card-body"
+        onSubmit={onSubmit}
+        action="."
+        method="get"
+      >
         {title && <h3 className="search-card-title">{title}</h3>}
         {intro && <p className="search-card-intro">{intro}</p>}
         {!title && <label htmlFor="location-input">{label}</label>}

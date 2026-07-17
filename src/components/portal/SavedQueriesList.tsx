@@ -1,7 +1,12 @@
 import { PdfDownloadPanel } from "../PdfDownloadPanel";
 import { formatSlDateRange } from "../../lib/dates";
 import { tokenCountLabel } from "../../lib/ob-skodi-tokens";
-import { formatQueryExecutedAt, strikeCountLabel } from "../../lib/saved-queries";
+import {
+  formatQueryExecutedAt,
+  formatStoredQueryCoordinates,
+  MAP_PICKER_QUERY_LABEL,
+  strikeCountLabel,
+} from "../../lib/saved-queries";
 import type { SavedQuerySummary } from "../../types";
 
 type SavedQueriesListProps = {
@@ -26,11 +31,20 @@ export function SavedQueriesList({
     <div className="portal-queries-list">
       {queries.map((q) => {
         const locationLabel = q.label?.trim() || `${q.lat.toFixed(4)}, ${q.lon.toFixed(4)}`;
+        const showMapCoords =
+          q.label?.trim() === MAP_PICKER_QUERY_LABEL &&
+          Number.isFinite(q.lat) &&
+          Number.isFinite(q.lon);
         const pdfBusy = pdfBusyId === q.id;
         return (
           <article key={q.id} className="portal-query-card">
             <header className="portal-query-card__head">
               <h3 className="portal-query-card__title">{locationLabel}</h3>
+              {showMapCoords ? (
+                <p className="portal-query-card__meta">
+                  {formatStoredQueryCoordinates(q.lat, q.lon)}
+                </p>
+              ) : null}
               <p className="portal-query-card__meta">
                 Izvedeno {formatQueryExecutedAt(q.created_at)}
               </p>
