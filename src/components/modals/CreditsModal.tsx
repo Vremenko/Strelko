@@ -8,6 +8,7 @@ import {
 import { OB_SKODI_PER_TOKEN_GROSS_LABEL } from "../../lib/ob-skodi-tokens";
 import { PODPORNIST_MONTHLY_GROSS_LABEL } from "../../lib/podpornik-pricing";
 import { formatPlanGrossLabel } from "../../lib/pricing";
+import { canSubscribePodpornik, formatPeriodEndGenitive } from "../../lib/portal-account";
 import { seasonLabelSl } from "../../lib/season";
 import type { Plan } from "../../types";
 
@@ -51,6 +52,7 @@ export function CreditsModal() {
     closeCredits,
     plans,
     plansMeta,
+    credits,
     selectedPlan,
     setSelectedPlan,
     paymentsEnabled,
@@ -59,12 +61,14 @@ export function CreditsModal() {
   if (!modals.credits) return null;
 
   const list = resolvePlansList(plans);
+  const podpornikActive = !canSubscribePodpornik(credits);
   const insufficientCredits = !!modals.creditsOptions.insufficientCredits;
   const checkoutError = modals.creditsOptions.checkoutError;
   const seasonNote = plansMeta.season_label_sl || seasonLabelSl();
   const archiveFree = !!plansMeta.archive_free_now;
   const selected = list.find((p) => p.id === selectedPlan);
   const contactOnly = !!selected?.contact_only;
+  const podpornikCheckoutBlocked = selectedPlan === "podpornik" && podpornikActive;
 
   const intro = archiveFree ? (
     <p className="credits-modal-lead">
@@ -93,10 +97,12 @@ export function CreditsModal() {
         <div className="plan-grid plan-grid--2">
           {list.map((p) => {
             const isSelected = selectedPlan === p.id;
+            const isPodpornikLocked = p.id === "podpornik" && podpornikActive;
             const cls = [
               "plan-card",
               isSelected ? "is-selected" : "",
               p.recommended ? "is-recommended" : "",
+              isPodpornikLocked ? "is-disabled" : "",
             ]
               .filter(Boolean)
               .join(" ");
@@ -107,9 +113,17 @@ export function CreditsModal() {
                 className={cls}
                 data-plan={p.id}
                 aria-pressed={isSelected}
-                onClick={() => setSelectedPlan(p.id)}
+                aria-disabled={isPodpornikLocked}
+                disabled={isPodpornikLocked}
+                onClick={() => {
+                  if (isPodpornikLocked) return;
+                  setSelectedPlan(p.id);
+                }}
               >
                 {p.recommended && <span className="plan-ribbon">Priporočeno</span>}
+                {isPodpornikLocked ? (
+                  <span className="plan-ribbon plan-ribbon--muted">Aktiven</span>
+                ) : null}
                 <h4>{p.name_sl}</h4>
                 {p.tagline_sl && <p className="plan-tagline">{p.tagline_sl}</p>}
                 <PlanPrice plan={p} variant="modal" />
@@ -140,11 +154,13 @@ export function CreditsModal() {
           className="btn btn-primary"
           id="btn-checkout"
           style={{ width: "100%", marginTop: "1rem" }}
-          disabled={!paymentsEnabled || contactOnly}
+          disabled={!paymentsEnabled || contactOnly || podpornikCheckoutBlocked}
           onClick={() => void checkout()}
         >
           {contactOnly
             ? "Po dogovoru"
+            : podpornikCheckoutBlocked
+              ? "Podpornik je že aktiven"
             : paymentsEnabled
               ? checkoutButtonLabel(selectedPlan, list)
               : "Plačila trenutno niso aktivna"}
@@ -164,20 +180,39 @@ export function CreditsModal() {
 }
 
 export function CheckoutSuccessModal() {
-  const { modals, closeCheckoutSuccess } = useStrelko();
+  const { modals, closeCheckoutSuccess, credits } = useStrelko();
   const s = modals.checkoutSuccess;
   if (!s) return null;
 
-  const isSeason = s.planId === "podpornik";
-  const message = isSeason ? (
+  const tokenPurchase = s.creditsAdded > 0;
+  const isSeason = !tokenPurchase && s.planId === "podpornik";
+  const periodRaw =
+    credits?.subscription_current_period_end || credits?.season_pass_expires_at || null;
+  const periodLabel = periodRaw ? formatPeriodEndGenitive(periodRaw) : null;
+  const message = tokenPurchase ? (
     <>
-      Paket <strong>{s.planName || "Podpornik"}</strong> je aktiven do konca sezone. Na voljo
-      imate <strong>{s.balance}</strong> pregledov in widget.
+      Kupljeni žetoni so bili prišteti vašemu stanju. Dodanih{" "}
+      <strong>{s.creditsAdded}</strong> — skupaj imate <strong>{s.balance}</strong>{" "}
+      {s.balance === 1 ? "žeton" : s.balance === 2 ? "žetona" : "žetonov"}.
+      {s.planId === "podpornik" ? (
+        <>
+          {" "}
+          Paket <strong>Podpornik</strong> ostaja aktiven.
+        </>
+      ) : null}
     </>
-  ) : s.creditsAdded > 0 ? (
-    <>
-      Dodanih <strong>{s.creditsAdded}</strong> pregledov. Stanje: <strong>{s.balance}</strong>.
-    </>
+  ) : isSeason ? (
+    periodLabel ? (
+      <>
+        Paket <strong>{s.planName || "Podpornik"}</strong> je aktiven do {periodLabel} in se
+        samodejno podaljšuje.
+      </>
+    ) : (
+      <>
+        Paket <strong>{s.planName || "Podpornik"}</strong> je aktiven in se samodejno
+        podaljšuje.
+      </>
+    )
   ) : s.planName ? (
     <>
       Paket <strong>{s.planName}</strong> je aktiven. Stanje: <strong>{s.balance}</strong>{" "}
@@ -192,7 +227,7 @@ export function CheckoutSuccessModal() {
   return (
     <div className="modal-overlay" id="checkout-success-modal">
       <div className="modal">
-        <h3>{isSeason ? "Hvala za podporo!" : "Plačilo uspešno"}</h3>
+        <h3>{isSeason ? "Hvala za podporo!" : tokenPurchase ? "Žetoni dodani" : "Plačilo uspešno"}</h3>
         <p>{message}</p>
         <button
           type="button"
