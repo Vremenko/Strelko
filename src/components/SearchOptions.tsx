@@ -7,7 +7,6 @@ import {
   adjustRangeFromEnd,
   adjustRangeFromStart,
   formatSearchDateLabel,
-  maxEndDateForStart,
   searchPeriodHint,
   todayIso,
   validateSearchPeriod,
@@ -59,8 +58,9 @@ export function SearchOptions({ disabled = false }: SearchOptionsProps) {
 
   const fromMin = SEARCH_ARCHIVE_MIN_ISO;
   const fromMax = today;
+  /* Koledar ne omejuje na 30 dni — samo arhiv, prihodnost in vrstni red Od ≤ Do. */
   const toMin = searchDateFrom;
-  const toMax = maxEndDateForStart(searchDateFrom, today);
+  const toMax = today;
   const periodError = validateSearchPeriod(searchDateFrom, searchDateTo, today);
 
   const onRadiusChange = (value: string) => {

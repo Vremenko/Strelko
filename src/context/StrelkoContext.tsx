@@ -29,6 +29,7 @@ import {
   buildPreviewRequestBody,
   clampSearchRange,
   defaultSearchRange,
+  validateSearchPeriod,
 } from "../lib/search-dates";
 import { NATIONAL_WIDGET_SCOPE } from "../lib/widget-obcine";
 import {
@@ -678,6 +679,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       alert("Izberite veljaven naslov s seznama predlogov ali vnesite naslov, ki ga sistem prepozna.");
       return;
     }
+    const periodErr = validateSearchPeriod(searchDateFrom, searchDateTo);
+    if (periodErr) {
+      alert(periodErr);
+      return;
+    }
     setLoading(true);
     try {
       const searchRange = clampSearchRange({
@@ -823,6 +829,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         const rawQuery = locationQuery;
         if (!rawQuery.trim() && !selected) {
           alert("Vnesite naslov ali kraj.");
+          return;
+        }
+        const periodErr = validateSearchPeriod(searchDateFrom, searchDateTo);
+        if (periodErr) {
+          alert(periodErr);
           return;
         }
         runPreviewInFlightRef.current = true;

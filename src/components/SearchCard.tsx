@@ -6,7 +6,7 @@ import {
   queryCostHintFromQuote,
   querySubmitButtonLabelFromQuote,
 } from "../lib/query-billing";
-import { clampSearchRange } from "../lib/search-dates";
+import { clampSearchRange, validateSearchPeriod } from "../lib/search-dates";
 import { api } from "../api/client";
 import { IconLocationPin, SearchScanBolt } from "./icons";
 import { SearchOptions } from "./SearchOptions";
@@ -143,10 +143,14 @@ export function SearchCard({
     () => clampSearchRange({ from: searchDateFrom, to: searchDateTo }),
     [searchDateFrom, searchDateTo]
   );
+  const periodError = showOptions
+    ? validateSearchPeriod(searchDateFrom, searchDateTo)
+    : "";
+  const periodInvalid = Boolean(periodError);
 
   useEffect(() => {
     clearTimeout(quoteDebounce.current);
-    if (!showOptions || !user || !isValidGeocodePlace(selected)) {
+    if (!showOptions || !user || !isValidGeocodePlace(selected) || periodInvalid) {
       quoteRequestSeq.current += 1;
       setQueryQuote(null);
       setQuoteLoading(false);
@@ -187,6 +191,7 @@ export function SearchCard({
     searchRadiusKm,
     searchRange.from,
     searchRange.to,
+    periodInvalid,
   ]);
 
   const onInput = (value: string) => {
@@ -284,6 +289,10 @@ export function SearchCard({
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (showOptions) {
+      const err = validateSearchPeriod(searchDateFrom, searchDateTo);
+      if (err) return;
+    }
     void runPreview();
   };
 
@@ -418,7 +427,7 @@ export function SearchCard({
           type="submit"
           className="btn btn-primary btn-search-full"
           id="btn-search"
-          disabled={loading}
+          disabled={loading || periodInvalid}
         >
           {submitLabel}
         </button>

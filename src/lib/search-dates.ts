@@ -11,7 +11,7 @@ export const SEARCH_PERIOD_DAYS = 14;
 export const SEARCH_ARCHIVE_MIN_ISO = "2026-03-11";
 
 /** Največja dolžina posameznega iskanja (koledarski dnevi, vključno). */
-export const SEARCH_MAX_RANGE_CALENDAR_DAYS = 90;
+export const SEARCH_MAX_RANGE_CALENDAR_DAYS = 30;
 
 export const HOURLY_PROFILE_MIN_STRIKES = 100;
 export const DEFAULT_SEARCH_RADIUS_KM = 10;
@@ -69,24 +69,11 @@ export function defaultSearchRange(): { from: string; to: string } {
 }
 
 /**
- * Najpoznejši dovoljeni `Do` glede na `Od`:
- * zgodnejši od (Od + 89 dni) in današnjega datuma → največ 90 vključujočih dni.
+ * Najpoznejši koledarski `Do` glede na arhiv in danes (brez omejitve 30 dni).
+ * Omejitev dolžine obdobja se preverja ob oddaji, ne v koledarju.
  */
-export function maxEndDateForStart(fromIso: string, today = todayIso()): string {
-  const from = clampToArchiveWindow(fromIso, today);
-  const maxTo = addDays(from, SEARCH_MAX_RANGE_CALENDAR_DAYS - 1);
-  return maxTo > today ? today : maxTo;
-}
-
-function enforceMaxSpan(
-  from: string,
-  to: string,
-  today = todayIso()
-): { from: string; to: string } {
-  if (inclusivePeriodDays(from, to) <= SEARCH_MAX_RANGE_CALENDAR_DAYS) {
-    return { from, to };
-  }
-  return { from, to: maxEndDateForStart(from, today) };
+export function maxEndDateForStart(_fromIso: string, today = todayIso()): string {
+  return today;
 }
 
 export function clampSearchRange(
@@ -98,10 +85,10 @@ export function clampSearchRange(
   if (from > to) {
     to = from;
   }
-  return enforceMaxSpan(from, to, today);
+  return { from, to };
 }
 
-/** Ob spremembi `Od`: posodobi meje za `Do` in po potrebi omeji `Do`. */
+/** Ob spremembi `Od`: ohrani `Do`, razen če postane neveljaven glede na arhiv/vrstni red. */
 export function adjustRangeFromStart(
   startIso: string,
   currentTo: string,
@@ -113,14 +100,10 @@ export function adjustRangeFromStart(
   if (from > to) {
     to = from;
   }
-  const cappedMaxTo = maxEndDateForStart(from, today);
-  if (to > cappedMaxTo) {
-    to = cappedMaxTo;
-  }
   return { from, to };
 }
 
-/** Ob spremembi `Do`: `Od` ostane; `Do` se omeji na [Od, min(Od+89, danes)]. */
+/** Ob spremembi `Do`: ohrani `Od`, razen če postane neveljaven glede na arhiv/vrstni red. */
 export function adjustRangeFromEnd(
   endIso: string,
   currentFrom: string,
@@ -132,15 +115,11 @@ export function adjustRangeFromEnd(
   if (to < from) {
     to = from;
   }
-  const cappedMaxTo = maxEndDateForStart(from, today);
-  if (to > cappedMaxTo) {
-    to = cappedMaxTo;
-  }
   return { from, to };
 }
 
 /**
- * Programska validacija (enaka mejam kot Statistika Po meri / StormAPI).
+ * Programska validacija (enaka mejam kot StormAPI).
  * Vrne sporočilo o napaki ali prazen niz.
  */
 export function validateSearchPeriod(
@@ -163,13 +142,13 @@ export function validateSearchPeriod(
   const n = inclusivePeriodDays(fromIso, toIso);
   if (n < 1) return "Obdobje mora obsegati najmanj 1 dan.";
   if (n > SEARCH_MAX_RANGE_CALENDAR_DAYS) {
-    return `Obdobje sme obsegati največ ${SEARCH_MAX_RANGE_CALENDAR_DAYS} dni.`;
+    return "Izbrano obdobje je daljše od 30 dni. Izberite krajše obdobje.";
   }
   return "";
 }
 
 export function searchPeriodHint(): string {
-  return `Izberite obdobje od 11. 3. 2026 naprej. Največ ${SEARCH_MAX_RANGE_CALENDAR_DAYS} vključujočih dni; datum Do ne sme biti v prihodnosti.`;
+  return "Izberite obdobje od 11. 3. 2026 naprej, največ 30 dni naenkrat.";
 }
 
 export function formatSearchDateLabel(iso: string): string {

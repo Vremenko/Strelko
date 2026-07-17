@@ -111,8 +111,8 @@ label.field-labeled > span {
 }
 
 .hero--landing + .features .feature.feature--link[href="/pomoc-pri-zavarovalnici"] {
-  --landing-card-border: color-mix(in srgb, var(--accent) 58%, #94a3b8);
-  border-color: color-mix(in srgb, var(--landing-card-border) 50%, rgba(255, 255, 255, 0.12));
+  --landing-card-border: var(--danger);
+  border-color: color-mix(in srgb, var(--landing-card-border) 46%, rgba(255, 255, 255, 0.12));
 }
 
 .hero--landing + .features .feature.feature--link[href="/statistika#zemljevid"] {
@@ -135,7 +135,7 @@ label.field-labeled > span {
   }
 
   .hero--landing + .features .feature.feature--link[href="/pomoc-pri-zavarovalnici"]:hover {
-    border-color: color-mix(in srgb, var(--landing-card-border) 78%, rgba(255, 255, 255, 0.06));
+    border-color: color-mix(in srgb, var(--landing-card-border) 72%, rgba(255, 255, 255, 0.06));
   }
 
   .hero--landing + .features .feature.feature--link[href="/statistika#zemljevid"]:hover {
@@ -1302,7 +1302,8 @@ label.field-labeled > span {
 }
 
 .locked-content.locked-content--inset,
-.locked-content.archive-map-locked {
+.locked-content.archive-map-locked,
+.locked-content.archive-hourly-locked {
   flex: 1 1 auto;
   align-self: stretch;
   min-height: 0;
@@ -1316,27 +1317,36 @@ label.field-labeled > span {
 
 .locked-content__inner {
   max-width: 42rem;
+  width: 100%;
+  margin: 0 auto;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .locked-content__icon {
   display: block;
   font-size: 1.35rem;
-  margin-bottom: 0.35rem;
+  line-height: 1;
+  margin: 0 0 0.35rem;
 }
 
 .locked-content__title {
   margin: 0 0 0.65rem;
+  padding: 0;
   font-size: 1.05rem;
   line-height: 1.35;
+  font-weight: 600;
   color: var(--text);
+  text-align: center;
 }
 
 .locked-content__text {
   margin: 0 0 1rem;
+  padding: 0;
   font-size: 0.9rem;
   line-height: 1.55;
   color: var(--muted);
+  text-align: center;
 }
 
 .locked-content__actions {
@@ -1347,6 +1357,8 @@ label.field-labeled > span {
   gap: 0.5rem;
 }
 
+/* Enoten CTA za Podpornik: en rumen gumb, ista širina povsod */
+.locked-content__actions--supporter,
 .locked-content__actions--stacked {
   flex-direction: column;
   flex-wrap: nowrap;
@@ -1356,8 +1368,33 @@ label.field-labeled > span {
   margin-inline: auto;
 }
 
-.locked-content__actions--stacked .btn {
+.locked-content__actions--supporter .btn,
+.locked-content__actions--stacked .btn,
+.locked-content-surface a.btn.btn-primary,
+.locked-content a.btn.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  text-decoration: none;
+  background: linear-gradient(135deg, #fbb006, #d99a05);
+  color: #1a1508;
+}
+
+.locked-content-surface a.btn.btn-primary:visited,
+.locked-content-surface a.btn.btn-primary:hover,
+.locked-content-surface a.btn.btn-primary:focus,
+.locked-content a.btn.btn-primary:visited,
+.locked-content a.btn.btn-primary:hover,
+.locked-content a.btn.btn-primary:focus {
+  color: #1a1508;
+  text-decoration: none;
 }
 
 .locked-content__hint {
