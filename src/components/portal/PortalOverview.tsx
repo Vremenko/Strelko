@@ -19,8 +19,9 @@ function queryCountLabel(count: number): string {
 export function PortalOverview() {
   const {
     credits,
-    savedQueries,
     savedQueriesLoading,
+    savedQueriesTotal,
+    savedQueriesCreditsSpent,
     openBillingPortal,
     restoreSubscription,
   } = useStrelko();
@@ -30,8 +31,8 @@ export function PortalOverview() {
 
   const tokenBalance = tokenBalanceLabel(credits);
   const podpornik = getPodpornikOverview(credits);
-  const queryCount = savedQueries.length;
-  const tokensSpent = savedQueries.reduce((sum, q) => sum + q.tokens_spent, 0);
+  const queryCount = savedQueriesTotal;
+  const tokensSpent = savedQueriesCreditsSpent;
   const queriesStat =
     savedQueriesLoading && queryCount === 0 ? "Nalagam …" : queryCountLabel(queryCount);
 
@@ -42,7 +43,13 @@ export function PortalOverview() {
       await restoreSubscription();
     } catch (e) {
       if (isSubscriptionNotRestorableError(e)) {
-        navigate("/cenik");
+        navigate("/cenik", {
+          state: {
+            cenikNotice:
+              (e as Error).message ||
+              "Naročnine ni mogoče obnoviti. Aktivirajte paket Podpornik znova.",
+          },
+        });
         return;
       }
       window.alert(
@@ -157,7 +164,7 @@ export function PortalOverview() {
                 </>
               ) : !podpornik.active ? (
                 <Link to="/cenik" className="btn btn-ghost btn-block">
-                  Aktiviraj paket
+                  Aktiviraj paket Podpornik
                 </Link>
               ) : null}
             </div>

@@ -188,7 +188,7 @@ export const api = {
   billingPortal: () =>
     request<{ portal_url: string }>("/strelko/billing-portal", { method: "POST", body: "{}" }),
   restoreSubscription: () =>
-    request<import("../types").Credits>("/strelko/subscription/restore", {
+    request<import("../types").Credits>("/strelko/subscription/resume", {
       method: "POST",
       body: "{}",
     }),
@@ -340,8 +340,13 @@ export const adminApi = {
     return res.blob();
   },
   retryFurs: (invoiceId: number) =>
-    request<{ ok: boolean; message?: string }>(
+    request<{ ok: boolean; message?: string; invoice_id?: number; furs_status?: string }>(
       `/admin/strelko/invoices/${invoiceId}/retry-furs`,
+      { method: "POST", body: "{}" }
+    ),
+  regeneratePdf: (invoiceId: number) =>
+    request<{ ok: boolean; message?: string; invoice_id?: number }>(
+      `/admin/strelko/invoices/${invoiceId}/regenerate-pdf`,
       { method: "POST", body: "{}" }
     ),
   resendEmail: (invoiceId: number) =>
@@ -365,6 +370,9 @@ export const adminApi = {
     ),
   listUsers: (params: {
     email?: string;
+    filter?: string;
+    sort_by?: string;
+    sort_dir?: string;
     page?: number;
     page_size?: number;
     limit?: number;

@@ -3,9 +3,11 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type MutableRefObject,
   type ReactNode,
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -43,6 +45,11 @@ import { tokenCountLabel } from "../lib/ob-skodi-tokens";
 import { canSubscribePodpornik } from "../lib/portal-account";
 import { openStripeBillingPortalInNewTab } from "../lib/stripe-billing-portal";
 import {
+  errorStatus,
+  planAfterWhoami,
+  shouldClearAuthToken,
+} from "../lib/auth-session";
+import {
   clearPreviewCheckoutReturn,
   peekPreviewCheckoutReturn,
   PREVIEW_CHECKOUT_RETURN_PATH,
@@ -70,6 +77,20 @@ import type {
 
 const DEFAULT_OB_MID = 11026516;
 const SEARCH_RESULT_STORAGE_KEY = "strelko_search_result_v1";
+
+/** Pogled (obrazec/predogled) + pomik pred push na ?query= — za brskalnikov Nazaj. */
+type ZavarovalnicaBackSnapshot = {
+  scrollY: number;
+  preview: PreviewResult | null;
+  previewScreen: PreviewScreen;
+  previewTokenNotice: InsufficientTokensDetail | null;
+  previewActionError: string | null;
+  selected: GeocodeResult | null;
+  locationQuery: string;
+  searchRadiusKm: number;
+  searchDateFrom: string;
+  searchDateTo: string;
+};
 
 function writeSearchResultToStorage(res: SearchResult | null): void {
   try {
@@ -110,11 +131,15 @@ interface StrelkoState {
   savedQueries: SavedQuerySummary[];
   savedQueriesLoading: boolean;
   savedQueriesError: string | null;
+  savedQueriesTotal: number;
+  savedQueriesCreditsSpent: number;
   searchRadiusKm: number;
   searchDateFrom: string;
   searchDateTo: string;
   loading: boolean;
   pdfDownloading: boolean;
+  /** Opozorilo ob neuspehu pomožnih zahtev (npr. alerts), medtem ko seja ostane. */
+  sessionLoadWarning: string | null;
   widget: {
     publicWidgetObMid: number | null;
     publicWidgetObMids: number[];
@@ -167,6 +192,8 @@ interface StrelkoContextValue extends StrelkoState {
   restoreSubscription: () => Promise<void>;
   acceptCookies: () => void;
   clearSearch: () => void;
+  /** Ob Nazaj z ?query= — ZavarovalnicaPage naj ne skoči na vrh. */
+  zavarovalnicaSkipFormScrollRef: MutableRefObject<boolean>;
   setWidget: (patch: Partial<StrelkoState["widget"]>) => void;
   loadWidgetObcine: () => Promise<void>;
   loadWidgetSelection: (value: string | number) => Promise<void>;
@@ -204,6 +231,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<Credits | null>(null);
   const [alerts, setAlerts] = useState<AlertsSettings | null>(null);
+  const [sessionLoadWarning, setSessionLoadWarning] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansMeta, setPlansMeta] = useState<PlansMeta>({});
   const [paymentsEnabled, setPaymentsEnabled] = useState(false);
@@ -264,6 +292,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [savedQueries, setSavedQueries] = useState<SavedQuerySummary[]>([]);
   const [savedQueriesLoading, setSavedQueriesLoading] = useState(false);
   const [savedQueriesError, setSavedQueriesError] = useState<string | null>(null);
+  const [savedQueriesTotal, setSavedQueriesTotal] = useState(0);
+  const [savedQueriesCreditsSpent, setSavedQueriesCreditsSpent] = useState(0);
   const applySearchResult = useCallback((res: SearchResult | null) => {
     writeSearchResultToStorage(res);
     setSearchResultState(res);
@@ -360,6 +390,12 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const ignoreHydrationQueryIdRef = useRef<string | null>(null);
   /** Med uspešno lokalno oddajo ne dovolimo effectu »brez query« da počisti rezultat. */
   const localSubmitLockRef = useRef(false);
+  /** Posnetek obrazca/predogleda + scrollY pred prehodom na rezultat (ob Nazaj). */
+  const zavarovalnicaBackSnapshotRef = useRef<ZavarovalnicaBackSnapshot | null>(null);
+  /** scrollY za obnovitev po izrisu obnovljenega pogleda (useLayoutEffect). */
+  const pendingScrollRestoreRef = useRef<number | null>(null);
+  /** ZavarovalnicaPage: ne scrollTo(0) ob prehodu results→form/preview (Nazaj). */
+  const zavarovalnicaSkipFormScrollRef = useRef(false);
   const billingPortalInFlightRef = useRef(false);
   const runFullSearchInFlightRef = useRef(false);
   const previewScreenRef = useRef<PreviewScreen>(null);
@@ -379,16 +415,22 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     }
     localSubmitLockRef.current = false;
     ignoreHydrationQueryIdRef.current = null;
+    zavarovalnicaBackSnapshotRef.current = null;
+    pendingScrollRestoreRef.current = null;
+    zavarovalnicaSkipFormScrollRef.current = false;
     setLoading(false);
     clearSearchState();
     if (qid) {
       navigate("/pomoc-pri-zavarovalnici", { replace: true });
     }
+    window.scrollTo(0, 0);
   }, [location.pathname, location.search, navigate, clearSearchState]);
 
   const loadSavedQueries = useCallback(async () => {
     if (!user) {
       setSavedQueries([]);
+      setSavedQueriesTotal(0);
+      setSavedQueriesCreditsSpent(0);
       setSavedQueriesError(null);
       return;
     }
@@ -396,7 +438,16 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     setSavedQueriesError(null);
     try {
       const res = await api.listQueries();
-      setSavedQueries(Array.isArray(res.queries) ? res.queries : []);
+      const list = Array.isArray(res.queries) ? res.queries : [];
+      setSavedQueries(list);
+      setSavedQueriesTotal(
+        typeof res.total_queries === "number" ? res.total_queries : list.length
+      );
+      setSavedQueriesCreditsSpent(
+        typeof res.total_credits_spent === "number"
+          ? res.total_credits_spent
+          : list.reduce((sum, q) => sum + (q.tokens_spent || 0), 0)
+      );
       if (typeof res.token_balance === "number") {
         setCredits((c) => ({ ...(c || {}), credits_balance: res.token_balance }));
       }
@@ -404,6 +455,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       const err = e as ApiError;
       if (err.status === 401) {
         setSavedQueries([]);
+        setSavedQueriesTotal(0);
+        setSavedQueriesCreditsSpent(0);
         setSavedQueriesError(null);
         return;
       }
@@ -416,6 +469,21 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const commitLocalQueryResult = useCallback(
     (out: SavedQueryOut, res: SearchResult) => {
       const onZavarovalnica = location.pathname === "/pomoc-pri-zavarovalnici";
+      /* Posnetek pogleda + pomika še pred zamenjavo na rezultat (za brskalnikov Nazaj). */
+      if (onZavarovalnica) {
+        zavarovalnicaBackSnapshotRef.current = {
+          scrollY: window.scrollY,
+          preview,
+          previewScreen,
+          previewTokenNotice,
+          previewActionError,
+          selected,
+          locationQuery,
+          searchRadiusKm,
+          searchDateFrom,
+          searchDateTo,
+        };
+      }
       if (onZavarovalnica) {
         localSubmitLockRef.current = true;
         ignoreHydrationQueryIdRef.current = out.id;
@@ -434,7 +502,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       }
       const resultsPath = `/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`;
       if (onZavarovalnica) {
-        navigate(resultsPath, { replace: true });
+        /* push (ne replace): Nazaj v brskalniku vrne na obrazec, ne na domačo. */
+        navigate(resultsPath);
       } else if (location.pathname !== "/") {
         navigate(resultsPath);
       }
@@ -446,6 +515,15 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       loadSavedQueries,
       location.pathname,
       navigate,
+      preview,
+      previewScreen,
+      previewTokenNotice,
+      previewActionError,
+      selected,
+      locationQuery,
+      searchRadiusKm,
+      searchDateFrom,
+      searchDateTo,
     ]
   );
 
@@ -526,6 +604,27 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       }
       if (openQueryInFlightRef.current === queryId) return;
       openQueryInFlightRef.current = queryId;
+
+      const onZavarovalnica = location.pathname === "/pomoc-pri-zavarovalnici";
+      const existingQueryId = onZavarovalnica
+        ? new URLSearchParams(location.search).get("query")
+        : null;
+      /* Shrani pomik + pogled PRED API in zamenjavo vsebine (Odpri iz seznama). */
+      if (onZavarovalnica && !existingQueryId) {
+        zavarovalnicaBackSnapshotRef.current = {
+          scrollY: window.scrollY,
+          preview,
+          previewScreen,
+          previewTokenNotice,
+          previewActionError,
+          selected,
+          locationQuery,
+          searchRadiusKm,
+          searchDateFrom,
+          searchDateTo,
+        };
+      }
+
       setLoading(true);
       try {
         const out = await api.getQuery(queryId);
@@ -550,12 +649,17 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setPreview(null);
         setPreviewScreen(null);
         setCredits((c) => ({ ...(c || {}), credits_balance: out.token_balance }));
-        if (location.pathname !== "/pomoc-pri-zavarovalnici") {
+        if (!onZavarovalnica) {
           navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`);
-        } else {
+        } else if (existingQueryId) {
+          /* Že na rezultatu z drugim ID — zamenjaj vnos, ne podvajaj zgodovine. */
           navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`, {
             replace: true,
           });
+        } else {
+          /* Obrazec → rezultat: push (Nazaj = isti pomik na seznamu). */
+          ignoreHydrationQueryIdRef.current = out.id;
+          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`);
         }
       } catch (e) {
         const err = e as ApiError;
@@ -580,15 +684,38 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
               navigate("/pomoc-pri-zavarovalnici", { replace: true });
             }
           }
+          if (onZavarovalnica && !existingQueryId) {
+            zavarovalnicaBackSnapshotRef.current = null;
+          }
         } else {
           alert(err.message || "Poizvedbe ni mogoče naložiti.");
+          if (onZavarovalnica && !existingQueryId) {
+            zavarovalnicaBackSnapshotRef.current = null;
+          }
         }
       } finally {
         openQueryInFlightRef.current = null;
         setLoading(false);
       }
     },
-    [user, applySearchResult, setSavedQueryId, applyQueryPdfMeta, navigate, location.pathname, location.search]
+    [
+      user,
+      applySearchResult,
+      setSavedQueryId,
+      applyQueryPdfMeta,
+      navigate,
+      location.pathname,
+      location.search,
+      preview,
+      previewScreen,
+      previewTokenNotice,
+      previewActionError,
+      selected,
+      locationQuery,
+      searchRadiusKm,
+      searchDateFrom,
+      searchDateTo,
+    ]
   );
 
   const refreshUser = useCallback(async () => {
@@ -609,25 +736,63 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       if (!token) {
         setUser(null);
         setCredits(null);
+        setAlerts(null);
+        setSessionLoadWarning(null);
         setPaymentsEnabled(false);
         return;
       }
       try {
         const u = await api.whoami();
         if (getToken() !== token) return;
-        const [c, a] = await Promise.all([api.credits(), api.alerts()]);
+
+        const [creditsSettled, alertsSettled] = await Promise.allSettled([
+          api.credits(),
+          api.alerts(),
+        ]);
         if (getToken() !== token) return;
+
+        const creditsError =
+          creditsSettled.status === "rejected"
+            ? { status: errorStatus(creditsSettled.reason) }
+            : null;
+        const alertsError =
+          alertsSettled.status === "rejected"
+            ? { status: errorStatus(alertsSettled.reason) }
+            : null;
+        const plan = planAfterWhoami({ creditsError, alertsError });
+
+        if (plan.clearAuth) {
+          setToken(null);
+          setUser(null);
+          setCredits(null);
+          setAlerts(null);
+          setSessionLoadWarning(null);
+          setPaymentsEnabled(false);
+          return;
+        }
+
         setUser(u);
-        setCredits(c);
-        setAlerts(a);
-        setPaymentsEnabled(!!c.payments_enabled);
-      } catch {
+        if (plan.creditsOk && creditsSettled.status === "fulfilled") {
+          setCredits(creditsSettled.value);
+          setPaymentsEnabled(!!creditsSettled.value.payments_enabled);
+        }
+        if (plan.alertsOk && alertsSettled.status === "fulfilled") {
+          setAlerts(alertsSettled.value);
+        } else if (!plan.alertsOk) {
+          setAlerts(null);
+        }
+        setSessionLoadWarning(plan.alertsWarning);
+      } catch (e) {
         if (getToken() !== token) return;
-        setToken(null);
-        setUser(null);
-        setCredits(null);
-        setAlerts(null);
-        setPaymentsEnabled(false);
+        if (shouldClearAuthToken(errorStatus(e), "whoami")) {
+          setToken(null);
+          setUser(null);
+          setCredits(null);
+          setAlerts(null);
+          setSessionLoadWarning(null);
+          setPaymentsEnabled(false);
+        }
+        /* 500 / timeout / omrežje: ohrani žeton in morebitno prejšnje stanje */
       }
     })();
 
@@ -734,9 +899,9 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     clearSearchDisplayState();
   }, [location.pathname, clearSearchDisplayState]);
 
-  /* Običajen prihod na /pomoc-pri-zavarovalnici (brez ?query=): prazen obrazec.
-     Med lokalno oddajo (loading / lock) in med osnovnim predogledom ne čistimo —
-     sicer form ↔ results utripa oziroma predogled izgine takoj po uspehu. */
+  /* Običajen prihod / Nazaj (popstate) na /pomoc-pri-zavarovalnici (brez ?query=).
+     Če obstaja posnetek (Nazaj z rezultata), obnovi predogled/obrazec + pomik.
+     Sicer prazen obrazec. Med lokalno oddajo / predogledom ne čistimo. */
   useEffect(() => {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
     const qid = new URLSearchParams(location.search).get("query");
@@ -746,8 +911,70 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     suppressQueryHydrationRef.current = false;
     openQueryInFlightRef.current = null;
     ignoreHydrationQueryIdRef.current = null;
+
+    const snap = zavarovalnicaBackSnapshotRef.current;
+    if (snap) {
+      zavarovalnicaBackSnapshotRef.current = null;
+      zavarovalnicaSkipFormScrollRef.current = true;
+      pendingScrollRestoreRef.current = snap.scrollY;
+      applySearchResult(null);
+      setSavedQueryId(null);
+      setActiveQueryPdf(null);
+      setPdfDownloadError(null);
+      setSelected(snap.selected);
+      setLocationQueryState(snap.locationQuery);
+      setSearchRadiusKm(snap.searchRadiusKm);
+      setSearchDateFrom(snap.searchDateFrom);
+      setSearchDateTo(snap.searchDateTo);
+      setPreview(snap.preview);
+      setPreviewScreen(snap.previewScreen);
+      setPreviewTokenNotice(snap.previewTokenNotice);
+      setPreviewActionError(snap.previewActionError);
+      return;
+    }
+
+    /* Ne zbriši pravkar obnovljenega pogleda (Strict Mode / ponovni effect). */
+    if (pendingScrollRestoreRef.current !== null || zavarovalnicaSkipFormScrollRef.current) {
+      return;
+    }
+
+    if (!searchResult && !savedQueryId) return;
     clearSearchState();
-  }, [location.pathname, location.search, clearSearchState, loading, previewScreen]);
+  }, [
+    location.pathname,
+    location.search,
+    clearSearchState,
+    loading,
+    previewScreen,
+    applySearchResult,
+    setSavedQueryId,
+    searchResult,
+    savedQueryId,
+  ]);
+
+  /* Pomik obnovi šele po izrisu obnovljenega obrazca/predogleda (+ seznam poizvedb). */
+  useLayoutEffect(() => {
+    const y = pendingScrollRestoreRef.current;
+    if (y === null) return;
+    if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
+    if (new URLSearchParams(location.search).get("query")) return;
+    pendingScrollRestoreRef.current = null;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+        zavarovalnicaSkipFormScrollRef.current = false;
+      });
+    });
+  }, [
+    location.pathname,
+    location.search,
+    previewScreen,
+    preview,
+    selected,
+    locationQuery,
+    savedQueries.length,
+    searchResult,
+  ]);
 
   useEffect(() => {
     if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
@@ -785,6 +1012,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) {
       setSavedQueries([]);
+      setSavedQueriesTotal(0);
+      setSavedQueriesCreditsSpent(0);
       setSavedQueriesError(null);
       return;
     }
@@ -1077,11 +1306,14 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       savedQueries,
       savedQueriesLoading,
       savedQueriesError,
+      savedQueriesTotal,
+      savedQueriesCreditsSpent,
       searchRadiusKm,
       searchDateFrom,
       searchDateTo,
       loading,
       pdfDownloading,
+      sessionLoadWarning,
       widget,
       userWidget,
       modals,
@@ -1319,6 +1551,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setToken(null);
         setUser(null);
         setCredits(null);
+        setAlerts(null);
+        setSessionLoadWarning(null);
         clearSearchState();
       },
       openCredits: (opts = {}) => openCreditsNotice(opts),
@@ -1383,6 +1617,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCookieAccepted(true);
       },
       clearSearch,
+      zavarovalnicaSkipFormScrollRef,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
       loadWidgetObcine,
       loadWidgetSelection,
@@ -1439,11 +1674,14 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       savedQueries,
       savedQueriesLoading,
       savedQueriesError,
+      savedQueriesTotal,
+      savedQueriesCreditsSpent,
       searchRadiusKm,
       searchDateFrom,
       searchDateTo,
       loading,
       pdfDownloading,
+      sessionLoadWarning,
       widget,
       userWidget,
       modals,
@@ -1464,6 +1702,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       location.search,
       location.hash,
       clearSearch,
+      zavarovalnicaSkipFormScrollRef,
       loadSavedQueries,
       openSavedQuery,
       commitLocalQueryResult,

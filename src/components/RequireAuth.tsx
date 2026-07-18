@@ -34,12 +34,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
         <header className="page-header">
           <h1>Moj Strelko</h1>
           <p className="pricing-lead">
-            Za dostop do portala se prijavite ali registrirajte. Po prijavi se boste samodejno
-            vrnili sem.
+            Za dostop do portala se prijavite ali registrirajte.
           </p>
         </header>
         <div className="portal-empty-state legal-card">
-          <p>Prijava je potrebna.</p>
+          <p>Potrebna je prijava.</p>
           <div className="portal-empty-actions">
             <button type="button" className="btn btn-primary" onClick={() => openAuth("login")}>
               Prijava

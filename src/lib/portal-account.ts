@@ -53,7 +53,7 @@ export function canSubscribePodpornik(credits?: Credits | null): boolean {
 }
 
 export const PODPORNIK_RENEWAL_NOTICE =
-  "Naročnina se samodejno podaljšuje vsak mesec do preklica.";
+  "Naročnina se bo samodejno podaljšala.";
 
 export function getPodpornikOverview(credits?: Credits | null): {
   active: boolean;
@@ -83,10 +83,12 @@ export function getPodpornikOverview(credits?: Credits | null): {
   const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
   const canManageBilling = Boolean(credits?.billing_portal_available);
   const hasStripeSub = Boolean(credits?.has_subscription);
+  const isManual =
+    Boolean(credits?.plan_id === "podpornik") && !hasStripeSub && !canManageBilling;
   /** Gumb Prekliči: samo pri Stripe naročnini (ne pri ročno dodeljenem Podporniku). */
   const canCancel = !cancelScheduled && canManageBilling && hasStripeSub;
-  /** Obnovi: še velja, nastavljen preklic ob koncu, Stripe sub še obstaja. */
-  const canRestore = cancelScheduled && (canManageBilling || hasStripeSub);
+  /** Obnovi: Stripe sub z načrtovanim preklicom — ne pri ročnem paketu. */
+  const canRestore = cancelScheduled && hasStripeSub && !isManual;
 
   return {
     active: true,

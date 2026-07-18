@@ -47,6 +47,20 @@ const inactiveOverview = getPodpornikOverview(inactive);
 assert.equal(inactiveOverview.canRestore, false);
 assert.equal(inactiveOverview.canCancel, false);
 
+const manualPodpornik: Credits = {
+  plan_id: "podpornik",
+  has_subscription: false,
+  billing_portal_available: false,
+  season_pass_expires_at: "2026-12-31",
+  subscription_cancel_at_period_end: false,
+};
+const manualOverview = getPodpornikOverview(manualPodpornik);
+assert.equal(manualOverview.active, true);
+assert.equal(manualOverview.canRestore, false);
+assert.equal(manualOverview.canCancel, false);
+
+assert.equal(PODPORNIK_RENEWAL_NOTICE, "Naročnina se bo samodejno podaljšala.");
+
 assert.equal(
   isSubscriptionNotRestorableError({
     data: { detail: { code: "subscription_not_restorable", message: "x" } },

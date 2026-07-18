@@ -41,7 +41,8 @@ function scrollWindowTopAfterPaint() {
 }
 
 export function ZavarovalnicaPage() {
-  const { searchResult, previewScreen, loading, savedQueryId } = useStrelko();
+  const { searchResult, previewScreen, loading, savedQueryId, zavarovalnicaSkipFormScrollRef } =
+    useStrelko();
 
   const viewState = deriveViewState(searchResult, previewScreen, loading);
   const prevViewRef = useRef<ViewState>(viewState);
@@ -59,16 +60,20 @@ export function ZavarovalnicaPage() {
     }
 
     if (viewState === "preview" && prev !== "preview" && prev !== "unlocking") {
-      scrollWindowTopAfterPaint();
+      if (!zavarovalnicaSkipFormScrollRef.current) {
+        scrollWindowTopAfterPaint();
+      }
     }
 
     if (viewState === "form" && (prev === "results" || prev === "preview" || prev === "unlocking")) {
       scrolledForQueryRef.current = null;
-      scrollWindowTopAfterPaint();
+      if (!zavarovalnicaSkipFormScrollRef.current) {
+        scrollWindowTopAfterPaint();
+      }
     }
 
     prevViewRef.current = viewState;
-  }, [viewState, searchResult, savedQueryId]);
+  }, [viewState, searchResult, savedQueryId, zavarovalnicaSkipFormScrollRef]);
 
   if (viewState === "results" && searchResult) {
     return (

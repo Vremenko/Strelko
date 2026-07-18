@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { adminApi } from "../api/client";
+import { AdminPager } from "../components/admin/AdminPager";
 import { AdminSmsManualSend } from "../components/admin/AdminSmsManualSend";
+import { AdminUsersSection } from "../components/admin/AdminUsersSection";
 import { AdminSmsSubscriberForm, type AdminSmsSubscriberFormData } from "../components/admin/AdminSmsSubscriberForm";
 import { RequireAdmin } from "../components/RequireAdmin";
-import { useStrelko } from "../context/StrelkoContext";
+import {
+  buildInvoicePipeline,
+  INVOICE_BUSY_LABELS,
+  invoiceActionAvailability,
+  type InvoiceActionId,
+  type InvoicePipelineStep,
+} from "../lib/adminInvoicePipeline";
 import type {
   AdminStrelkoInvoice,
   AdminStrelkoReconcileResult,
@@ -12,11 +20,12 @@ import type {
   AdminStrelkoSmsSubscriber,
   AdminStrelkoSmsSummary,
   AdminStrelkoSummary,
-  AdminStrelkoUser,
-  AdminStrelkoUserDetail,
 } from "../types";
 
-const USERS_PAGE_SIZE = 15;
+const INVOICES_PAGE_SIZE = 10;
+const SMS_SUBS_PAGE_SIZE = 25;
+const SMS_NOTES_PAGE_SIZE = 25;
+const RECONCILE_LIST_PAGE_SIZE = 20;
 
 type AdminTabId = "pregled" | "racuni" | "usklajevanje" | "uporabniki" | "sms";
 
@@ -56,6 +65,28 @@ function fursStatusLabel(status: string): string {
     default:
       return status;
   }
+}
+
+function InvoicePipelineView({ steps }: { steps: InvoicePipelineStep[] }) {
+  return (
+    <ol className="admin-pipeline" aria-label="Status računa">
+      {steps.map((step) => (
+        <li key={step.id} className={`admin-pipeline__step admin-pipeline__step--${step.state}`}>
+          <span className="admin-pipeline__label">{step.label}</span>
+          <span className="admin-pipeline__state">
+            {step.state === "ok" ? "uspešno" : step.state === "error" ? "napaka" : "čaka"}
+          </span>
+          {step.summary ? <span className="admin-pipeline__summary">{step.summary}</span> : null}
+          {step.technical ? (
+            <details className="admin-pipeline__tech">
+              <summary>Tehnične podrobnosti</summary>
+              <pre>{step.technical}</pre>
+            </details>
+          ) : null}
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 function AdminTabs({ active, onChange }: { active: AdminTabId; onChange: (t: AdminTabId) => void }) {
@@ -129,80 +160,154 @@ function SummarySection() {
 }
 
 function InvoicesSection() {
+  const [searchParams] = useSearchParams();
+  const emailFromUrl = (searchParams.get("email") || "").trim();
   const [items, setItems] = useState<AdminStrelkoInvoice[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
-  const [emailFilter, setEmailFilter] = useState("");
+  const [emailDraft, setEmailDraft] = useState(emailFromUrl);
+  const [appliedEmail, setAppliedEmail] = useState(emailFromUrl);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [busyAction, setBusyAction] = useState<InvoiceActionId | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await adminApi.listInvoices({
-        furs_status: statusFilter || undefined,
-        email: emailFilter.trim() || undefined,
-        limit: 80,
-      });
-      setItems(res.items);
-      setTotal(res.total);
-    } catch (e) {
-      setError((e as Error).message);
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, emailFilter]);
+  useEffect(() => {
+    const next = (searchParams.get("email") || "").trim();
+    setEmailDraft(next);
+    setAppliedEmail(next);
+    setPage(1);
+  }, [searchParams]);
+
+  const totalPages = total > 0 ? Math.ceil(total / INVOICES_PAGE_SIZE) : 0;
+
+  const loadInvoices = useCallback(
+    async (nextPage: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const requested = Math.max(1, nextPage);
+        const res = await adminApi.listInvoices({
+          furs_status: statusFilter || undefined,
+          email: appliedEmail.trim() || undefined,
+          limit: INVOICES_PAGE_SIZE,
+          offset: (requested - 1) * INVOICES_PAGE_SIZE,
+        });
+        const pages = res.total > 0 ? Math.ceil(res.total / INVOICES_PAGE_SIZE) : 0;
+        if (res.items.length === 0 && requested > 1 && pages >= 1) {
+          const fallbackPage = Math.min(requested - 1, pages);
+          const retry = await adminApi.listInvoices({
+            furs_status: statusFilter || undefined,
+            email: appliedEmail.trim() || undefined,
+            limit: INVOICES_PAGE_SIZE,
+            offset: (fallbackPage - 1) * INVOICES_PAGE_SIZE,
+          });
+          setItems(retry.items);
+          setTotal(retry.total);
+          setPage(fallbackPage);
+          return;
+        }
+        setItems(res.items);
+        setTotal(res.total);
+        setPage(requested);
+      } catch (e) {
+        setError((e as Error).message);
+        setItems([]);
+        setTotal(0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [statusFilter, appliedEmail]
+  );
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadInvoices(1);
+  }, [loadInvoices]);
 
-  async function openPdf(id: number) {
+  function searchByEmail() {
+    setPage(1);
+    setAppliedEmail(emailDraft.trim());
+  }
+
+  function resetEmailFilter() {
+    setEmailDraft("");
+    setPage(1);
+    setAppliedEmail("");
+  }
+
+  async function goToPage(nextPage: number) {
+    if (nextPage < 1 || (totalPages > 0 && nextPage > totalPages) || nextPage === page) return;
+    await loadInvoices(nextPage);
+  }
+
+  async function runRowAction(
+    id: number,
+    action: InvoiceActionId,
+    fn: () => Promise<void>,
+    refresh = true
+  ) {
     setBusyId(id);
+    setBusyAction(action);
     setMessage(null);
     try {
-      const blob = await adminApi.downloadInvoicePdf(id);
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      window.setTimeout(() => URL.revokeObjectURL(url), 120_000);
+      await fn();
+      if (refresh) await loadInvoices(page);
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
       setBusyId(null);
+      setBusyAction(null);
     }
+  }
+
+  async function openPdf(id: number) {
+    await runRowAction(
+      id,
+      "open_pdf",
+      async () => {
+        const blob = await adminApi.downloadInvoicePdf(id);
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank", "noopener,noreferrer");
+        window.setTimeout(() => URL.revokeObjectURL(url), 120_000);
+      },
+      false
+    );
   }
 
   async function retryFurs(id: number) {
-    setBusyId(id);
-    setMessage(null);
-    try {
+    await runRowAction(id, "retry_furs", async () => {
       const res = await adminApi.retryFurs(id);
       setMessage(res.message || "FURS ponovno poslan.");
-      await load();
-    } catch (e) {
-      setMessage((e as Error).message);
-    } finally {
-      setBusyId(null);
-    }
+    });
+  }
+
+  async function regeneratePdf(id: number) {
+    await runRowAction(id, "regenerate_pdf", async () => {
+      const res = await adminApi.regeneratePdf(id);
+      setMessage(res.message || "PDF ponovno izdelan.");
+    });
   }
 
   async function resendEmail(id: number) {
-    setBusyId(id);
-    setMessage(null);
-    try {
+    await runRowAction(id, "resend_email", async () => {
       const res = await adminApi.resendEmail(id);
       setMessage(res.message || "E-pošta poslana.");
-      await load();
-    } catch (e) {
-      setMessage((e as Error).message);
-    } finally {
-      setBusyId(null);
-    }
+    });
   }
+
+  const pageNumbers = (() => {
+    if (totalPages <= 0) return [] as number[];
+    const windowSize = 5;
+    let start = Math.max(1, page - Math.floor(windowSize / 2));
+    let end = Math.min(totalPages, start + windowSize - 1);
+    start = Math.max(1, end - windowSize + 1);
+    const nums: number[] = [];
+    for (let i = start; i <= end; i++) nums.push(i);
+    return nums;
+  })();
 
   return (
     <section className="portal-section admin-panel">
@@ -210,7 +315,13 @@ function InvoicesSection() {
       <div className="admin-filters">
         <label>
           FURS status
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setPage(1);
+              setStatusFilter(e.target.value);
+            }}
+          >
             <option value="">Vsi</option>
             <option value="fiscalized">Fiskalizirano</option>
             <option value="failed">Napaka</option>
@@ -222,12 +333,30 @@ function InvoicesSection() {
           E-pošta
           <input
             type="search"
-            value={emailFilter}
-            onChange={(e) => setEmailFilter(e.target.value)}
-            placeholder="iskanje …"
+            value={emailDraft}
+            onChange={(e) => setEmailDraft(e.target.value)}
+            placeholder="del e-pošte …"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") searchByEmail();
+            }}
           />
         </label>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => void load()}>
+        <button type="button" className="btn btn-primary btn-sm" onClick={() => searchByEmail()}>
+          Išči
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => resetEmailFilter()}
+          disabled={!emailDraft && !appliedEmail}
+        >
+          Ponastavi filter
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => void loadInvoices(page)}
+        >
           Osveži
         </button>
       </div>
@@ -238,75 +367,148 @@ function InvoicesSection() {
       ) : items.length === 0 ? (
         <p className="admin-panel__muted">Ni zadetkov.</p>
       ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Številka</th>
-                <th>Datum</th>
-                <th>Uporabnik</th>
-                <th>Znesek</th>
-                <th>FURS</th>
-                <th>Akcije</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((inv) => (
-                <tr key={inv.id}>
-                  <td>
-                    <strong>{inv.invoice_number}</strong>
-                    <div className="admin-table__sub">{inv.description_sl}</div>
-                  </td>
-                  <td>{formatDt(inv.issued_at)}</td>
-                  <td>
-                    {inv.user_email || `#${inv.user_id}`}
-                    {inv.buyer_email && inv.buyer_email !== inv.user_email ? (
-                      <div className="admin-table__sub">{inv.buyer_email}</div>
-                    ) : null}
-                  </td>
-                  <td>{formatEur(inv.gross_cents)}</td>
-                  <td>
-                    <span className={`admin-badge admin-badge--${inv.furs_status}`}>
-                      {fursStatusLabel(inv.furs_status)}
-                    </span>
-                    {inv.furs_error ? (
-                      <div className="admin-table__sub admin-table__sub--error">{inv.furs_error}</div>
-                    ) : null}
-                    {inv.zoi ? <div className="admin-table__sub">ZOI: {inv.zoi.slice(0, 12)}…</div> : null}
-                  </td>
-                  <td className="admin-table__actions">
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      disabled={busyId === inv.id}
-                      onClick={() => void openPdf(inv.id)}
-                    >
-                      PDF
-                    </button>
-                    {inv.furs_status !== "fiscalized" ? (
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        disabled={busyId === inv.id}
-                        onClick={() => void retryFurs(inv.id)}
-                      >
-                        FURS
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      disabled={busyId === inv.id || !inv.buyer_email}
-                      onClick={() => void resendEmail(inv.id)}
-                    >
-                      Pošlji
-                    </button>
-                  </td>
+        <>
+          {totalPages > 1 ? (
+            <p className="admin-panel__muted admin-users-count">
+              Stran {page}/{totalPages}
+            </p>
+          ) : null}
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Številka</th>
+                  <th>Datum</th>
+                  <th>Uporabnik</th>
+                  <th>Znesek</th>
+                  <th>Status</th>
+                  <th>Akcije</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.map((inv) => {
+                  const pipeline = buildInvoicePipeline({
+                    id: inv.id,
+                    invoice_number: inv.invoice_number,
+                    furs_status: inv.furs_status,
+                    furs_error: inv.furs_error,
+                    has_pdf: inv.has_pdf,
+                    email_sent_at: inv.email_sent_at,
+                    buyer_email: inv.buyer_email,
+                  });
+                  const actions = invoiceActionAvailability({
+                    id: inv.id,
+                    furs_status: inv.furs_status,
+                    has_pdf: inv.has_pdf,
+                    email_sent_at: inv.email_sent_at,
+                    buyer_email: inv.buyer_email,
+                  });
+                  const rowBusy = busyId === inv.id;
+                  return (
+                    <tr key={inv.id}>
+                      <td>
+                        <strong>{inv.invoice_number}</strong>
+                        <div className="admin-table__sub">{inv.description_sl}</div>
+                      </td>
+                      <td>{formatDt(inv.issued_at)}</td>
+                      <td>
+                        {inv.user_email || `#${inv.user_id}`}
+                        {inv.buyer_email && inv.buyer_email !== inv.user_email ? (
+                          <div className="admin-table__sub">{inv.buyer_email}</div>
+                        ) : null}
+                      </td>
+                      <td>{formatEur(inv.gross_cents)}</td>
+                      <td>
+                        <InvoicePipelineView steps={pipeline} />
+                        <span className={`admin-badge admin-badge--${inv.furs_status}`}>
+                          {fursStatusLabel(inv.furs_status)}
+                        </span>
+                      </td>
+                      <td className="admin-table__actions">
+                        {rowBusy && busyAction ? (
+                          <span className="admin-panel__muted">{INVOICE_BUSY_LABELS[busyAction]}</span>
+                        ) : null}
+                        {actions.open_pdf ? (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            disabled={rowBusy}
+                            onClick={() => void openPdf(inv.id)}
+                          >
+                            Odpri PDF
+                          </button>
+                        ) : null}
+                        {actions.retry_furs ? (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            disabled={rowBusy}
+                            onClick={() => void retryFurs(inv.id)}
+                          >
+                            Ponovi FURS potrditev
+                          </button>
+                        ) : null}
+                        {actions.regenerate_pdf ? (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            disabled={rowBusy}
+                            onClick={() => void regeneratePdf(inv.id)}
+                          >
+                            Ponovno izdelaj PDF
+                          </button>
+                        ) : null}
+                        {actions.resend_email ? (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            disabled={rowBusy}
+                            onClick={() => void resendEmail(inv.id)}
+                          >
+                            Ponovno pošlji račun
+                          </button>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {totalPages > 1 ? (
+            <nav className="admin-pagination" aria-label="Strani računov">
+              <button
+                type="button"
+                className="btn"
+                disabled={loading || page <= 1}
+                onClick={() => void goToPage(page - 1)}
+              >
+                Nazaj
+              </button>
+              <div className="admin-pagination__pages">
+                {pageNumbers.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`btn admin-pagination__num${n === page ? " is-active" : ""}`}
+                    disabled={loading || n === page}
+                    onClick={() => void goToPage(n)}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="btn"
+                disabled={loading || page >= totalPages}
+                onClick={() => void goToPage(page + 1)}
+              >
+                Naprej
+              </button>
+            </nav>
+          ) : null}
+        </>
       )}
     </section>
   );
@@ -322,6 +524,30 @@ function ReconcileSection() {
   const [issueRefType, setIssueRefType] = useState("checkout_session");
   const [issueRefId, setIssueRefId] = useState("");
   const [issueMessage, setIssueMessage] = useState<string | null>(null);
+  const [issueBusy, setIssueBusy] = useState(false);
+  const [rowBusyKey, setRowBusyKey] = useState<string | null>(null);
+  const [missingPage, setMissingPage] = useState(1);
+  const [failedPage, setFailedPage] = useState(1);
+
+  async function refreshReconcile() {
+    setLoading(true);
+    setError(null);
+    try {
+      // Osvežitev seznama brez samodejne izdaje / e-pošte.
+      const data = await adminApi.reconcile({
+        lookback_days: lookbackDays,
+        auto_issue: false,
+        send_email: false,
+      });
+      setResult(data);
+      setMissingPage(1);
+      setFailedPage(1);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function runReconcile() {
     setLoading(true);
@@ -333,6 +559,8 @@ function ReconcileSection() {
         send_email: sendEmail,
       });
       setResult(data);
+      setMissingPage(1);
+      setFailedPage(1);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -340,14 +568,39 @@ function ReconcileSection() {
     }
   }
 
-  async function issueMissing() {
-    if (!issueRefId.trim()) return;
+  async function issueMissing(refType: string, refId: string, confirmLabel?: string) {
+    if (!refId.trim()) return;
+    const ok = window.confirm(
+      confirmLabel ||
+        `Izdali boste manjkajoči račun za ${refType === "stripe_invoice" ? "Stripe invoice" : "checkout"} ${refId.trim()}. Želite nadaljevati?`
+    );
+    if (!ok) return;
+    setIssueBusy(true);
+    setRowBusyKey(`${refType}:${refId}`);
     setIssueMessage(null);
     try {
-      const res = await adminApi.issueMissing(issueRefType, issueRefId.trim());
+      const res = await adminApi.issueMissing(refType, refId.trim());
       setIssueMessage(res.message || `Račun ${res.invoice_number || ""}`.trim());
+      await refreshReconcile();
     } catch (e) {
       setIssueMessage((e as Error).message);
+    } finally {
+      setIssueBusy(false);
+      setRowBusyKey(null);
+    }
+  }
+
+  async function retryFailedFurs(invoiceId: number, invoiceNumber: string) {
+    setRowBusyKey(`furs:${invoiceId}`);
+    setIssueMessage(null);
+    try {
+      const res = await adminApi.retryFurs(invoiceId);
+      setIssueMessage(res.message || `FURS za ${invoiceNumber} posodobljen.`);
+      await refreshReconcile();
+    } catch (e) {
+      setIssueMessage((e as Error).message);
+    } finally {
+      setRowBusyKey(null);
     }
   }
 
@@ -391,6 +644,7 @@ function ReconcileSection() {
         </button>
       </div>
       {error ? <p className="admin-panel__error" role="alert">{error}</p> : null}
+      {issueMessage ? <p className="admin-panel__message" role="status">{issueMessage}</p> : null}
       {result ? (
         <div className="admin-reconcile-result">
           <p>
@@ -399,31 +653,115 @@ function ReconcileSection() {
             <strong>{result.missing_count}</strong> · FURS napak:{" "}
             <strong>{result.failed_count}</strong>
             {result.issued_count > 0 ? (
-              <> · Izdano: <strong>{result.issued_count}</strong></>
+              <>
+                {" "}
+                · Izdano: <strong>{result.issued_count}</strong>
+              </>
             ) : null}
           </p>
           {result.missing.length > 0 ? (
             <>
-              <h3>Plačila brez računa</h3>
+              <h3>
+                Plačila brez računa ({result.missing_count ?? result.missing.length})
+              </h3>
               <ul className="admin-list">
-                {result.missing.map((row) => (
-                  <li key={`${row.ref_type}-${row.ref_id}`}>
-                    {String(row.description)} — {String(row.amount_eur)} ({String(row.ref_id)})
-                  </li>
-                ))}
+                {result.missing
+                  .slice(
+                    (missingPage - 1) * RECONCILE_LIST_PAGE_SIZE,
+                    missingPage * RECONCILE_LIST_PAGE_SIZE
+                  )
+                  .map((row) => {
+                  const refType = String(row.ref_type || "");
+                  const refId = String(row.ref_id || "");
+                  const key = `${refType}:${refId}`;
+                  const pipeline = buildInvoicePipeline({ missing_invoice: true });
+                  const busy = rowBusyKey === key;
+                  return (
+                    <li key={key} className="admin-list__card">
+                      <div>
+                        {String(row.description)} — {String(row.amount_eur)} ({refId})
+                      </div>
+                      <InvoicePipelineView steps={pipeline} />
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        disabled={busy || issueBusy}
+                        onClick={() => void issueMissing(refType, refId)}
+                      >
+                        {busy ? INVOICE_BUSY_LABELS.issue_missing : "Izdaj manjkajoči račun"}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
+              <AdminPager
+                page={missingPage}
+                totalPages={Math.max(
+                  1,
+                  Math.ceil(result.missing.length / RECONCILE_LIST_PAGE_SIZE)
+                )}
+                total={result.missing.length}
+                pageSize={RECONCILE_LIST_PAGE_SIZE}
+                loading={loading}
+                label="Strani manjkajočih plačil"
+                onPage={setMissingPage}
+              />
             </>
           ) : null}
           {result.failed.length > 0 ? (
             <>
-              <h3>FURS napake</h3>
+              <h3>FURS napake ({result.failed_count ?? result.failed.length})</h3>
               <ul className="admin-list">
-                {result.failed.map((row) => (
-                  <li key={String(row.invoice_number)}>
-                    {String(row.invoice_number)} — {String(row.furs_error || "")}
-                  </li>
-                ))}
+                {result.failed
+                  .slice(
+                    (failedPage - 1) * RECONCILE_LIST_PAGE_SIZE,
+                    failedPage * RECONCILE_LIST_PAGE_SIZE
+                  )
+                  .map((row) => {
+                  const invoiceNumber = String(row.invoice_number || "");
+                  const invoiceId = Number(row.invoice_id || 0);
+                  const pipeline = buildInvoicePipeline({
+                    id: invoiceId || 1,
+                    invoice_number: invoiceNumber,
+                    furs_status: "failed",
+                    furs_error: String(row.furs_error || ""),
+                    has_pdf: Boolean(row.has_pdf),
+                    email_sent_at: row.email_sent_at ? String(row.email_sent_at) : null,
+                    buyer_email: row.buyer_email ? String(row.buyer_email) : null,
+                  });
+                  const busy = rowBusyKey === `furs:${invoiceId}`;
+                  return (
+                    <li key={invoiceNumber} className="admin-list__card">
+                      <div>
+                        {invoiceNumber} — {String(row.furs_error || "")}
+                      </div>
+                      <InvoicePipelineView steps={pipeline} />
+                      {invoiceId > 0 ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={busy}
+                          onClick={() => void retryFailedFurs(invoiceId, invoiceNumber)}
+                        >
+                          {busy ? INVOICE_BUSY_LABELS.retry_furs : "Ponovi FURS potrditev"}
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
+              <AdminPager
+                page={failedPage}
+                totalPages={Math.max(
+                  1,
+                  Math.ceil(result.failed.length / RECONCILE_LIST_PAGE_SIZE)
+                )}
+                total={result.failed.length}
+                pageSize={RECONCILE_LIST_PAGE_SIZE}
+                loading={loading}
+                label="Strani FURS napak"
+                onPage={setFailedPage}
+              />
             </>
           ) : null}
         </div>
@@ -448,475 +786,91 @@ function ReconcileSection() {
             placeholder="cs_… ali in_…"
           />
         </label>
-        <button type="button" className="btn btn-ghost" onClick={() => void issueMissing()}>
-          Izdaj račun
+        <button
+          type="button"
+          className="btn btn-ghost"
+          disabled={issueBusy || !issueRefId.trim()}
+          onClick={() => void issueMissing(issueRefType, issueRefId)}
+        >
+          {issueBusy ? INVOICE_BUSY_LABELS.issue_missing : "Izdaj manjkajoči račun"}
         </button>
       </div>
-      {issueMessage ? <p className="admin-panel__message" role="status">{issueMessage}</p> : null}
     </section>
   );
 }
 
 function UsersSection() {
-  const { user: currentUser } = useStrelko();
-  const [email, setEmail] = useState("");
-  const [users, setUsers] = useState<AdminStrelkoUser[]>([]);
-  const [selected, setSelected] = useState<AdminStrelkoUserDetail | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  const [grantAmount, setGrantAmount] = useState(5);
-  const [grantNote, setGrantNote] = useState("");
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [actionBusy, setActionBusy] = useState(false);
-  const [podpornikExpires, setPodpornikExpires] = useState("");
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteEmailConfirm, setDeleteEmailConfirm] = useState("");
-
-  const loadUsers = useCallback(async (nextPage: number, searchEmail: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await adminApi.listUsers({
-        email: searchEmail.trim() || undefined,
-        page: nextPage,
-        page_size: USERS_PAGE_SIZE,
-      });
-      setUsers(res.items);
-      setPage(res.page);
-      setTotalPages(res.total_pages);
-      setTotalCount(res.total_count ?? res.total);
-    } catch (e) {
-      setError((e as Error).message);
-      setUsers([]);
-      setTotalPages(0);
-      setTotalCount(0);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadUsers(1, "");
-  }, [loadUsers]);
-
-  async function searchUsers() {
-    setSelected(null);
-    setDeleteOpen(false);
-    await loadUsers(1, email);
-  }
-
-  async function goToPage(nextPage: number) {
-    if (nextPage < 1 || (totalPages > 0 && nextPage > totalPages) || nextPage === page) return;
-    // Namerno brez scrolla na vrh — samo zamenjaj stran seznama.
-    await loadUsers(nextPage, email);
-  }
-
-  async function loadUser(id: number) {
-    setError(null);
-    setActionMessage(null);
-    setDeleteOpen(false);
-    setDeleteEmailConfirm("");
-    try {
-      const detail = await adminApi.getUser(id);
-      setSelected(detail);
-      if (!detail.podpornik_active) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + 1);
-        setPodpornikExpires(d.toISOString().slice(0, 10));
-      }
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function withBusy(fn: () => Promise<void>) {
-    if (actionBusy) return;
-    setActionBusy(true);
-    setActionMessage(null);
-    try {
-      await fn();
-    } catch (e) {
-      setActionMessage((e as Error).message);
-    } finally {
-      setActionBusy(false);
-    }
-  }
-
-  async function grantCredits() {
-    if (!selected) return;
-    const amount = Math.floor(Number(grantAmount));
-    if (!Number.isFinite(amount) || amount < 1) {
-      setActionMessage("Količina mora biti pozitivno celo število.");
-      return;
-    }
-    await withBusy(async () => {
-      const res = await adminApi.grantCredits(selected.id, amount, grantNote.trim() || undefined);
-      setActionMessage(`Dodano ${res.amount_granted} žetonov. Novo stanje: ${res.credits_balance}.`);
-      setGrantNote("");
-      await loadUser(selected.id);
-      await loadUsers(page, email);
-    });
-  }
-
-  async function activatePodpornik() {
-    if (!selected || !podpornikExpires) return;
-    await withBusy(async () => {
-      const res = await adminApi.activatePodpornik(selected.id, podpornikExpires);
-      setActionMessage(res.message || "Podpornik aktiviran.");
-      await loadUser(selected.id);
-      await loadUsers(page, email);
-    });
-  }
-
-  async function cancelPodpornik() {
-    if (!selected) return;
-    const ok = window.confirm(
-      selected.podpornik_manual || !selected.stripe_subscription_id
-        ? `Takoj deaktivirati ročni paket Podpornik za ${selected.email}?`
-        : `Nastaviti preklic Stripe naročnine ob koncu plačanega obdobja za ${selected.email}? (brez vračila)`
-    );
-    if (!ok) return;
-    await withBusy(async () => {
-      const res = await adminApi.cancelPodpornik(selected.id);
-      setActionMessage(res.message);
-      await loadUser(selected.id);
-      await loadUsers(page, email);
-    });
-  }
-
-  async function deleteUser() {
-    if (!selected) return;
-    await withBusy(async () => {
-      await adminApi.deleteUser(selected.id, deleteEmailConfirm.trim());
-      setActionMessage(`Uporabnik ${selected.email} je izbrisan.`);
-      setSelected(null);
-      setDeleteOpen(false);
-      setDeleteEmailConfirm("");
-      await loadUsers(page, email);
-    });
-  }
-
-  const pageNumbers = (() => {
-    if (totalPages <= 0) return [] as number[];
-    const windowSize = 5;
-    let start = Math.max(1, page - Math.floor(windowSize / 2));
-    let end = Math.min(totalPages, start + windowSize - 1);
-    start = Math.max(1, end - windowSize + 1);
-    const nums: number[] = [];
-    for (let i = start; i <= end; i++) nums.push(i);
-    return nums;
-  })();
-
-  const isSelf =
-    !!selected &&
-    !!currentUser?.email &&
-    selected.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
-
-  return (
-    <section className="portal-section admin-panel">
-      <h2 className="portal-section__title">Uporabniki</h2>
-      <div className="admin-filters">
-        <label>
-          E-pošta
-          <input
-            type="search"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="del e-pošte …"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void searchUsers();
-            }}
-          />
-        </label>
-        <button type="button" className="btn btn-primary" disabled={loading} onClick={() => void searchUsers()}>
-          Išči
-        </button>
-      </div>
-      {error ? <p className="admin-panel__error" role="alert">{error}</p> : null}
-      {loading ? <p className="admin-panel__muted">Nalagam …</p> : null}
-      {!loading && users.length > 0 ? (
-        <>
-          <p className="admin-panel__muted admin-users-count">
-            {totalCount} uporabnikov · stran {page}/{Math.max(totalPages, 1)}
-          </p>
-          <ul className="admin-user-list">
-            {users.map((u) => (
-              <li key={u.id}>
-                <button
-                  type="button"
-                  className={`admin-user-list__btn${selected?.id === u.id ? " is-selected" : ""}`}
-                  onClick={() => void loadUser(u.id)}
-                >
-                  <strong>{u.email}</strong>
-                  <span>
-                    {u.credits_balance} žetonov · {u.plan_id || "brez paketa"}
-                    {u.podpornik_active ? " · Podpornik aktiven" : ""}
-                    {u.podpornik_manual ? " (ročno)" : ""}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          {totalPages > 1 ? (
-            <nav className="admin-pagination" aria-label="Strani uporabnikov">
-              <button
-                type="button"
-                className="btn"
-                disabled={loading || page <= 1}
-                onClick={() => void goToPage(page - 1)}
-              >
-                Nazaj
-              </button>
-              <div className="admin-pagination__pages">
-                {pageNumbers.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`btn admin-pagination__num${n === page ? " is-active" : ""}`}
-                    disabled={loading || n === page}
-                    onClick={() => void goToPage(n)}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="btn"
-                disabled={loading || page >= totalPages}
-                onClick={() => void goToPage(page + 1)}
-              >
-                Naprej
-              </button>
-            </nav>
-          ) : null}
-        </>
-      ) : null}
-      {!loading && users.length === 0 && !error ? (
-        <p className="admin-panel__muted">Ni uporabnikov za prikaz.</p>
-      ) : null}
-
-      {selected ? (
-        <div className="admin-user-detail legal-card">
-          <h3>{selected.email}</h3>
-          <p className="admin-panel__muted">
-            ID {selected.id} · vloga {selected.role} · {selected.credits_balance} žetonov · paket{" "}
-            {selected.plan_id || "—"}
-            {selected.podpornik_active ? " · Podpornik aktiven" : ""}
-            {selected.podpornik_manual ? " · ročna admin aktivacija" : ""}
-          </p>
-          {selected.season_pass_expires_at ? (
-            <p className="admin-panel__muted">Veljavnost do: {selected.season_pass_expires_at}</p>
-          ) : null}
-          {selected.stripe_subscription_id ? (
-            <p className="admin-panel__muted">
-              Stripe sub: {selected.stripe_subscription_id}
-              {selected.subscription_cancel_at_period_end ? " · preklic ob koncu obdobja" : ""}
-            </p>
-          ) : null}
-
-          <div className="admin-grant">
-            <h4>Dodaj žetone</h4>
-            <div className="admin-filters">
-              <label>
-                Količina
-                <input
-                  type="number"
-                  min={1}
-                  max={10000}
-                  step={1}
-                  value={grantAmount}
-                  onChange={(e) => setGrantAmount(Number(e.target.value))}
-                />
-              </label>
-              <label>
-                Opomba
-                <input
-                  type="text"
-                  value={grantNote}
-                  onChange={(e) => setGrantNote(e.target.value)}
-                  placeholder="opcijsko"
-                  maxLength={200}
-                />
-              </label>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={actionBusy || !(Math.floor(Number(grantAmount)) >= 1)}
-                onClick={() => void grantCredits()}
-              >
-                Dodaj žetone
-              </button>
-            </div>
-          </div>
-
-          {!selected.podpornik_active ? (
-            <div className="admin-grant">
-              <h4>Aktivacija paketa Podpornik</h4>
-              <p className="admin-panel__muted">
-                Ročna dodelitev brez Stripe naročnine, bremenitve ali računa.
-              </p>
-              <div className="admin-filters">
-                <label>
-                  Veljavnost do
-                  <input
-                    type="date"
-                    required
-                    value={podpornikExpires}
-                    min={new Date().toISOString().slice(0, 10)}
-                    onChange={(e) => setPodpornikExpires(e.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={actionBusy || !podpornikExpires}
-                  onClick={() => void activatePodpornik()}
-                >
-                  Aktiviraj Podpornika
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="admin-grant">
-              <h4>Preklic paketa Podpornik</h4>
-              {selected.podpornik_manual || !selected.stripe_subscription_id ? (
-                <p className="admin-panel__muted">Ročno dodeljen paket — deaktivacija je takojšnja.</p>
-              ) : (
-                <p className="admin-panel__muted">
-                  Stripe naročnina — preklic ob koncu že plačanega obdobja (brez vračila).
-                </p>
-              )}
-              <button
-                type="button"
-                className="btn"
-                disabled={actionBusy}
-                onClick={() => void cancelPodpornik()}
-              >
-                Prekliči Podpornika
-              </button>
-            </div>
-          )}
-
-          <div className="admin-grant admin-user-delete">
-            <h4>Brisanje uporabnika</h4>
-            {!selected.can_delete || isSelf ? (
-              <p className="admin-panel__error" role="status">
-                Brisanje ni dovoljeno
-                {(selected.delete_block_reasons || []).length
-                  ? `: ${(selected.delete_block_reasons || []).join(" ")}`
-                  : isSelf
-                    ? ": ne morete izbrisati lastnega računa."
-                    : "."}
-              </p>
-            ) : !deleteOpen ? (
-              <button
-                type="button"
-                className="btn admin-btn-danger-solid"
-                disabled={actionBusy}
-                onClick={() => setDeleteOpen(true)}
-              >
-                Izbriši uporabnika
-              </button>
-            ) : (
-              <div className="admin-delete-confirm">
-                <p className="admin-panel__muted">
-                  Za potrditev vpišite e-pošto uporabnika: <strong>{selected.email}</strong>
-                </p>
-                <label>
-                  E-pošta
-                  <input
-                    type="email"
-                    value={deleteEmailConfirm}
-                    onChange={(e) => setDeleteEmailConfirm(e.target.value)}
-                    autoComplete="off"
-                  />
-                </label>
-                <div className="admin-filters">
-                  <button
-                    type="button"
-                    className="btn admin-btn-danger-solid"
-                    disabled={
-                      actionBusy ||
-                      deleteEmailConfirm.trim().toLowerCase() !== selected.email.trim().toLowerCase()
-                    }
-                    onClick={() => void deleteUser()}
-                  >
-                    Trajno izbriši
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={actionBusy}
-                    onClick={() => {
-                      setDeleteOpen(false);
-                      setDeleteEmailConfirm("");
-                    }}
-                  >
-                    Prekliči
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {actionMessage ? <p className="admin-panel__message" role="status">{actionMessage}</p> : null}
-
-          <h4>Zadnje transakcije</h4>
-          <ul className="admin-list admin-list--compact">
-            {selected.transactions.slice(0, 20).map((tx) => (
-              <li key={tx.id}>
-                {formatDt(tx.created_at)} · {tx.amount > 0 ? "+" : ""}
-                {tx.amount} · {tx.reason}
-              </li>
-            ))}
-          </ul>
-
-          <h4>Računi</h4>
-          {selected.invoices.length === 0 ? (
-            <p className="admin-panel__muted">Ni računov.</p>
-          ) : (
-            <ul className="admin-list admin-list--compact">
-              {selected.invoices.map((inv) => (
-                <li key={inv.id}>
-                  {inv.invoice_number} · {formatEur(inv.gross_cents)} · {fursStatusLabel(inv.furs_status)}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ) : null}
-    </section>
-  );
+  return <AdminUsersSection />;
 }
 
 function SmsSection() {
   const [summary, setSummary] = useState<AdminStrelkoSmsSummary | null>(null);
   const [subscribers, setSubscribers] = useState<AdminStrelkoSmsSubscriber[]>([]);
+  const [subsTotal, setSubsTotal] = useState(0);
+  const [subsPage, setSubsPage] = useState(1);
+  const [sendSubscribers, setSendSubscribers] = useState<AdminStrelkoSmsSubscriber[]>([]);
   const [notifications, setNotifications] = useState<AdminStrelkoSmsNotification[]>([]);
+  const [notesTotal, setNotesTotal] = useState(0);
+  const [notesPage, setNotesPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [listLoading, setListLoading] = useState(false);
 
-  const loadData = useCallback(async () => {
-    const [s, subs, notes] = await Promise.all([
+  const subsTotalPages = subsTotal > 0 ? Math.ceil(subsTotal / SMS_SUBS_PAGE_SIZE) : 0;
+  const notesTotalPages = notesTotal > 0 ? Math.ceil(notesTotal / SMS_NOTES_PAGE_SIZE) : 0;
+
+  const loadSummaryAndSendList = useCallback(async () => {
+    const [s, sendList] = await Promise.all([
       adminApi.smsSummary(),
-      adminApi.smsSubscribers({ limit: 50 }),
-      adminApi.smsNotifications({ limit: 30 }),
+      adminApi.smsSubscribers({ limit: 200, offset: 0 }),
     ]);
     setSummary(s);
-    setSubscribers(subs.items);
-    setNotifications(notes.items);
+    setSendSubscribers(sendList.items);
   }, []);
+
+  const loadSubscribersPage = useCallback(async (page: number) => {
+    setListLoading(true);
+    try {
+      const res = await adminApi.smsSubscribers({
+        limit: SMS_SUBS_PAGE_SIZE,
+        offset: (page - 1) * SMS_SUBS_PAGE_SIZE,
+      });
+      setSubscribers(res.items);
+      setSubsTotal(res.total);
+      setSubsPage(page);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  const loadNotificationsPage = useCallback(async (page: number) => {
+    setListLoading(true);
+    try {
+      const res = await adminApi.smsNotifications({
+        limit: SMS_NOTES_PAGE_SIZE,
+        offset: (page - 1) * SMS_NOTES_PAGE_SIZE,
+      });
+      setNotifications(res.items);
+      setNotesTotal(res.total);
+      setNotesPage(page);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  const reloadAll = useCallback(async () => {
+    await loadSummaryAndSendList();
+    await Promise.all([loadSubscribersPage(subsPage), loadNotificationsPage(notesPage)]);
+  }, [loadSummaryAndSendList, loadSubscribersPage, loadNotificationsPage, subsPage, notesPage]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        await loadData();
+        await loadSummaryAndSendList();
+        if (cancelled) return;
+        await Promise.all([loadSubscribersPage(1), loadNotificationsPage(1)]);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       }
@@ -924,7 +878,7 @@ function SmsSection() {
     return () => {
       cancelled = true;
     };
-  }, [loadData]);
+  }, [loadSummaryAndSendList, loadSubscribersPage, loadNotificationsPage]);
 
   const onAddSubscriber = async (data: AdminSmsSubscriberFormData) => {
     setError(null);
@@ -933,7 +887,7 @@ function SmsSection() {
     try {
       const res = await adminApi.upsertSmsSubscriber(data);
       setActionMsg(res.message);
-      await loadData();
+      await reloadAll();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -955,7 +909,7 @@ function SmsSection() {
       setActionMsg(
         `${res.message} (${res.gsm_length} znakov, ${res.sms_credits_estimate} kredit, ročno)`
       );
-      await loadData();
+      await reloadAll();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -972,7 +926,7 @@ function SmsSection() {
     try {
       const res = await adminApi.removeSmsSubscriber(userId);
       setActionMsg(res.message);
-      await loadData();
+      await reloadAll();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -1049,7 +1003,7 @@ function SmsSection() {
       <h3 className="portal-section__subtitle">Ročno testno pošiljanje</h3>
       <AdminSmsManualSend
         busy={busy}
-        subscribers={subscribers}
+        subscribers={sendSubscribers}
         onSend={onSendManualSms}
       />
 
@@ -1059,7 +1013,7 @@ function SmsSection() {
         Admin lahko doda naročnika tudi brez paketa Podpornik (ročna odobritev).
       </p>
 
-      <h3 className="portal-section__subtitle">Naročniki</h3>
+      <h3 className="portal-section__subtitle">Naročniki ({subsTotal})</h3>
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -1115,8 +1069,17 @@ function SmsSection() {
           </tbody>
         </table>
       </div>
+      <AdminPager
+        page={subsPage}
+        totalPages={subsTotalPages}
+        total={subsTotal}
+        pageSize={SMS_SUBS_PAGE_SIZE}
+        loading={listLoading}
+        label="Strani SMS naročnikov"
+        onPage={(p) => void loadSubscribersPage(p)}
+      />
 
-      <h3 className="portal-section__subtitle">Zadnja obvestila</h3>
+      <h3 className="portal-section__subtitle">Obvestila ({notesTotal})</h3>
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -1161,6 +1124,15 @@ function SmsSection() {
           </tbody>
         </table>
       </div>
+      <AdminPager
+        page={notesPage}
+        totalPages={notesTotalPages}
+        total={notesTotal}
+        pageSize={SMS_NOTES_PAGE_SIZE}
+        loading={listLoading}
+        label="Strani SMS obvestil"
+        onPage={(p) => void loadNotificationsPage(p)}
+      />
     </section>
   );
 }

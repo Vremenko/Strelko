@@ -6,7 +6,6 @@ import { setAuthReturn } from "../lib/auth-intent";
 import { isValidGeocodePlace } from "../lib/geocode";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
 import { savePreviewCheckoutReturn } from "../lib/preview-checkout-return";
-import { previewUnlockTokenRequirementMessage } from "../lib/query-billing";
 import { clampSearchRange, queryTokenCost } from "../lib/search-dates";
 import { resultLocationTitle } from "../lib/pick-location-map";
 import { formatPlaceName, getToken } from "../lib/utils";
@@ -284,7 +283,11 @@ function PreviewUnlockBlock({
         <h4>Odklenite celoten pregled</h4>
         {unlockTokenCost > 0 ? (
           <p className="preview-blur-token-cost">
-            {previewUnlockTokenRequirementMessage(unlockTokenCost)}
+            Za odklep tega pregleda potrebujete{" "}
+            <span className="preview-blur-token-cost__amount">
+              {tokenCountLabel(unlockTokenCost, "accusative")}
+            </span>
+            .
           </p>
         ) : null}
         <p>{PREVIEW_UNLOCK_INTRO}</p>

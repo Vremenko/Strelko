@@ -214,6 +214,8 @@ export interface SavedQueryOut extends SavedQuerySummary {
 export interface SavedQueryListOut {
   queries: SavedQuerySummary[];
   token_balance: number;
+  total_queries?: number;
+  total_credits_spent?: number;
 }
 
 export interface QueryQuoteOut {
@@ -292,6 +294,7 @@ export interface AdminStrelkoInvoice {
   stripe_session_id?: string | null;
   stripe_invoice_id?: string | null;
   email_sent_at?: string | null;
+  has_pdf?: boolean;
 }
 
 export interface AdminStrelkoUser {
@@ -305,11 +308,14 @@ export interface AdminStrelkoUser {
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
   season_pass_expires_at?: string | null;
+  subscription_period_start?: string | null;
   subscription_period_end?: string | null;
   podpornik_active: boolean;
   podpornik_manual?: boolean;
   subscription_cancel_at_period_end?: boolean | null;
   created_at?: string | null;
+  last_client_app?: string | null;
+  signup_client_app?: string | null;
 }
 
 export interface AdminStrelkoCreditTransaction {
@@ -321,9 +327,26 @@ export interface AdminStrelkoCreditTransaction {
   created_at: string;
 }
 
+export interface AdminStrelkoSavedQuery {
+  id: string;
+  label?: string | null;
+  lat: number;
+  lon: number;
+  radius_km: number;
+  date_from: string;
+  date_to: string;
+  tokens_spent: number;
+  created_at: string;
+  total_strikes?: number | null;
+}
+
 export interface AdminStrelkoUserDetail extends AdminStrelkoUser {
   transactions: AdminStrelkoCreditTransaction[];
   invoices: AdminStrelkoInvoice[];
+  queries?: AdminStrelkoSavedQuery[];
+  transactions_total?: number;
+  invoices_total?: number;
+  queries_total?: number;
   can_delete?: boolean;
   delete_block_reasons?: string[];
 }
