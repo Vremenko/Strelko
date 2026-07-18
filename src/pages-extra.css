@@ -5031,6 +5031,43 @@ button:disabled.btn-primary {
   color: #a8c4ff;
 }
 
+.admin-env-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-width: 16rem;
+}
+
+.admin-env-badge {
+  display: inline-block;
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.admin-env-badge--prod {
+  background: rgba(46, 160, 90, 0.18);
+  color: #6bcf8e;
+}
+
+.admin-env-badge--test {
+  background: rgba(220, 140, 40, 0.2);
+  color: #e8b060;
+}
+
+.admin-env-badge--neutral {
+  background: rgba(140, 150, 165, 0.18);
+  color: #a8b0bc;
+}
+
+.admin-list__card .admin-env-badges {
+  margin: 0.35rem 0;
+  max-width: none;
+}
+
 .admin-pipeline {
   list-style: none;
   margin: 0 0 0.5rem;

@@ -5,6 +5,7 @@ import { AdminPager } from "../components/admin/AdminPager";
 import { AdminSmsManualSend } from "../components/admin/AdminSmsManualSend";
 import { AdminUsersSection } from "../components/admin/AdminUsersSection";
 import { AdminSmsSubscriberForm, type AdminSmsSubscriberFormData } from "../components/admin/AdminSmsSubscriberForm";
+import { InvoiceEnvironmentBadges } from "../components/admin/InvoiceEnvironmentBadges";
 import { RequireAdmin } from "../components/RequireAdmin";
 import {
   buildInvoicePipeline,
@@ -378,6 +379,7 @@ function InvoicesSection() {
               <thead>
                 <tr>
                   <th>Številka</th>
+                  <th>Okolje</th>
                   <th>Datum</th>
                   <th>Uporabnik</th>
                   <th>Znesek</th>
@@ -409,6 +411,9 @@ function InvoicesSection() {
                       <td>
                         <strong>{inv.invoice_number}</strong>
                         <div className="admin-table__sub">{inv.description_sl}</div>
+                      </td>
+                      <td>
+                        <InvoiceEnvironmentBadges invoice={inv} />
                       </td>
                       <td>{formatDt(inv.issued_at)}</td>
                       <td>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../../api/client";
 import { useStrelko } from "../../context/StrelkoContext";
+import { InvoiceEnvironmentBadges } from "./InvoiceEnvironmentBadges";
 import {
   buildInvoicePipeline,
   type InvoicePipelineStep,
@@ -697,6 +698,7 @@ export function AdminUsersSection() {
                           {fursStatusLabel(inv.furs_status)}
                           {inv.email_sent_at ? " · E-pošta poslana" : " · E-pošta ni poslana"}
                         </div>
+                        <InvoiceEnvironmentBadges invoice={inv} />
                         <PipelineMini steps={pipeline} />
                         {inv.has_pdf ? (
                           <button

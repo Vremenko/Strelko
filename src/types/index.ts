@@ -293,6 +293,9 @@ export interface AdminStrelkoInvoice {
   eor?: string | null;
   stripe_session_id?: string | null;
   stripe_invoice_id?: string | null;
+  stripe_livemode?: boolean | null;
+  furs_environment?: string | null;
+  invoice_source?: string | null;
   email_sent_at?: string | null;
   has_pdf?: boolean;
 }
