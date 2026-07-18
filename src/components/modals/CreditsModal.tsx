@@ -5,7 +5,10 @@ import {
   defaultPlansFallback,
   resolvePlansList,
 } from "../../lib/plans-modal";
-import { OB_SKODI_PER_TOKEN_GROSS_LABEL } from "../../lib/ob-skodi-tokens";
+import {
+  OB_SKODI_PER_TOKEN_GROSS_LABEL,
+  tokenWord,
+} from "../../lib/ob-skodi-tokens";
 import { PODPORNIST_MONTHLY_GROSS_LABEL } from "../../lib/podpornik-pricing";
 import { formatPlanGrossLabel } from "../../lib/pricing";
 import { canSubscribePodpornik, formatPeriodEndGenitive } from "../../lib/portal-account";
@@ -184,22 +187,15 @@ export function CheckoutSuccessModal() {
   const s = modals.checkoutSuccess;
   if (!s) return null;
 
-  const tokenPurchase = s.creditsAdded > 0;
+  const tokenPurchase = s.creditsAdded > 0 || s.planId === "ob_skodi";
   const isSeason = !tokenPurchase && s.planId === "podpornik";
   const periodRaw =
     credits?.subscription_current_period_end || credits?.season_pass_expires_at || null;
   const periodLabel = periodRaw ? formatPeriodEndGenitive(periodRaw) : null;
   const message = tokenPurchase ? (
     <>
-      Kupljeni žetoni so bili prišteti vašemu stanju. Dodanih{" "}
-      <strong>{s.creditsAdded}</strong> — skupaj imate <strong>{s.balance}</strong>{" "}
-      {s.balance === 1 ? "žeton" : s.balance === 2 ? "žetona" : "žetonov"}.
-      {s.planId === "podpornik" ? (
-        <>
-          {" "}
-          Paket <strong>Podpornik</strong> ostaja aktiven.
-        </>
-      ) : null}
+      Žetoni so bili uspešno dodani. Stanje: <strong>{s.balance}</strong>{" "}
+      {tokenWord(s.balance)}
     </>
   ) : isSeason ? (
     periodLabel ? (

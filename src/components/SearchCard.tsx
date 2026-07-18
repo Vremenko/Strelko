@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useLocation } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
 import type { GeocodeResult, QueryQuoteOut } from "../types";
 import { geocodeSuggest, isSameSuggestBase, isValidGeocodePlace } from "../lib/geocode";
@@ -7,6 +8,7 @@ import {
   querySubmitButtonLabelFromQuote,
 } from "../lib/query-billing";
 import { clampSearchRange, validateSearchPeriod } from "../lib/search-dates";
+import { setAuthReturn } from "../lib/auth-intent";
 import { api } from "../api/client";
 import { IconLocationPin, SearchScanBolt } from "./icons";
 import { SearchOptions } from "./SearchOptions";
@@ -92,6 +94,7 @@ export function SearchCard({
     openAuth,
     clearSearch,
   } = useStrelko();
+  const location = useLocation();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [queryQuote, setQueryQuote] = useState<QueryQuoteOut | null>(null);
@@ -292,7 +295,10 @@ export function SearchCard({
     event.stopPropagation();
     if (showOptions) {
       const err = validateSearchPeriod(searchDateFrom, searchDateTo);
-      if (err) return;
+      if (err) {
+        window.alert(err);
+        return;
+      }
     }
     void runPreview();
   };
@@ -343,7 +349,15 @@ export function SearchCard({
               <p className="search-overlay-msg">{preview.message_sl}</p>
               <div className="search-overlay-actions">
                 {preview.requires_login && (
-                  <button type="button" className="btn btn-primary" onClick={() => openAuth("login")}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const returnTo = `${location.pathname}${location.search}${location.hash}`;
+                      setAuthReturn(returnTo);
+                      openAuth("login", returnTo);
+                    }}
+                  >
                     Prijavite se za podrobnosti
                   </button>
                 )}

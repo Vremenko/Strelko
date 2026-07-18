@@ -9,7 +9,8 @@ export function CookieBanner() {
     <div className="cookie-banner" role="dialog" aria-label="Obvestilo o piškotkih">
       <div className="cookie-banner-inner">
         <p>
-          Za delovanje prijave uporabljamo nujne piškotke oziroma localStorage.{" "}
+          Za delovanje prijave uporabljamo nujne zapise v brskalniku. Po potrditvi merimo tudi anonimne
+          statistike obiska (Umami, brez piškotkov za sledenje).{" "}
           <Link to="/piskotki">Več o piškotkih</Link>
         </p>
         <button type="button" className="btn btn-primary btn-sm" onClick={acceptCookies}>

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { api } from "../api/client";
 import { ObSkodiTokenPurchase } from "../components/pricing/ObSkodiTokenPurchase";
 import { PricingPlanCard } from "../components/pricing/PricingPlanCard";
 import { PricingPurchaseInfo } from "../components/pricing/PricingPurchaseInfo";
@@ -8,6 +9,7 @@ import { useStrelko } from "../context/StrelkoContext";
 import {
   CENIK_RETURN_PATH,
   checkoutPlanForTab,
+  clearCheckoutQuantity,
   setAuthReturn,
   setCheckoutPlanId,
   setCheckoutQuantity,
@@ -25,6 +27,8 @@ import {
   CENIK_ZETONI_DESCRIPTION,
   PRICING_PODPORNIST,
 } from "../lib/pricing-offers";
+import { openStripeCheckoutInNewTab } from "../lib/stripe-billing-portal";
+import type { ApiError } from "../types";
 
 type CenikLocationState = { cenikNotice?: string } | null;
 
@@ -34,6 +38,8 @@ export function CenikPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [notice, setNotice] = useState<string | null>(null);
+  const [tokenCheckoutBusy, setTokenCheckoutBusy] = useState(false);
+  const tokenCheckoutInFlightRef = useRef(false);
 
   useEffect(() => {
     const state = location.state as CenikLocationState;
@@ -60,16 +66,37 @@ export function CenikPage() {
 
   const handleObSkodiPurchase = (quantity: number) => {
     const planId = checkoutPlanForTab("zetoni");
-    if (user) {
-      if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
-      void checkout(quantity, planId);
+    if (!user) {
+      if (!paymentsEnabled) return;
+      setAuthReturn(CENIK_RETURN_PATH);
+      setCheckoutPlanId(planId);
+      setCheckoutQuantity(quantity);
+      openAuth("login");
       return;
     }
-    if (!paymentsEnabled) return;
-    setAuthReturn(CENIK_RETURN_PATH);
-    setCheckoutPlanId(planId);
-    setCheckoutQuantity(quantity);
-    openAuth("login");
+    if (!isObSkodiPurchaseAllowed(paymentsEnabled)) return;
+    if (tokenCheckoutInFlightRef.current) return;
+    tokenCheckoutInFlightRef.current = true;
+    setTokenCheckoutBusy(true);
+    setNotice(null);
+    void (async () => {
+      try {
+        await openStripeCheckoutInNewTab(async () => {
+          const { checkout_url } = await api.checkout({
+            plan: planId,
+            quantity,
+          });
+          clearCheckoutQuantity();
+          return checkout_url;
+        });
+      } catch (e) {
+        const err = e as ApiError;
+        setNotice(err.message || "Checkout trenutno ni na voljo.");
+      } finally {
+        tokenCheckoutInFlightRef.current = false;
+        setTokenCheckoutBusy(false);
+      }
+    })();
   };
 
   const podpornikCtaLabel = !paymentsEnabled
@@ -104,6 +131,7 @@ export function CenikPage() {
               variant="cenik"
               paymentsEnabled={paymentsEnabled}
               loggedIn={Boolean(user)}
+              purchaseBusy={tokenCheckoutBusy}
               onPurchase={handleObSkodiPurchase}
             />
           </article>

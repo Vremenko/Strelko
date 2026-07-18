@@ -77,12 +77,15 @@ V `StormAPI/.env` (Twilio):
 
 ```env
 STRELKO_SMS_ENABLED=1
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_SMS_FROM=+386...
+SMSAPI_USERNAME=...
+SMSAPI_PASSWORD=...
+SMSAPI_FROM=040123456
+# ali alfanumerični pošiljatelj (po odobritvi pri SMSapi.si):
+# SMSAPI_USE_SENDER_ID=1
+# SMSAPI_SENDER_ID=Meteoinfo
 ```
 
-Brez Twilio ključev se SMS zabeleži v log (dry-run). V aplikaciji: **SMS opozorila** → telefon + naslov + vklop.
+Registracija in API ključi: [smsapi.si](https://www.smsapi.si/). Brez API podatkov se SMS zabeleži v log (dry-run). V aplikaciji: **SMS opozorila** → telefon + naslov + vklop.
 
 ## Naročniški paketi
 

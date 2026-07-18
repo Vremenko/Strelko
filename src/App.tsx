@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { StrelkoProvider } from "./context/StrelkoContext";
+import { UmamiAnalytics } from "./components/UmamiAnalytics";
 import { AppLayout } from "./AppLayout";
 import { PageMeta } from "./components/layout/PageMeta";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
@@ -22,6 +23,7 @@ export function App() {
       <ScrollToTop />
       <PageMeta />
       <StrelkoProvider>
+        <UmamiAnalytics />
         <Routes>
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

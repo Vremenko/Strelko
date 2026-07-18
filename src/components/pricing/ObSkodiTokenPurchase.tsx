@@ -25,6 +25,8 @@ interface ObSkodiTokenPurchaseProps {
   tokenBalance?: string;
   /** Pojasnilo, da se žetoni prištejejo (portal). */
   showAddToBalanceNote?: boolean;
+  /** Med ustvarjanjem Stripe Checkout seje (cenik). */
+  purchaseBusy?: boolean;
   onPurchase: (quantity: number) => void;
 }
 
@@ -35,6 +37,7 @@ export function ObSkodiTokenPurchase({
   showBalance = false,
   tokenBalance,
   showAddToBalanceNote = false,
+  purchaseBusy = false,
   onPurchase,
 }: ObSkodiTokenPurchaseProps) {
   const savedQuantity = variant === "cenik" ? peekCheckoutQuantity() : null;
@@ -84,11 +87,12 @@ export function ObSkodiTokenPurchase({
   };
 
   const handlePurchase = () => {
-    if (!buttonEnabled) return;
+    if (!buttonEnabled || purchaseBusy) return;
     onPurchase(order.quantity);
   };
 
   const ctaLabel = (() => {
+    if (purchaseBusy) return "Pripravljam plačilo …";
     if (!paymentsEnabled) return obSkodiPurchaseCtaLabel(quantity, false);
     if (!loggedIn) {
       return isCenik
@@ -202,8 +206,9 @@ export function ObSkodiTokenPurchase({
       type="button"
       className="btn btn-primary btn-block ob-skodi-purchase__cta"
       onClick={handlePurchase}
-      disabled={!buttonEnabled}
-      aria-disabled={!buttonEnabled}
+      disabled={!buttonEnabled || purchaseBusy}
+      aria-disabled={!buttonEnabled || purchaseBusy}
+      aria-busy={purchaseBusy || undefined}
     >
       {ctaLabel}
     </button>

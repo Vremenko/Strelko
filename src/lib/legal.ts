@@ -634,7 +634,7 @@ export const LEGAL_PAGES = {
     path: "/piskotki",
     title: "Politika piškotkov in podobnih tehnologij",
     navTitle: "Politika piškotkov",
-    updated: "12. 7. 2026",
+    updated: "16. 7. 2026",
     sections: [
       {
         title: "1. Kaj so piškotki in podobne tehnologije?",
@@ -675,7 +675,10 @@ export const LEGAL_PAGES = {
           <p>Te zapise ne uporabljamo za profiliranje, analitiko ali oglaševanje. Naložijo se brez ločenega
           soglasja, ker ne nadomeščajo osnovnega delovanja strani in ne spremljajo uporabnika med spletnimi mesti.</p>
           <h3>Analitične tehnologije</h3>
-          <p>Strelko trenutno ne uporablja analitičnih piškotkov za merjenje obiska ali sledenje uporabnikom.</p>
+          <p>Po potrditvi obvestila o piškotkih (gumb <strong>Razumem</strong>) naložimo self-hosted storitev
+          <strong>Umami Analytics</strong> za anonimno merjenje obiska strani (število ogledov, referer,
+          tip naprave). Umami ne uporablja piškotkov za sledenje med spletnimi mesti. Brez potrditve
+          obvestila se analitika ne naloži.</p>
           <h3>Trženjske tehnologije</h3>
           <p>Strelko trenutno ne uporablja oglaševalskih ali trženjskih piškotkov.</p>`,
       },
@@ -759,6 +762,14 @@ export const LEGAL_PAGES = {
                 <td>Do zaprtja zavihka brskalnika</td>
               </tr>
               <tr>
+                <td>Umami Analytics (brez imenovanih piškotkov)</td>
+                <td>strelko.meteoinfo.si / umami (self-hosted)</td>
+                <td>Omrežna zahteva (skripta)</td>
+                <td>Anonimna statistika obiska strani (pageview, referer, naprava)</td>
+                <td>Analitična (po privolitvi)</td>
+                <td>Brez piškotkov; podatki na našem strežniku</td>
+              </tr>
+              <tr>
                 <td>Google piškotki in podobne tehnologije (npr. po imenu ponudnika)</td>
                 <td>google.com / accounts.google.com</td>
                 <td>Piškotek (tretja oseba)</td>
@@ -788,6 +799,10 @@ export const LEGAL_PAGES = {
           <a href="https://www.maptiler.com/privacy-policy/" target="_blank" rel="noopener">maptiler.com/privacy-policy</a>.</p>
           <p><strong>Vdelani arhivski prikazi</strong> – na nekaterih straneh se naložijo vdelani okvirji (<code>iframe</code>)
           z iste domene Strelko za prikaz arhivskih grafov ali zemljevida. To niso piškotki tretjih oseb.</p>
+          <p><strong>Umami Analytics</strong> – po kliku na <strong>Razumem</strong> v obvestilu o piškotkih
+          se naloži skripta <code>/umami/script.js</code> z naše self-hosted instance Umami
+          (strežnik Meteoinfo). Meri anonimne oglede strani brez piškotkov za sledenje. Admin stran
+          <code>/admin</code> se ne pošilja v analitiko.</p>
           <p><strong>Plačila prek Stripe</strong> – ob nakupu se uporabnik preusmeri na varno plačilno stran Stripe.
           V spletni aplikaciji Strelko se ne vgrajuje Stripe sledilnih skript; podatke o kartici obdeluje Stripe na
           svoji strani.</p>`,
@@ -795,13 +810,14 @@ export const LEGAL_PAGES = {
       {
         title: "6. Privolitev in izbira uporabnika",
         body: `
-          <p>Strelko ne uporablja analitičnih ali trženjskih tehnologij, ki bi zahtevale ločeno privolitev.</p>
-          <p>Ob prvem obisku se prikaže informativno obvestilo o uporabi nujnih tehnologij. S klikom na
-          <strong>Razumem</strong> se shrani zapis <code>strelko_cookie_consent</code>, da vam obvestila ni treba
-          ponavljati. To ni izbira med kategorijami piškotkov, temveč potrditev, da ste obvestilo prebrali.</p>
-          <p>Strelko trenutno ne ponuja ločenega vmesnika za sprejemanje ali zavračanje posameznih nenujnih kategorij,
-          ker takih kategorij ne uporablja. Zavrnitev analitike ali oglaševanja zato ni potrebna – ti zapisi se ne
-          nalagajo.</p>`,
+          <p>Strelko uporablja self-hosted analitiko Umami le po potrditvi obvestila (gumb
+          <strong>Razumem</strong>). Trženjskih tehnologij ne uporabljamo.</p>
+          <p>Ob prvem obisku se prikaže obvestilo o nujnih tehnologijah in analitiki. S klikom na
+          <strong>Razumem</strong> se shrani zapis <code>strelko_cookie_consent</code> in se naloži Umami;
+          brez tega se analitika ne aktivira.</p>
+          <p>Strelko trenutno ne ponuja ločenega vmesnika za sprejemanje ali zavračanje posameznih nenujnih kategorij
+          poleg analitike. Če ne želite analitike, obvestila ne potrdite — nujne funkcije (razen ponavljanja
+          obvestila ob vsakem obisku) ostanejo na voljo.</p>`,
       },
       {
         title: "7. Shranjevanje izbire",

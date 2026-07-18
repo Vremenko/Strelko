@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
+import { openStripeBillingPortalInNewTab } from "../../lib/stripe-billing-portal";
 import type { BillingHistoryItem } from "../../types";
 import { PortalQueriesPagination } from "./PortalQueriesPagination";
 
@@ -147,20 +148,12 @@ export function PortalInvoicesSection() {
   const openManageSubscription = useCallback(async () => {
     if (portalBusy) return;
     setPortalBusy(true);
-    const tab = window.open("about:blank", "_blank");
     try {
-      const { portal_url } = await api.billingPortal();
-      if (tab && !tab.closed) {
-        tab.location.href = portal_url;
-      } else {
-        window.alert(
-          "Portal za upravljanje naročnine trenutno ni na voljo. Dovolite pojavna okna in poskusite znova."
-        );
-      }
+      await openStripeBillingPortalInNewTab(async () => {
+        const { portal_url } = await api.billingPortal();
+        return portal_url;
+      });
     } catch (e) {
-      if (tab && !tab.closed) {
-        tab.close();
-      }
       window.alert(
         (e as Error).message || "Portal za upravljanje naročnine trenutno ni na voljo."
       );
@@ -230,15 +223,7 @@ export function PortalInvoicesSection() {
                   {items.map((item) => (
                     <tr key={item.id}>
                       <td>{formatOccurredAt(item.occurred_at)}</td>
-                      <td>
-                        {item.description_sl}
-                        {item.credits_added != null && item.credits_added > 0 ? (
-                          <span className="portal-invoices-table__meta">
-                            {" "}
-                            (+{item.credits_added} žetonov)
-                          </span>
-                        ) : null}
-                      </td>
+                      <td>{item.description_sl.replace(/\s*\(Ob škodi\)\s*/g, "").trim()}</td>
                       <td>{item.amount_eur}</td>
                       <td>{item.fiscal_status_sl || item.status_sl}</td>
                       <td>
@@ -300,9 +285,8 @@ export function PortalInvoicesSection() {
             ariaLabel="Strani plačil"
           />
           <p className="portal-card__hint">
-            Za naročnino Podpornik lahko v Stripe portalu prekličete podaljšanje ali posodobite
-            plačilno kartico. FURS račun (PDF) je na voljo za vsa plačila; Stripe potrdilo
-            «Odpri» je dodatno za enkratne nakupe.
+            Podaljšanje naročnine Podpornik lahko prekličete ali posodobite plačilno kartico s
+            klikom na gumb Upravljaj naročnino.
           </p>
         </div>
       )}

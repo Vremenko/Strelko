@@ -1,14 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useStrelko } from "../context/StrelkoContext";
-import { portalTabPath } from "../lib/auth-intent";
+import { setAuthReturn } from "../lib/auth-intent";
 import { isValidGeocodePlace } from "../lib/geocode";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
+import { savePreviewCheckoutReturn } from "../lib/preview-checkout-return";
 import { previewUnlockTokenRequirementMessage } from "../lib/query-billing";
 import { clampSearchRange, queryTokenCost } from "../lib/search-dates";
 import { resultLocationTitle } from "../lib/pick-location-map";
-import { formatPlaceName } from "../lib/utils";
+import { formatPlaceName, getToken } from "../lib/utils";
 import type { InsufficientTokensDetail, QueryQuoteOut } from "../types";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
 
@@ -150,12 +151,27 @@ function PreviewUnlockBlock({
   onUnlock,
   unlockBusy,
 }: {
-  openAuth: (mode: "login" | "register") => void;
+  openAuth: (mode: "login" | "register", returnTo?: string) => void;
   onUnlock: () => void;
   unlockBusy: boolean;
 }) {
-  const { user, previewTokenNotice, searchDateFrom, searchDateTo } = useStrelko();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    user,
+    preview,
+    previewScreen,
+    previewTokenNotice,
+    previewActionError,
+    selected,
+    locationQuery,
+    searchRadiusKm,
+    searchDateFrom,
+    searchDateTo,
+  } = useStrelko();
+  const hasToken = Boolean(getToken());
   const loggedIn = Boolean(user);
+  const authHydrating = hasToken && !loggedIn;
   const { quote, quoteLoading, requiredTokens, canUnlock, needsTokens } =
     usePreviewUnlockQuote(loggedIn, previewTokenNotice);
   const searchRange = clampSearchRange({
@@ -165,13 +181,59 @@ function PreviewUnlockBlock({
   const periodTokenCost = queryTokenCost(searchRange.from, searchRange.to);
   const unlockTokenCost =
     loggedIn && !quoteLoading && requiredTokens > 0 ? requiredTokens : periodTokenCost;
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+
+  const openPreviewLogin = () => {
+    setAuthReturn(returnTo);
+    openAuth("login", returnTo);
+  };
+
+  const goBuyTokensFromPreview = () => {
+    if (!preview || !previewScreen || !isValidGeocodePlace(selected)) {
+      navigate("/cenik");
+      return;
+    }
+    savePreviewCheckoutReturn({
+      preview,
+      previewScreen,
+      tokenNotice: previewTokenNotice,
+      selected,
+      locationQuery: locationQuery || selected.label || "",
+      searchRadiusKm,
+      searchDateFrom: preview.date_from || searchDateFrom,
+      searchDateTo: preview.date_to || searchDateTo,
+    });
+    navigate("/cenik");
+  };
 
   let actions: ReactNode = null;
 
-  if (!loggedIn) {
+  if (authHydrating) {
     actions = (
       <div className="preview-blur-actions">
-        <button type="button" className="btn btn-primary" onClick={() => openAuth("login")}>
+        <button type="button" className="btn btn-primary" disabled aria-busy="true">
+          Nalagam prijavo …
+        </button>
+        <Link to="/cenik" className="btn btn-ghost">
+          Cenik
+        </Link>
+      </div>
+    );
+  } else if (unlockBusy) {
+    actions = (
+      <div className="preview-blur-actions">
+        <button type="button" className="btn btn-primary" disabled aria-busy="true">
+          Odklepam pregled …
+        </button>
+        <Link to="/cenik" className="btn btn-ghost">
+          Cenik
+        </Link>
+      </div>
+    );
+  } else if (!loggedIn) {
+    actions = (
+      <div className="preview-blur-actions">
+        <button type="button" className="btn btn-primary" onClick={openPreviewLogin}>
           Prijava
         </button>
         <Link to="/cenik" className="btn btn-ghost">
@@ -182,12 +244,9 @@ function PreviewUnlockBlock({
   } else if (needsTokens) {
     actions = (
       <div className="preview-blur-actions">
-        <Link to={portalTabPath("narocnina")} className="btn btn-primary">
+        <button type="button" className="btn btn-primary" onClick={goBuyTokensFromPreview}>
           Kupi žetone
-        </Link>
-        <Link to="/cenik" className="btn btn-ghost">
-          Cenik
-        </Link>
+        </button>
       </div>
     );
   } else if (canUnlock) {
@@ -196,10 +255,12 @@ function PreviewUnlockBlock({
         <button
           type="button"
           className="btn btn-primary"
-          disabled={unlockBusy || quoteLoading}
+          disabled={unlockBusy || quoteLoading || authHydrating}
           onClick={onUnlock}
         >
-          {quoteLoading ? "Preračunavam ceno …" : previewUnlockButtonLabel(requiredTokens, quote)}
+          {quoteLoading
+            ? "Preračunavam ceno …"
+            : previewUnlockButtonLabel(requiredTokens, quote)}
         </button>
         <Link to="/cenik" className="btn btn-ghost">
           Cenik
@@ -209,12 +270,9 @@ function PreviewUnlockBlock({
   } else {
     actions = (
       <div className="preview-blur-actions">
-        <Link to={portalTabPath("narocnina")} className="btn btn-primary">
+        <button type="button" className="btn btn-primary" onClick={goBuyTokensFromPreview}>
           Kupi žetone
-        </Link>
-        <Link to="/cenik" className="btn btn-ghost">
-          Cenik
-        </Link>
+        </button>
       </div>
     );
   }
@@ -236,6 +294,11 @@ function PreviewUnlockBlock({
           ))}
         </ul>
         {actions}
+        {previewActionError ? (
+          <p className="form-error" role="alert" style={{ marginTop: "0.75rem" }}>
+            {previewActionError}
+          </p>
+        ) : null}
       </div>
     </div>
   );

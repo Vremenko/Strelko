@@ -65,7 +65,8 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
       }
       if (cacheRef.current.period) return cacheRef.current.period;
       const initial = r.strikes || [];
-      if (initial.length >= r.total_strikes) {
+      /* Vzorčeni ali popolni nabor — ne kliči periodStrikes za tisoče točk. */
+      if (r.map_strikes_sampled || initial.length >= r.total_strikes) {
         cacheRef.current.period = initial;
         return initial;
       }
@@ -152,6 +153,16 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
     r.location_label
   );
 
+  const selectedDayRow = selectedMapDay
+    ? daily.find((d) => dayKey(d.datum) === selectedMapDay)
+    : null;
+  const mapSampleTotal = selectedDayRow ? selectedDayRow.stevilo_strel : r.total_strikes;
+  const mapShowsSample =
+    mapStrikes.length > 0 &&
+    mapSampleTotal > mapStrikes.length &&
+    (Boolean(selectedMapDay) || Boolean(r.map_strikes_sampled) || mapStrikes.length >= 1500);
+  const formatCount = (n: number) => new Intl.NumberFormat("sl-SI").format(n);
+
   return (
     <section className={`results-panel${panelClass}`}>
       <h3 className="results-panel-title">
@@ -184,6 +195,12 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
             refit={selectedMapDay != null}
           />
         </ErrorBoundary>
+        {mapShowsSample ? (
+          <p className="strike-map-sample-note" role="note">
+            Na zemljevidu je zaradi preglednosti prikazanih {formatCount(mapStrikes.length)} od
+            skupno {formatCount(mapSampleTotal)} zaznanih strel.
+          </p>
+        ) : null}
       </div>
       <div className="daily-table-scroll">
         <table className="daily-table">

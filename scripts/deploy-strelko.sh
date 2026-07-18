@@ -40,6 +40,13 @@ fi
 for f in "$STRELE2_PUBLIC/embed.html" "$STRELE2_PUBLIC/map-embed.html" "$STRELE2_PUBLIC/obcina-widget.html"; do
   [[ -f "$f" ]] && _obcine_cp "$f" "/app/web/public/$(basename "$f")" || true
 done
+# Lokalni MapLibre slogi (npr. strelko-dark.json) — potrebni za map-embed podlago
+if [[ -d "$STRELE2_PUBLIC/styles" ]]; then
+  docker exec "$OBCINE_CONTAINER" mkdir -p /app/web/public/styles
+  for f in "$STRELE2_PUBLIC/styles"/*.json; do
+    [[ -f "$f" ]] && _obcine_cp "$f" "/app/web/public/styles/$(basename "$f")" || true
+  done
+fi
 for f in "$STRELE2_WEB/charts-shared.css" "$STRELE2_WEB/brand.css"; do
   [[ -f "$f" ]] && _obcine_cp "$f" "/app/web/$(basename "$f")" || true
 done

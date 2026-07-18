@@ -183,6 +183,8 @@ export interface SearchResult {
   total_strikes: number;
   daily: DailyStrike[];
   strikes?: StrikePoint[];
+  /** true, ko zemljevid kaže vzorec (npr. 1500 od N), ne vseh točk. */
+  map_strikes_sampled?: boolean;
   credits_remaining: number;
   period_days?: number;
 }

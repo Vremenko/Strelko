@@ -844,6 +844,13 @@ label.field-labeled > span {
   margin: var(--results-section-gap) 0;
 }
 
+.strike-map-sample-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .zavarovalnica-page .results-panel .daily-table-hint {
   margin: var(--results-section-gap) 0 0;
 }
@@ -4241,6 +4248,11 @@ body.site-nav-open {
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--muted);
+}
+
+/* ~8 px med »Velja do …« in obvestilom o preklicu. */
+.portal-card__cancel-notice--under-expiry {
+  margin-top: 8px;
 }
 
 .portal-card__cancel-btn + .portal-card__cancel-notice {

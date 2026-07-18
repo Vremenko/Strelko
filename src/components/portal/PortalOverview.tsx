@@ -26,6 +26,7 @@ export function PortalOverview() {
   } = useStrelko();
   const navigate = useNavigate();
   const [restoreBusy, setRestoreBusy] = useState(false);
+  const [portalBusy, setPortalBusy] = useState(false);
 
   const tokenBalance = tokenBalanceLabel(credits);
   const podpornik = getPodpornikOverview(credits);
@@ -49,6 +50,16 @@ export function PortalOverview() {
       );
     } finally {
       setRestoreBusy(false);
+    }
+  };
+
+  const onCancelViaPortal = async () => {
+    if (portalBusy) return;
+    setPortalBusy(true);
+    try {
+      await openBillingPortal();
+    } finally {
+      setPortalBusy(false);
     }
   };
 
@@ -96,11 +107,18 @@ export function PortalOverview() {
             </div>
             <div className="portal-card__service-body">
               {podpornik.active ? (
-                podpornik.expiryLabel ? (
-                  <p className="portal-overview-stat portal-overview-stat--expiry">
-                    {podpornik.expiryLabel}
-                  </p>
-                ) : null
+                <>
+                  {podpornik.expiryLabel ? (
+                    <p className="portal-overview-stat portal-overview-stat--expiry">
+                      {podpornik.expiryLabel}
+                    </p>
+                  ) : null}
+                  {podpornik.cancelNotice ? (
+                    <p className="portal-card__cancel-notice portal-card__cancel-notice--under-expiry">
+                      {podpornik.cancelNotice}
+                    </p>
+                  ) : null}
+                </>
               ) : (
                 <p className="portal-card__hint">
                   Dostop do celotnega arhiva, naprednih statistik in widgeta.
@@ -109,19 +127,14 @@ export function PortalOverview() {
             </div>
             <div className="portal-card__service-footer">
               {podpornik.canRestore ? (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-block"
-                    disabled={restoreBusy}
-                    onClick={() => void onRestore()}
-                  >
-                    {restoreBusy ? "Obnavljam …" : "Obnovi naročnino"}
-                  </button>
-                  {podpornik.cancelNotice ? (
-                    <p className="portal-card__cancel-notice">{podpornik.cancelNotice}</p>
-                  ) : null}
-                </>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  disabled={restoreBusy}
+                  onClick={() => void onRestore()}
+                >
+                  {restoreBusy ? "Obnavljam …" : "Obnovi naročnino"}
+                </button>
               ) : podpornik.canCancel ? (
                 <>
                   {podpornik.renewalNotice ? (
@@ -132,7 +145,9 @@ export function PortalOverview() {
                   <button
                     type="button"
                     className="btn btn-ghost btn-block portal-card__cancel-btn"
-                    onClick={() => void openBillingPortal()}
+                    disabled={portalBusy}
+                    aria-busy={portalBusy}
+                    onClick={() => void onCancelViaPortal()}
                   >
                     Prekliči naročnino
                   </button>
@@ -140,8 +155,6 @@ export function PortalOverview() {
                     Prekinitev je mogoča tudi po e-pošti na podpora@meteoinfo.si.
                   </p>
                 </>
-              ) : podpornik.cancelNotice ? (
-                <p className="portal-card__cancel-notice">{podpornik.cancelNotice}</p>
               ) : !podpornik.active ? (
                 <Link to="/cenik" className="btn btn-ghost btn-block">
                   Aktiviraj paket

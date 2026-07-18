@@ -8,6 +8,22 @@ import { useStrelko } from "../context/StrelkoContext";
 
 const RESULTS_ID = "zavarovalnica-results";
 
+/**
+ * form → (iskanju) loading na obrazcu
+ * preview → unlocking → results  (brez vmesnega obrazca)
+ */
+type ViewState = "form" | "preview" | "unlocking" | "results";
+
+function deriveViewState(
+  searchResult: unknown,
+  previewScreen: "teaser" | "no-strikes" | null,
+  loading: boolean
+): ViewState {
+  if (searchResult) return "results";
+  if (previewScreen) return loading ? "unlocking" : "preview";
+  return "form";
+}
+
 function scrollElementAfterPaint(elementId: string) {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -26,25 +42,35 @@ function scrollWindowTopAfterPaint() {
 
 export function ZavarovalnicaPage() {
   const { searchResult, previewScreen, loading, savedQueryId } = useStrelko();
-  const showForm =
-    !searchResult && previewScreen !== "teaser" && previewScreen !== "no-strikes";
-  const wasShowingFormRef = useRef(showForm);
 
-  /* Uspešen rezultat: en sam pomik na začetek rezultata (šele po renderju, ne med nalaganjem). */
+  const viewState = deriveViewState(searchResult, previewScreen, loading);
+  const prevViewRef = useRef<ViewState>(viewState);
+  const scrolledForQueryRef = useRef<string | null>(null);
+  const previewKind = previewScreen === "no-strikes" ? "no-strikes" : "teaser";
+
   useEffect(() => {
-    if (!searchResult || loading) return;
-    scrollElementAfterPaint(RESULTS_ID);
-  }, [savedQueryId, searchResult, loading]);
+    const prev = prevViewRef.current;
 
-  /* Nova poizvedba / zaprtje predogleda: po izrisu obrazca stran povsem na vrh. */
-  useEffect(() => {
-    const returnedToForm = showForm && !wasShowingFormRef.current;
-    wasShowingFormRef.current = showForm;
-    if (!returnedToForm || loading) return;
-    scrollWindowTopAfterPaint();
-  }, [showForm, loading]);
+    if (viewState === "results" && searchResult && savedQueryId) {
+      if (!(prev === "results" && scrolledForQueryRef.current === savedQueryId)) {
+        scrolledForQueryRef.current = savedQueryId;
+        scrollElementAfterPaint(RESULTS_ID);
+      }
+    }
 
-  if (searchResult) {
+    if (viewState === "preview" && prev !== "preview" && prev !== "unlocking") {
+      scrollWindowTopAfterPaint();
+    }
+
+    if (viewState === "form" && (prev === "results" || prev === "preview" || prev === "unlocking")) {
+      scrolledForQueryRef.current = null;
+      scrollWindowTopAfterPaint();
+    }
+
+    prevViewRef.current = viewState;
+  }, [viewState, searchResult, savedQueryId]);
+
+  if (viewState === "results" && searchResult) {
     return (
       <section id={RESULTS_ID} className="zavarovalnica-page page--standard">
         <ErrorBoundary
@@ -60,22 +86,15 @@ export function ZavarovalnicaPage() {
     );
   }
 
-  if (previewScreen === "teaser") {
+  if (viewState === "preview" || viewState === "unlocking") {
     return (
       <section className="zavarovalnica-page page--standard">
-        <PreviewTeaser />
+        {previewKind === "no-strikes" ? <PreviewNoStrikes /> : <PreviewTeaser />}
       </section>
     );
   }
 
-  if (previewScreen === "no-strikes") {
-    return (
-      <section className="zavarovalnica-page page--standard">
-        <PreviewNoStrikes />
-      </section>
-    );
-  }
-
+  /* form: začetno iskanje; SearchCard sam prikaže indikator med loading. */
   return (
     <section className="zavarovalnica-page page--standard">
       <div className="page-header">

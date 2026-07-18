@@ -83,8 +83,8 @@ export function getPodpornikOverview(credits?: Credits | null): {
   const expiryFormatted = expiryRaw ? formatPeriodEndGenitive(expiryRaw) : null;
   const canManageBilling = Boolean(credits?.billing_portal_available);
   const hasStripeSub = Boolean(credits?.has_subscription);
-  /** Gumb Prekliči, ko ni načrtovanega preklica in obstaja Stripe naročnina/portal. */
-  const canCancel = !cancelScheduled && (canManageBilling || hasStripeSub);
+  /** Gumb Prekliči: samo pri Stripe naročnini (ne pri ročno dodeljenem Podporniku). */
+  const canCancel = !cancelScheduled && canManageBilling && hasStripeSub;
   /** Obnovi: še velja, nastavljen preklic ob koncu, Stripe sub še obstaja. */
   const canRestore = cancelScheduled && (canManageBilling || hasStripeSub);
 

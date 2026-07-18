@@ -80,6 +80,7 @@ export function savedQueryOutToSearchResult(out: SavedQueryOut): SearchResult {
     total_strikes: totalStrikes,
     daily,
     strikes: asStrikePoints(snapshot.strikes),
+    map_strikes_sampled: Boolean(snapshot.map_strikes_sampled),
     credits_remaining: out.token_balance,
     period_days:
       typeof snapshot.period_days === "number" ? snapshot.period_days : undefined,
