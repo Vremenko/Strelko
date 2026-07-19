@@ -358,15 +358,21 @@ function ArchiveMapEmbedSupporter({
 
 function ArchiveMapEmbedGated({
   visible = true,
-  periodDays = 7,
+  periodDays,
   hideGrid = false,
 }: {
   visible?: boolean;
+  /**
+   * 1 ali 7 = fiksno obdobje (javni embed z ?period=).
+   * Brez vrednosti: map-embed izbere Danes, če so danes strele, sicer 7 dni
+   * (days=30 v URL je signal »ne zakleni«, default_range_days=7 je rezervni).
+   */
   periodDays?: number;
   hideGrid?: boolean;
 }) {
-  const freeDays = periodDays === 1 || periodDays === 7 ? periodDays : 7;
-  const src = archiveMapEmbedUrl(freeDays, {
+  const lockedFreeDays =
+    periodDays === 1 || periodDays === 7 ? periodDays : null;
+  const src = archiveMapEmbedUrl(lockedFreeDays ?? 30, {
     defaultRangeDays: 7,
     hideGrid,
     supporter: false,
@@ -530,7 +536,7 @@ export function ArchiveMapEmbed({
   return (
     <ArchiveMapEmbedGated
       visible={visible}
-      periodDays={periodDays ?? 7}
+      periodDays={periodDays}
       hideGrid={forcePublic || hideGridTab}
     />
   );
