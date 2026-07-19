@@ -57,6 +57,13 @@ export function isMapPeriodLockedInIframe(doc: Document): boolean {
   return isMapSelectValueLocked(sel.value);
 }
 
+/** Aktivni zavihek Mreža — React period gate ne sme prestreči dogodkov (native grid lock). */
+export function isGridViewActiveInIframe(doc: Document): boolean {
+  return Boolean(
+    doc.querySelector('#mapViewTabs .map-mode-btn--active[data-view="grid"]')
+  );
+}
+
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -185,6 +192,7 @@ export function attachMapPeriodGate(
   const sel = doc.getElementById("daysSelect") as HTMLSelectElement | null;
   const dayPick = doc.getElementById("mapDayPick") as HTMLInputElement | null;
   const mapModeTabs = doc.getElementById("mapModeTabs");
+  const mapViewTabs = doc.getElementById("mapViewTabs");
 
   const sync = (locked: boolean) => {
     if (locked) syncLockedToolbarUI(doc);
@@ -193,7 +201,20 @@ export function attachMapPeriodGate(
     onLockedChange(locked, mount);
   };
 
+  const recompute = () => {
+    /* Med zaklenjeno mrežo React portal ugasnemo — native #map-feature-lock je vir resnice. */
+    if (isGridViewActiveInIframe(doc)) {
+      sync(false);
+      return;
+    }
+    sync(isMapPeriodLockedInIframe(doc));
+  };
+
   const onSelectChange = (e: Event) => {
+    if (isGridViewActiveInIframe(doc)) {
+      sync(false);
+      return; /* pusti native applyPeriodSelection / showPeriodLockUi */
+    }
     const locked = isMapPeriodLockedInIframe(doc);
     if (locked) {
       e.stopImmediatePropagation();
@@ -205,6 +226,10 @@ export function attachMapPeriodGate(
   };
 
   const onDayPickChange = (e: Event) => {
+    if (isGridViewActiveInIframe(doc)) {
+      sync(false);
+      return;
+    }
     if (sel?.value !== "pick") return;
     e.stopImmediatePropagation();
     e.preventDefault();
@@ -212,6 +237,7 @@ export function attachMapPeriodGate(
   };
 
   const onModeTabClick = (e: Event) => {
+    if (isGridViewActiveInIframe(doc)) return;
     if (!isMapPeriodLockedInIframe(doc)) return;
     const btn = (e.target as Element | null)?.closest("[data-mode]");
     if (!btn) return;
@@ -225,15 +251,44 @@ export function attachMapPeriodGate(
     sync(true);
   };
 
+  const onViewTabClick = () => {
+    /* Po native preklopu Občine/Mreža ponovno izračunaj React zaklep. */
+    setTimeout(recompute, 0);
+  };
+
+  const onEmbedMessage = (e: MessageEvent) => {
+    if (e.source !== iframe.contentWindow) return;
+    if (e.data?.type !== "strele-map-view-changed") return;
+    if (e.data.view === "grid") {
+      sync(false);
+      return;
+    }
+    if (e.data.view === "obcine") {
+      if (e.data.locked === true) {
+        sync(true);
+        return;
+      }
+      if (e.data.locked === false) {
+        sync(false);
+        return;
+      }
+      recompute();
+    }
+  };
+
   sel?.addEventListener("change", onSelectChange, true);
   dayPick?.addEventListener("change", onDayPickChange, true);
   mapModeTabs?.addEventListener("click", onModeTabClick, true);
+  mapViewTabs?.addEventListener("click", onViewTabClick);
+  window.addEventListener("message", onEmbedMessage);
 
-  sync(isMapPeriodLockedInIframe(doc));
+  recompute();
 
   return () => {
     sel?.removeEventListener("change", onSelectChange, true);
     dayPick?.removeEventListener("change", onDayPickChange, true);
     mapModeTabs?.removeEventListener("click", onModeTabClick, true);
+    mapViewTabs?.removeEventListener("click", onViewTabClick);
+    window.removeEventListener("message", onEmbedMessage);
   };
 }
