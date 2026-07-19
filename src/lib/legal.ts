@@ -62,13 +62,13 @@ export const LEGAL_PAGES = {
     path: "/pogoji-uporabe",
     title: "Pogoji uporabe storitve Strelko",
     navTitle: "Pogoji uporabe",
-    updated: "12. 7. 2026",
+    updated: "19. 7. 2026",
     sections: [
       {
         title: "1. Splošno",
         body: `
           <p>Ti pogoji uporabe urejajo dostop do spletne storitve Strelko, uporabo brezplačnih in plačljivih funkcij,
-          nakup ter porabo žetonov, uporabo paketa Podpornik in izdelavo PDF-poročil.</p>
+          nakup ter porabo žetonov, naročnino Podpornik in izdelavo PDF-poročil.</p>
           <p>Z uporabo storitve oziroma z izvedbo nakupa uporabnik potrjuje, da je te pogoje prebral in se z njimi strinja.</p>
           <p>Ponudnik storitve je:</p>
           <p><strong>${COMPANY.legalName}</strong><br />
@@ -156,6 +156,12 @@ export const LEGAL_PAGES = {
         body: `
           <p>Paket Podpornik je plačljiva digitalna storitev, ki omogoča dostop do dodatnih prikazov in funkcij,
           navedenih na strani <a href="/cenik">Cenik</a>.</p>
+          <p>Z aktivacijo paketa Podpornik uporabnik sklene mesečno naročnino na digitalno storitev Strelko. Naročnina
+          se samodejno podaljšuje vsak mesec do preklica. Uporabnik jo lahko kadar koli prekliče v razdelku
+          <a href="/moj-strelko">Moj Strelko</a>. Po preklicu ostane paket aktiven do konca že plačanega obračunskega
+          obdobja, nato pa se ne podaljša več.</p>
+          <p>Posebne pisne pogodbe ob aktivaciji naročnine ne podpisujete; naročnina se sklene na daljavo prek spletne
+          strani.</p>
           <p>Paket lahko vključuje zlasti:</p>
           <ul>
             <li>celoten arhiv strel,</li>
@@ -163,19 +169,22 @@ export const LEGAL_PAGES = {
             <li>widget za spletno stran.</li>
           </ul>
           <p>Paket Podpornik ne vključuje žetonov za pregled udarov strel ob škodnem dogodku ali izdelave PDF-poročil.
-          Žetone je treba kupiti posebej.</p>
-          <p>Uporabnik lahko hkrati uporablja paket Podpornik in žetone.</p>`,
+          Žetone je treba kupiti posebej (enkratni nakup, ne naročnina).</p>
+          <p>Uporabnik lahko hkrati uporablja naročnino Podpornik in žetone.</p>`,
       },
       {
-        title: "10. Trajanje in podaljševanje paketa Podpornik",
+        title: "10. Trajanje in podaljševanje naročnine Podpornik",
         body: `
-          <p>Paket Podpornik velja 30 dni od uspešno izvedenega plačila.</p>
-          <p>Če uporabnik naročnine ne prekliče, se paket po izteku plačanega obdobja samodejno podaljša za nadaljnjih
-          30 dni, uporabniku pa se obračuna takrat veljavna cena.</p>
-          <p>Uporabnik lahko samodejno podaljševanje kadar koli prekliče v razdelku <a href="/moj-strelko">Moj Strelko</a>.</p>
-          <p>Po preklicu novih plačil ne bo, dostop do paketa Podpornik pa ostane aktiven do konca že plačanega obdobja.</p>
-          <p>Trajanje pogodbe, način samodejnega podaljševanja in pogoji preklica so uporabniku prikazani tudi pred
-          končno potrditvijo nakupa.</p>`,
+          <p>Naročnina Podpornik velja za plačano obračunsko obdobje 30 dni od uspešno izvedenega plačila oziroma
+          aktivacije naročnine.</p>
+          <p>Če uporabnik naročnine ne prekliče, se po izteku plačanega obračunskega obdobja samodejno mesečno
+          podaljša za nadaljnjih 30 dni, uporabniku pa se obračuna takrat veljavna cena.</p>
+          <p>Uporabnik lahko naročnino kadar koli prekliče v razdelku <a href="/moj-strelko">Moj Strelko</a>.</p>
+          <p>Po preklicu naročnine novih plačil ne bo, dostop do paketa Podpornik pa ostane aktiven do konca že
+          plačanega obračunskega obdobja.</p>
+          <p>Trajanje naročnine, način samodejnega mesečnega podaljševanja in pogoji preklica so uporabniku prikazani
+          tudi pred končno potrditvijo nakupa. Ob aktivaciji gre za pogodbo, sklenjeno na daljavo, v smislu
+          potrošniške zakonodaje.</p>`,
       },
       {
         title: "11. Cene in plačilo",
@@ -184,7 +193,7 @@ export const LEGAL_PAGES = {
           <p>Vse cene za potrošnike vključujejo DDV, razen če je izrecno navedeno drugače.</p>
           <p>Plačilo se izvede prek izbranega ponudnika plačilnih storitev. Ponudnik Strelka praviloma ne prejme
           ali hrani celotnih podatkov o plačilni kartici.</p>
-          <p>Po uspešnem plačilu se žetoni pripišejo uporabniškemu računu oziroma se aktivira paket Podpornik.
+          <p>Po uspešnem plačilu se žetoni pripišejo uporabniškemu računu oziroma se aktivira naročnina Podpornik.
           Potrdilo o plačilu oziroma račun se uporabniku pošlje po e-pošti in je lahko dostopen tudi v razdelku
           <a href="/moj-strelko">Moj Strelko</a>.</p>`,
       },
@@ -192,9 +201,10 @@ export const LEGAL_PAGES = {
         title: "12. Sklenitev pogodbe",
         body: `
           <p>Uporabnik pred oddajo plačljivega naročila prejme povzetek izbrane ponudbe, cene, morebitnega samodejnega
-          podaljševanja in drugih bistvenih pogojev.</p>
-          <p>Pogodba je sklenjena, ko uporabnik potrdi naročilo z gumbom, ki jasno označuje obveznost plačila,
-          in je plačilo uspešno izvedeno.</p>
+          mesečnega podaljševanja naročnine in drugih bistvenih pogojev.</p>
+          <p>Pogodba, sklenjena na daljavo, nastane, ko uporabnik potrdi naročilo z gumbom, ki jasno označuje obveznost
+          plačila, in je plačilo uspešno izvedeno. Pri paketu Podpornik gre za aktivacijo mesečne spletne naročnine;
+          posebne pisne pogodbe ne podpisujete.</p>
           <p>Potrdilo o sklenjeni pogodbi se uporabniku pošlje na njegov e-poštni naslov oziroma shrani v uporabniškem računu.</p>
           <p>Pogodba se sklepa v slovenskem jeziku.</p>`,
       },
@@ -203,10 +213,12 @@ export const LEGAL_PAGES = {
         body: `
           <p>Potrošnik ima pri pogodbi, sklenjeni na daljavo, pravico do odstopa v roku 14 dni, razen v primerih,
           ko veljavna zakonodaja določa izjemo ali prenehanje te pravice.</p>
-          <p>Kadar uporabnik zahteva takojšnjo aktivacijo paketa, odklep poizvedbe ali izdelavo PDF-poročila pred
-          potekom odstopnega roka, mora pred izvedbo podati izrecno zahtevo oziroma soglasje, kadar ga zahteva zakon.</p>
+          <p>Kadar uporabnik zahteva takojšnjo aktivacijo naročnine Podpornik, odklep poizvedbe ali izdelavo PDF-poročila
+          pred potekom odstopnega roka, mora pred izvedbo podati izrecno zahtevo oziroma soglasje, kadar ga zahteva
+          zakon.</p>
           <p>Posledice takojšnjega začetka izvajanja, morebitno sorazmerno plačilo že opravljene storitve ter prenehanje
           pravice do odstopa se presojajo skladno z veljavno zakonodajo.</p>
+          <p>Preklic naročnine Podpornik (ustavitev prihodnjih samodejnih podaljšanj) ni enak odstopu od pogodbe.</p>
           <p>Odstop lahko uporabnik sporoči na <a href="mailto:${COMPANY.email}">${COMPANY.email}</a> z nedvoumno izjavo.</p>`,
       },
       {
@@ -881,14 +893,16 @@ export const LEGAL_PAGES = {
   consumer: {
     path: "/pravice-potrosnikov",
     title: "Pravice potrošnikov",
-    updated: "12. 7. 2026",
+    updated: "19. 7. 2026",
     sections: [
       {
         title: "Praktičen povzetek",
         body: `
           <p>Ta stran je <strong>praktičen povzetek</strong> najpomembnejših potrošniških pravic pri nakupu žetonov in
           paketa Podpornik v storitvi Strelko. Ne nadomešča veljavne zakonodaje in ne omejuje pravic, ki vam po zakonu
-          pripadajo.</p>`,
+          pripadajo.</p>
+          <p>Paket Podpornik je <strong>mesečna spletna naročnina</strong>. Ob aktivaciji ne podpisujete posebne pisne
+          pogodbe; naročnina se sklene na daljavo prek spletne strani. Nakup žetonov je enkratni nakup in ni naročnina.</p>`,
       },
       {
         title: "1. Kdo je potrošnik?",
@@ -905,11 +919,11 @@ export const LEGAL_PAGES = {
           <ul>
             <li>izbrana ponudba in njene bistvene lastnosti;</li>
             <li>končna cena z DDV;</li>
-            <li>število kupljenih oziroma porabljenih žetonov;</li>
-            <li>trajanje paketa Podpornik;</li>
-            <li>samodejno podaljševanje in način preklica;</li>
+            <li>število kupljenih oziroma porabljenih žetonov (pri nakupu žetonov);</li>
+            <li>aktivacija naročnine in trajanje plačanega obračunskega obdobja (pri paketu Podpornik);</li>
+            <li>samodejno mesečno podaljševanje in preklic naročnine;</li>
             <li>pogoji takojšnje uporabe plačljive storitve;</li>
-            <li>pogoji in postopek za odstop od pogodbe.</li>
+            <li>pogoji in postopek za odstop od pogodbe, sklenjene na daljavo.</li>
           </ul>
           <p>Uporabnik lahko pred potrditvijo naročila preveri in po potrebi popravi vnesene podatke. Naročilo je oddano
           šele z dejanjem, ki jasno označuje obveznost plačila.</p>
@@ -925,23 +939,29 @@ export const LEGAL_PAGES = {
             jasno razvidno, da odstopa od pogodbe.</p>
           </div>
           <p>Pravica do odstopa se presoja v skladu z Zakonom o varstvu potrošnikov in morebitnimi zakonskimi
-          izjemami.</p>`,
+          izjemami.</p>
+          <p>Odstop od pogodbe ni isto kot preklic naročnine Podpornik. Preklic ustavi prihodnja samodejna
+          podaljšanja; odstop je zakonska potrošniška pravica v roku 14 dni.</p>`,
       },
       {
         title: "4. Takojšnja uporaba storitve",
         body: `
-          <p>Žetoni in paket Podpornik so uporabniku praviloma na voljo takoj po uspešnem plačilu, še pred potekom
+          <p>Žetoni in naročnina Podpornik so uporabniku praviloma na voljo takoj po uspešnem plačilu, še pred potekom
           14-dnevnega odstopnega roka.</p>
           <p>Kadar zakon to zahteva, mora uporabnik pred takojšnjim začetkom izvajanja podati izrecno zahtevo oziroma
           soglasje. Izjava mora biti jasna, ločena od sprejetja splošnih pogojev in ne sme biti vnaprej označena.</p>
           <h3>Paket Podpornik</h3>
-          <p>Paket Podpornik je storitev, ki se zagotavlja v plačanem 30-dnevnem obdobju. Če potrošnik zahteva
-          takojšnjo aktivacijo in nato veljavno odstopi pred koncem obdobja, se njegova pravica in morebitno sorazmerno
-          plačilo za že izvedeni del presojata skladno z veljavno zakonodajo ter informacijami in izjavami, ki jih je
-          prejel oziroma podal pred nakupom.</p>
-          <p>Potrošnik pravice do odstopa ne izgubi samodejno že z aktivacijo paketa. Pri storitvi lahko pravica
-          preneha po popolni izvedbi le, če so izpolnjeni vsi zakonski pogoji, vključno z ustrezno predhodno zahtevo
-          oziroma soglasjem potrošnika.</p>
+          <p>Z aktivacijo paketa Podpornik uporabnik sklene mesečno naročnino na digitalno storitev Strelko. Naročnina
+          se samodejno podaljšuje vsak mesec do preklica. Uporabnik jo lahko kadar koli prekliče v razdelku
+          <a href="/moj-strelko">Moj Strelko</a>. Po preklicu ostane paket aktiven do konca že plačanega obračunskega
+          obdobja, nato pa se ne podaljša več.</p>
+          <p>Naročnina se zagotavlja v plačanem obračunskem obdobju. Če potrošnik zahteva takojšnjo aktivacijo naročnine
+          in nato veljavno odstopi od pogodbe pred koncem obdobja, se njegova pravica in morebitno sorazmerno plačilo za
+          že izvedeni del presojata skladno z veljavno zakonodajo ter informacijami in izjavami, ki jih je prejel
+          oziroma podal pred nakupom.</p>
+          <p>Potrošnik pravice do odstopa od pogodbe ne izgubi samodejno že z aktivacijo naročnine. Pri storitvi lahko
+          pravica preneha po popolni izvedbi le, če so izpolnjeni vsi zakonski pogoji, vključno z ustrezno predhodno
+          zahtevo oziroma soglasjem potrošnika.</p>
           <h3>Odklep poizvedbe in PDF-poročilo</h3>
           <p>Odklep posamezne poizvedbe in izdelava PDF-poročila se lahko izvedeta takoj in v celoti. Pred tako
           izvedbo mora biti uporabniku jasno pojasnjeno, kako takojšnji začetek oziroma popolna izvedba vpliva na
@@ -954,6 +974,8 @@ export const LEGAL_PAGES = {
       {
         title: "5. Odstop od nakupa žetonov",
         body: `
+          <p>Nakup žetonov je <strong>enkratni nakup</strong> in ni naročnina. Ne vključuje samodejnega mesečnega
+          podaljševanja.</p>
           <p>Potrošnik lahko od nakupa žetonov odstopi v zakonskem roku, če za omejitev ali prenehanje pravice do
           odstopa niso izpolnjeni zakonski pogoji.</p>
           <p>Ob veljavnem odstopu od nakupa se neporabljeni žetoni odstranijo z uporabniškega računa, ustrezno
@@ -965,24 +987,31 @@ export const LEGAL_PAGES = {
           računu.</p>`,
       },
       {
-        title: "6. Paket Podpornik: odstop in preklic",
+        title: "6. Paket Podpornik: naročnina, preklic in odstop",
         body: `
-          <p>Odstop od pogodbe in preklic samodejnega podaljševanja sta <strong>različna postopka</strong>.</p>
-          <h3>Odstop od pogodbe</h3>
-          <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #05a5ce; background: rgba(5, 165, 206, 0.08); border-radius: 0 8px 8px 0;">
-            <p>Potrošnik lahko pri sklenitvi pogodbe za paket Podpornik uveljavlja zakonsko pravico do odstopa v 14
-            dneh, ob upoštevanju pravil o takojšnjem začetku izvajanja storitve.</p>
-            <p>Če je potrošnik izrecno zahteval takojšnjo aktivacijo, se obseg morebitnega vračila oziroma sorazmernega
-            plačila za že izvedeni del določi skladno z veljavno zakonodajo.</p>
-          </div>
+          <p>Z aktivacijo paketa Podpornik uporabnik sklene mesečno naročnino na digitalno storitev Strelko. Naročnina
+          se samodejno podaljšuje vsak mesec do preklica. Uporabnik jo lahko kadar koli prekliče v razdelku
+          <a href="/moj-strelko">Moj Strelko</a>. Po preklicu ostane paket aktiven do konca že plačanega obračunskega
+          obdobja, nato pa se ne podaljša več.</p>
+          <p>Posebne pisne pogodbe ob aktivaciji ne podpisujete. Naročnina se sklene na daljavo prek spletne strani;
+          gre za pogodbo, sklenjeno na daljavo, v smislu potrošniške zakonodaje.</p>
+          <p>Odstop od pogodbe in preklic naročnine sta <strong>različna postopka</strong>.</p>
           <h3>Preklic naročnine</h3>
           <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #fbb006; background: rgba(251, 176, 6, 0.08); border-radius: 0 8px 8px 0;">
-            <p>Uporabnik lahko samodejno podaljševanje paketa Podpornik kadar koli prekliče v razdelku
+            <p>Preklic naročnine ustavi prihodnja samodejna mesečna podaljšanja.</p>
+            <p>Uporabnik lahko naročnino Podpornik kadar koli prekliče v razdelku
             <a href="/moj-strelko">Moj Strelko</a>.</p>
-            <p>Po preklicu se nova plačila ne izvedejo, dostop pa ostane aktiven do konca že plačanega 30-dnevnega
+            <p>Po preklicu se nova plačila ne izvedejo, dostop pa ostane aktiven do konca že plačanega obračunskega
             obdobja.</p>
-            <p>Preklic samodejnega podaljševanja ni enak odstopu od že sklenjene pogodbe in sam po sebi ne pomeni
-            vračila plačila za tekoče obdobje.</p>
+            <p>Preklic naročnine ni enak odstopu od pogodbe in sam po sebi ne pomeni vračila plačila za tekoče
+            obračunsko obdobje.</p>
+          </div>
+          <h3>Odstop od pogodbe</h3>
+          <div style="margin: 1rem 0; padding: 1rem 1.25rem; border-left: 3px solid #05a5ce; background: rgba(5, 165, 206, 0.08); border-radius: 0 8px 8px 0;">
+            <p>Odstop od pogodbe je zakonska potrošniška pravica pri pogodbi, sklenjeni na daljavo. Potrošnik jo lahko
+            uveljavlja v 14 dneh, ob upoštevanju pravil o takojšnjem začetku izvajanja storitve.</p>
+            <p>Če je potrošnik izrecno zahteval takojšnjo aktivacijo naročnine, se obseg morebitnega vračila oziroma
+            sorazmernega plačila za že izvedeni del določi skladno z veljavno zakonodajo.</p>
           </div>`,
       },
       {
@@ -1036,12 +1065,13 @@ export const LEGAL_PAGES = {
           <p>Obseg vračila je odvisen od vrste kupljene ponudbe, že opravljenega dela storitve, izjav uporabnika pred
           začetkom izvajanja in veljavne zakonodaje.</p>
           <p>Ob veljavnem vračilu plačila za neporabljene žetone se ti odstranijo z uporabniškega računa. Ob odstopu od
-          paketa Podpornik se uporabniku po izvedenem vračilu ustrezno omeji nadaljnji dostop do plačljivih funkcij.</p>`,
+          pogodbe za naročnino Podpornik se uporabniku po izvedenem vračilu ustrezno omeji nadaljnji dostop do
+          plačljivih funkcij.</p>`,
       },
       {
         title: "9. Če storitev ni dobavljena",
         body: `
-          <p>Če se kupljeni žetoni ne pripišejo računu, paket Podpornik ni aktiviran ali druga plačana funkcija ni
+          <p>Če se kupljeni žetoni ne pripišejo računu, naročnina Podpornik ni aktivirana ali druga plačana funkcija ni
           dostopna, naj uporabnik najprej obvesti Meteoinfo in zahteva dobavo oziroma odpravo težave.</p>
           <p>Če storitev kljub pozivu ni zagotovljena brez nepotrebnega odlašanja oziroma v dogovorjenem dodatnem
           roku, lahko potrošnik pod zakonskimi pogoji odstopi od pogodbe.</p>

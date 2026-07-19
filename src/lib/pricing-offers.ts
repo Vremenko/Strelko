@@ -64,17 +64,17 @@ export const PRICING_PODPORNIST: PricingOffer = {
     "Dostop do celotnega arhiva strel",
     "Napredne statistike",
     "Widget za prikaz podatkov na spletni strani",
-    "Samodejno mesečno podaljšanje",
-    "Preklic kadar koli",
+    "Samodejno mesečno podaljševanje",
+    "Preklic naročnine kadar koli",
   ],
 };
 
 export const CENIK_PODPORNIST_DESCRIPTION =
-  "S paketom Podpornik pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov.";
+  "S paketom Podpornik aktivirate mesečno spletno naročnino in pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov.";
 
 /** Obvestilo neposredno nad gumbom na kartici Podpornik (cenik). */
 export const CENIK_PODPORNIST_RENEWAL_NOTE =
-  "Naročnina se samodejno obnavlja vsak mesec do preklica.";
+  "Naročnina se samodejno mesečno podaljšuje do preklica.";
 
 export const CENIK_PODPORNIST_FEATURES = [
   "Celoten arhiv strel po dnevih, urah, statističnih regijah in občinah",
@@ -138,7 +138,7 @@ export const PRICING_FAQ = [
   },
   {
     q: "Kako prekličem naročnino Podpornik?",
-    a: "Naročnino lahko kadar koli prekličete v Moj Strelko. Po preklicu se ne izvedejo nova plačila, dostop pa ostane do konca že plačanega obdobja.",
+    a: "Naročnino lahko kadar koli prekličete v Moj Strelko. Preklic ustavi prihodnja samodejna podaljšanja; dostop ostane aktiven do konca že plačanega obračunskega obdobja.",
   },
   {
     q: "Kje dobim račune?",
@@ -149,11 +149,11 @@ export const PRICING_FAQ = [
 export const PURCHASE_STEPS = [
   "Prijavite se ali ustvarite uporabniški račun.",
   "Izberite nakup žetonov ali paket Podpornik ter plačilo opravite prek varnega plačilnega sistema.",
-  "Naročnina Podpornik se vsak mesec samodejno podaljša, dokler je ne prekličete v razdelku Moj Strelko. Po preklicu novih plačil ne bo, dostop do paketa Podpornik pa ostane aktiven do konca že plačanega obdobja.",
+  "Naročnina Podpornik se samodejno mesečno podaljšuje do preklica v razdelku Moj Strelko. Po preklicu novih plačil ne bo, dostop pa ostane aktiven do konca že plačanega obračunskega obdobja.",
   "Potrdila o plačilu in računi bodo po povezavi plačilnega sistema poslani po e-pošti ter dostopni v razdelku Moj Strelko.",
 ] as const;
 
 export const PURCHASE_CLOSING_NOTE = {
-  lead: "Paket Podpornik in žetone lahko uporabljate hkrati.",
-  body: "Podpornik omogoča dostop do dodatnih prikazov in orodij, žetoni pa so namenjeni posameznim pregledom udarov strel in izdelavi PDF-poročil.",
+  lead: "Naročnino Podpornik in žetone lahko uporabljate hkrati.",
+  body: "Podpornik je mesečna spletna naročnina za dodatne prikaze in orodja; žetoni so enkratni nakup za posamezne preglede udarov strel in izdelavo PDF-poročil.",
 } as const;
