@@ -1,21 +1,34 @@
-import { useStrelko } from "../../context/StrelkoContext";
 import { Link } from "react-router-dom";
+import { useStrelko } from "../../context/StrelkoContext";
 
 export function CookieBanner() {
-  const { cookieAccepted, acceptCookies } = useStrelko();
-  if (cookieAccepted) return null;
+  const { privacyConsent, setPrivacyConsent } = useStrelko();
+  if (privacyConsent !== null) return null;
 
   return (
-    <div className="cookie-banner" role="dialog" aria-label="Obvestilo o piškotkih">
+    <div className="cookie-banner" role="dialog" aria-label="Obvestilo o zasebnosti">
       <div className="cookie-banner-inner">
         <p>
-          Za delovanje prijave uporabljamo nujne zapise v brskalniku. Po potrditvi merimo tudi anonimne
-          statistike obiska (Umami, brez piškotkov za sledenje).{" "}
-          <Link to="/piskotki">Več o piškotkih</Link>
+          Za delovanje Strelka uporabljamo nujno lokalno shranjevanje. Z vašim dovoljenjem vključimo tudi
+          anonimno statistiko obiska z lastno analitiko Umami.{" "}
+          <Link to="/piskotki">Več o zasebnosti</Link>
         </p>
-        <button type="button" className="btn btn-primary btn-sm" onClick={acceptCookies}>
-          Razumem
-        </button>
+        <div className="cookie-banner-actions">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setPrivacyConsent("necessary")}
+          >
+            Samo nujno
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => setPrivacyConsent("analytics")}
+          >
+            Dovoli analitiko
+          </button>
+        </div>
       </div>
     </div>
   );

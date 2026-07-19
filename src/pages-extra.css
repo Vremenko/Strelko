@@ -5907,3 +5907,36 @@ html.public-embed-root .hero-bg {
   margin: 0.75rem 0 0;
 }
 .admin2-preview-note{margin:0 0 .65rem;font-size:.82rem;opacity:.8;line-height:1.4}.admin2-preview-note code{font-size:.78rem;word-break:break-all}
+
+
+/* ——— Privolitev zasebnosti (banner + nastavitve na /piskotki) ——— */
+.cookie-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cookie-banner-actions .btn {
+  min-height: 2.25rem;
+}
+
+.privacy-consent-settings {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.privacy-consent-settings__hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.privacy-consent-settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}

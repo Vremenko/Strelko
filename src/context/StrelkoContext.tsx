@@ -44,6 +44,14 @@ import { parseInsufficientTokensDetail } from "../lib/query-billing";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
 import { canSubscribePodpornik } from "../lib/portal-account";
 import { markMapGridLockFlash } from "../lib/map-grid-access";
+import {
+  type CookieConsentValue,
+  isAnalyticsAllowed,
+  readCookieConsent,
+  writeCookieConsent,
+} from "../lib/cookie-consent";
+import { setUmamiTrackingAllowed } from "../lib/umami";
+
 import { decideZavarovalnicaNoQueryAction } from "../lib/zavarovalnica-view-transition";
 import { openStripeBillingPortalInNewTab } from "../lib/stripe-billing-portal";
 import {
@@ -154,7 +162,8 @@ interface StrelkoState {
     publicWidgetLabel: string;
   };
   modals: ModalState;
-  cookieAccepted: boolean;
+  /** null = banner še ni odgovorjen */
+  privacyConsent: CookieConsentValue | null;
 }
 
 interface StrelkoContextValue extends StrelkoState {
@@ -192,7 +201,7 @@ interface StrelkoContextValue extends StrelkoState {
   checkout: (quantity?: number, planOverride?: string) => Promise<void>;
   openBillingPortal: () => Promise<void>;
   restoreSubscription: () => Promise<void>;
-  acceptCookies: () => void;
+  setPrivacyConsent: (value: CookieConsentValue) => void;
   clearSearch: () => void;
   /** Ob Nazaj z ?query= — ZavarovalnicaPage naj ne skoči na vrh. */
   zavarovalnicaSkipFormScrollRef: MutableRefObject<boolean>;
@@ -376,9 +385,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     [goToCenik]
   );
 
-  const [cookieAccepted, setCookieAccepted] = useState(
-    () => localStorage.getItem("strelko_cookie_consent") === "1"
+  const [privacyConsent, setPrivacyConsentState] = useState<CookieConsentValue | null>(
+    () => readCookieConsent()
   );
+  const logoutInFlightRef = useRef(false);
 
   const refreshUserInFlightRef = useRef<Promise<void> | null>(null);
   const runPreviewInFlightRef = useRef(false);
@@ -1338,7 +1348,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       widget,
       userWidget,
       modals,
-      cookieAccepted,
+      privacyConsent,
       refreshUser,
       loadPlans,
       setSelectedPlan: setSelectedPlanState,
@@ -1568,15 +1578,26 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         await afterAuth();
       },
       logout: () => {
-        markMapGridLockFlash();
-        window.dispatchEvent(new Event("strelko-access-revoked"));
-        clearAuthCheckoutIntent();
-        setToken(null);
-        setUser(null);
-        setCredits(null);
-        setAlerts(null);
-        setSessionLoadWarning(null);
-        clearSearchState();
+        if (logoutInFlightRef.current) return;
+        logoutInFlightRef.current = true;
+        void (async () => {
+          try {
+            await api.logout();
+          } catch {
+            /* lokalna odjava vedno */
+          } finally {
+            markMapGridLockFlash();
+            window.dispatchEvent(new Event("strelko-access-revoked"));
+            clearAuthCheckoutIntent();
+            setToken(null);
+            setUser(null);
+            setCredits(null);
+            setAlerts(null);
+            setSessionLoadWarning(null);
+            clearSearchState();
+            logoutInFlightRef.current = false;
+          }
+        })();
       },
       openCredits: (opts = {}) => openCreditsNotice(opts),
       closeCredits: () =>
@@ -1635,9 +1656,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCredits(updated);
         await refreshUser();
       },
-      acceptCookies: () => {
-        localStorage.setItem("strelko_cookie_consent", "1");
-        setCookieAccepted(true);
+      setPrivacyConsent: (value) => {
+        writeCookieConsent(value);
+        setPrivacyConsentState(value);
+        setUmamiTrackingAllowed(isAnalyticsAllowed(value));
       },
       clearSearch,
       zavarovalnicaSkipFormScrollRef,
@@ -1708,7 +1730,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       widget,
       userWidget,
       modals,
-      cookieAccepted,
+      privacyConsent,
       refreshUser,
       loadPlans,
       fetchSuggestions,

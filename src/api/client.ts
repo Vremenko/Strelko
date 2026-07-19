@@ -180,6 +180,7 @@ export const api = {
       body: JSON.stringify({ token, password }),
     }),
   whoami: () => request<import("../types").User>("/auth/whoami"),
+  logout: () => request<{ ok?: boolean }>("/auth/logout", { method: "POST" }),
   checkout: (body: { plan: string; quantity?: number }) =>
     request<{ checkout_url: string; session_id: string }>("/strelko/checkout", {
       method: "POST",

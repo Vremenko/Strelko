@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PrivacyConsentSettings } from "../components/PrivacyConsentSettings";
 import { COMPANY, LEGAL_PAGES, type LegalPageId } from "../lib/legal";
 
 export function LegalPage({ pageId }: { pageId: LegalPageId }) {
@@ -30,6 +31,7 @@ export function LegalPage({ pageId }: { pageId: LegalPageId }) {
         </nav>
       </header>
       <div className="legal-card">
+        {pageId === "cookies" ? <PrivacyConsentSettings /> : null}
         {page.sections.map((s) => (
           <section className="legal-section" key={s.title}>
             <h2>{s.title}</h2>

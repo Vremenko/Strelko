@@ -1,22 +1,30 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
-import { loadUmamiScript, trackUmamiPageview, umamiEnabled } from "../lib/umami";
+import { isAnalyticsAllowed } from "../lib/cookie-consent";
+import {
+  loadUmamiScript,
+  setUmamiTrackingAllowed,
+  trackUmamiPageview,
+  umamiEnabled,
+} from "../lib/umami";
 
 /** Naloži Umami po privolitvi in pošlje pageview ob spremembi poti. */
 export function UmamiAnalytics() {
-  const { cookieAccepted } = useStrelko();
+  const { privacyConsent } = useStrelko();
   const location = useLocation();
+  const analyticsOk = isAnalyticsAllowed(privacyConsent);
 
   useEffect(() => {
-    if (!umamiEnabled() || !cookieAccepted) return;
+    setUmamiTrackingAllowed(analyticsOk);
+    if (!umamiEnabled() || !analyticsOk) return;
     loadUmamiScript();
-  }, [cookieAccepted]);
+  }, [analyticsOk]);
 
   useEffect(() => {
-    if (!umamiEnabled() || !cookieAccepted) return;
+    if (!umamiEnabled() || !analyticsOk) return;
     trackUmamiPageview(location.pathname, location.search);
-  }, [cookieAccepted, location.pathname, location.search]);
+  }, [analyticsOk, location.pathname, location.search]);
 
   return null;
 }
