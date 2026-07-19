@@ -341,7 +341,7 @@ export function siteJsonLdGraph(): Record<string, unknown> {
         name: ORGANIZATION_NAME,
         legalName: COMPANY.legalName,
         url: ORGANIZATION_URL,
-        email: "ekipa@meteoinfo.si",
+        email: COMPANY.email,
         logo: {
           "@type": "ImageObject",
           url: ORGANIZATION_LOGO_URL,

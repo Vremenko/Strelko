@@ -24,7 +24,7 @@ export function mapLoginApiError(err: ApiError): LoginErrorView {
 
   if (USER_BANNED_RE.test(message)) {
     return {
-      message: "Račun je blokiran. Za pomoč pišite na ekipa@meteoinfo.si.",
+      message: "Račun je blokiran. Za pomoč pišite na podpora@meteoinfo.si.",
     };
   }
 

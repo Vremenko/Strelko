@@ -7,8 +7,8 @@ export const COMPANY = {
   address: "Ženjak 4",
   postal: "2234 Benedikt",
   country: "Slovenija",
-  email: "ekipa@meteoinfo.si",
-  privacyEmail: "info@meteoinfo.si",
+  email: "podpora@meteoinfo.si",
+  privacyEmail: "podpora@meteoinfo.si",
   website: "https://meteoinfo.si",
   privacyPolicyUrl: "https://map.meteoinfo.si/privacy-policy.html",
   matična: "7514760000",
@@ -53,8 +53,6 @@ export const LEGAL_PAGES = {
         body: `
           <p>Podpora uporabnikom in vprašanja o storitvi Strelko:<br />
           <a href="mailto:${COMPANY.email}">${COMPANY.email}</a></p>
-          <p>Vprašanja glede zasebnosti in varstva osebnih podatkov:<br />
-          <a href="mailto:${COMPANY.privacyEmail}">${COMPANY.privacyEmail}</a></p>
           <p>Spletna stran podjetja:<br />
           <a href="${COMPANY.website}" target="_blank" rel="noopener">meteoinfo.si</a></p>`,
       },
