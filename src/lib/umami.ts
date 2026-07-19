@@ -11,11 +11,12 @@ declare global {
   }
 }
 
-const viteEnv =
-  (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env ?? {};
-const WEBSITE_ID = (viteEnv.VITE_UMAMI_WEBSITE_ID ?? "").trim();
-const SCRIPT_URL = (viteEnv.VITE_UMAMI_SCRIPT_URL ?? "").trim();
-const HOST_URL = (viteEnv.VITE_UMAMI_HOST_URL ?? "").trim() || scriptOrigin(SCRIPT_URL);
+/** Vite zamenja `import.meta.env.VITE_*` ob buildu — ne berimo celotnega `env` objekta. */
+const WEBSITE_ID = (import.meta.env.VITE_UMAMI_WEBSITE_ID as string | undefined)?.trim() || "";
+const SCRIPT_URL = (import.meta.env.VITE_UMAMI_SCRIPT_URL as string | undefined)?.trim() || "";
+const HOST_URL =
+  (import.meta.env.VITE_UMAMI_HOST_URL as string | undefined)?.trim() ||
+  scriptOrigin(SCRIPT_URL);
 
 let scriptRequested = false;
 /** Runtime vrata: ob preklicu privolitve ustavi dogodke v trenutnem ogledu. */

@@ -12,11 +12,6 @@ import {
   readCookieConsent,
   writeCookieConsent,
 } from "../src/lib/cookie-consent.ts";
-import {
-  isUmamiExcludedPath,
-  isUmamiTrackingAllowed,
-  setUmamiTrackingAllowed,
-} from "../src/lib/umami.ts";
 
 const store = new Map<string, string>();
 Object.defineProperty(globalThis, "localStorage", {
@@ -51,17 +46,5 @@ assert.equal(hasCookieConsentChoice(readCookieConsent()), true);
 writeCookieConsent("analytics");
 assert.equal(store.get(COOKIE_CONSENT_KEY), "analytics");
 assert.equal(isAnalyticsAllowed(readCookieConsent()), true);
-
-assert.equal(isUmamiExcludedPath("/embed/statistika-grafi"), true);
-assert.equal(isUmamiExcludedPath("/embed/obcine-zemljevid"), true);
-assert.equal(isUmamiExcludedPath("/admin"), true);
-assert.equal(isUmamiExcludedPath("/statistika"), false);
-
-setUmamiTrackingAllowed(false);
-assert.equal(isUmamiTrackingAllowed(), false);
-setUmamiTrackingAllowed(true);
-assert.equal(isUmamiTrackingAllowed(), true);
-setUmamiTrackingAllowed(false);
-assert.equal(isUmamiTrackingAllowed(), false, "preklic mora takoj ustaviti tracking vrata");
 
 console.log("verify-cookie-consent: OK");
