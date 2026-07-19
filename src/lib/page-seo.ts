@@ -29,7 +29,7 @@ export const SEO_FALLBACK = {
     "Strelko omogoča informativni pregled zaznanih udarov strel, arhiva, statistike in izdelavo PDF-poročil.",
 } as const;
 
-export type RobotsDirective = "index, follow" | "noindex, follow";
+export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
 
 export type PageSeo = {
   title: string;
@@ -204,7 +204,15 @@ const SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: "/pravice-potrosnikov", priority: 0.3, changefreq: "yearly" },
 ];
 
-const NOINDEX_PATHS = new Set(["/moj-strelko", "/admin", "/verify-email", "/reset-password"]);
+const NOINDEX_PATHS = new Set([
+  "/moj-strelko",
+  "/admin",
+  "/admin2",
+  "/embed/statistika-grafi",
+  "/embed/obcine-zemljevid",
+  "/verify-email",
+  "/reset-password",
+]);
 
 /** Javne poti za sitemap.xml (brez query, hash ali zasebnih poti). */
 export const SITEMAP_PATHS = [
@@ -226,6 +234,9 @@ export const KNOWN_APP_PATHS = [
   ...SITEMAP_PATHS,
   "/moj-strelko",
   "/admin",
+  "/admin2",
+  "/embed/statistika-grafi",
+  "/embed/obcine-zemljevid",
   "/verify-email",
   "/reset-password",
 ] as const;
@@ -263,7 +274,9 @@ export function resolvePageSeo(pathname: string, search: string): PageSeo {
     return {
       ...SEO_FALLBACK,
       canonical: canonicalForPath(path),
-      robots: "noindex, follow",
+      robots: path.startsWith("/embed/") || path === "/admin2" || path === "/admin"
+        ? "noindex, nofollow"
+        : "noindex, follow",
     };
   }
 

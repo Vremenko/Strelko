@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { adminApi } from "../api/client";
 import { AdminPager } from "../components/admin/AdminPager";
 import { AdminSmsManualSend } from "../components/admin/AdminSmsManualSend";
@@ -1174,6 +1174,11 @@ function AdminPageInner() {
         <h1>Strelko admin</h1>
         <p className="pricing-lead portal-page-header__lead">
           Računi, FURS, SMS opozorila, usklajevanje Stripe in uporabniki.
+        </p>
+        <p className="admin-page__extra-nav">
+          <Link to="/admin2" className="btn btn-ghost">
+            Vgradne kode
+          </Link>
         </p>
       </header>
       <AdminTabs active={tab} onChange={onTabChange} />

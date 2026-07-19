@@ -15,14 +15,13 @@ import {
   ensureMapLockPortal,
   setMapLockPortalActive,
 } from "../lib/map-period-access";
-import { isPodpornikActive } from "../lib/portal-account";
 import { canAccessMapGrid, markMapGridLockFlash } from "../lib/map-grid-access";
 import {
   ensureHourlyLockPortal,
   measureHourlyLockBox,
   type HourlyLockBox,
 } from "../lib/archive-hourly-lock";
-import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
+import { hasArchiveFullAccess } from "../lib/season";
 import { LockedContent } from "./LockedContent";
 import type { StatTab } from "../types";
 
@@ -48,11 +47,17 @@ function ArchiveLockedChartPanel({ id, title }: { id: string; title: string }) {
   );
 }
 
+export type ArchiveAccessMode = "auto" | "public";
+
 interface ArchiveChartEmbedProps {
   wrapId: string;
   iframeId: string;
   scope: "preview" | "full";
   visible?: boolean;
+  /** public = vedno javni grafi (brez Podpornik odklepov), tudi če je uporabnik prijavljen. */
+  accessMode?: ArchiveAccessMode;
+  /** Privzeto obdobje v dnevih (npr. 7). */
+  periodDays?: number;
 }
 
 function useLazyShow(enabled: boolean) {
@@ -95,12 +100,22 @@ export function ArchiveChartEmbed({
   iframeId,
   scope,
   visible = true,
+  accessMode = "auto",
+  periodDays,
 }: ArchiveChartEmbedProps) {
   const { credits, plansMeta } = useStrelko();
-  const fullAccess = hasArchiveFullAccess(credits, plansMeta);
-  const hourlyAccess = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
-  const src = archiveEmbedUrl(scope, fullAccess, { hourlyAccess });
-  const height = scope === "preview" ? "200" : "900";
+  const forcePublic = accessMode === "public";
+  const fullAccess = forcePublic ? false : hasArchiveFullAccess(credits, plansMeta);
+  /* Po urah: odklenjeno za vse (tudi brez Podpornika); v javnem embedu tudi. */
+  const hourlyAccess = true;
+  const src = archiveEmbedUrl(
+    scope,
+    fullAccess,
+    { hourlyAccess },
+    { days: periodDays, publicEmbed: forcePublic }
+  );
+  /* Javni embed: 3 paneli (dnevi + ure + regije); nato točno prek resize. */
+  const height = forcePublic ? "980" : scope === "preview" ? "200" : "900";
   const title =
     scope === "preview" ? "Dnevni graf strel — Slovenija" : "Arhiv strel — Slovenija";
   const { show, wrapRef } = useLazyShow(visible);
@@ -112,7 +127,7 @@ export function ArchiveChartEmbed({
   const [hourlyLockBox, setHourlyLockBox] = useState<HourlyLockBox | null>(null);
 
   const syncHourlyLockOverlay = useCallback(() => {
-    if (scope !== "full" || hourlyAccess || !visible) {
+    if (forcePublic || scope !== "full" || hourlyAccess || !visible) {
       setHourlyLockBox(null);
       return;
     }
@@ -126,10 +141,10 @@ export function ArchiveChartEmbed({
       return;
     }
     setHourlyLockBox(measureHourlyLockBox(wrap, iframe, mount));
-  }, [hourlyAccess, scope, visible]);
+  }, [forcePublic, hourlyAccess, scope, visible]);
 
   useEffect(() => {
-    if (scope !== "full" || hourlyAccess || !visible) {
+    if (forcePublic || scope !== "full" || hourlyAccess || !visible) {
       setHourlyLockBox(null);
       return;
     }
@@ -146,10 +161,14 @@ export function ArchiveChartEmbed({
       window.removeEventListener("message", onMessage);
       window.removeEventListener("resize", syncHourlyLockOverlay);
     };
-  }, [hourlyAccess, scope, visible, syncHourlyLockOverlay]);
+  }, [forcePublic, hourlyAccess, scope, visible, syncHourlyLockOverlay]);
 
   useLayoutEffect(() => {
     if (scope !== "full") return;
+    if (forcePublic) {
+      deactivateStatDaysOverlay(wrapId);
+      return;
+    }
     if (!visible) {
       deactivateStatDaysOverlay(wrapId);
       return;
@@ -158,13 +177,13 @@ export function ArchiveChartEmbed({
       activateStatDaysOverlayForGrafi(wrapId, iframeId);
       syncHourlyLockOverlay();
     }
-  }, [visible, show, scope, wrapId, iframeId, syncHourlyLockOverlay]);
+  }, [visible, show, scope, wrapId, iframeId, syncHourlyLockOverlay, forcePublic]);
 
   return (
     <>
       <div
         ref={wrapRef}
-        className={`archive-charts-embed-wrap${scope === "full" ? " archive-charts-embed-wrap--full" : ""}${hourlyLockBox ? " archive-charts-embed-wrap--hourly-lock" : ""}${visible ? "" : " stat-panel--hidden"}`}
+        className={`archive-charts-embed-wrap${scope === "full" ? " archive-charts-embed-wrap--full" : ""}${hourlyLockBox ? " archive-charts-embed-wrap--hourly-lock" : ""}${forcePublic ? " archive-charts-embed-wrap--public" : ""}${visible ? "" : " stat-panel--hidden"}`}
         id={wrapId}
         data-embed-src={src}
         data-embed-scope={scope}
@@ -174,19 +193,23 @@ export function ArchiveChartEmbed({
             ref={iframeRef}
             key={src}
             id={iframeId}
-            className="archive-charts-embed"
+            className={`archive-charts-embed${forcePublic ? " archive-charts-embed--public" : ""}`}
             src={src}
             title={title}
             width="100%"
             height={height}
             loading={window.matchMedia("(max-width:899px)").matches ? "eager" : "lazy"}
             scrolling="no"
-            style={{ overflow: "hidden" }}
+            style={
+              forcePublic
+                ? { overflow: "hidden", minHeight: 850 }
+                : { overflow: "hidden" }
+            }
             onLoad={() => {
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                   syncHourlyLockOverlay();
-                  if (scope === "full" && visible) {
+                  if (scope === "full" && visible && !forcePublic) {
                     activateStatDaysOverlayForGrafi(wrapId, iframeId);
                   }
                 });
@@ -212,7 +235,7 @@ export function ArchiveChartEmbed({
           </div>
         ) : null}
       </div>
-      {scope === "full" && !fullAccess && visible ? (
+      {scope === "full" && !fullAccess && !forcePublic && visible ? (
         <div className="archive-locked-charts charts-layout">
           {LOCKED_OBCINA_CHARTS.map((chart) => (
             <ArchiveLockedChartPanel key={chart.id} id={chart.id} title={chart.title} />
@@ -223,8 +246,16 @@ export function ArchiveChartEmbed({
   );
 }
 
-function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
-  const src = archiveMapEmbedUrl(30);
+function ArchiveMapEmbedSupporter({
+  visible = true,
+  periodDays = 30,
+  hideGrid = false,
+}: {
+  visible?: boolean;
+  periodDays?: number;
+  hideGrid?: boolean;
+}) {
+  const src = archiveMapEmbedUrl(periodDays, hideGrid ? { hideGrid: true } : undefined);
   const wrapRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const mountedRef = useRef(false);
@@ -325,8 +356,21 @@ function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
   );
 }
 
-function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
-  const src = archiveMapEmbedUrl(30, { defaultRangeDays: 7 });
+function ArchiveMapEmbedGated({
+  visible = true,
+  periodDays = 7,
+  hideGrid = false,
+}: {
+  visible?: boolean;
+  periodDays?: number;
+  hideGrid?: boolean;
+}) {
+  const freeDays = periodDays === 1 || periodDays === 7 ? periodDays : 7;
+  const src = archiveMapEmbedUrl(freeDays, {
+    defaultRangeDays: 7,
+    hideGrid,
+    supporter: false,
+  });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const detachGateRef = useRef<(() => void) | null>(null);
   const mountedRef = useRef(false);
@@ -353,12 +397,17 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
   const wirePeriodGate = useCallback(
     (iframe: HTMLIFrameElement) => {
       detachGateRef.current?.();
+      /* Javni embed: plačljivih obdobij ni v DOM — Podpornik portal ni potreben. */
+      if (hideGrid) {
+        detachGateRef.current = null;
+        return;
+      }
       detachGateRef.current = attachMapPeriodGate(iframe, (lockedNow, mount) => {
         setLocked(lockedNow);
         setLockMount(mount);
       });
     },
-    []
+    [hideGrid]
   );
 
   useEffect(() => {
@@ -446,21 +495,45 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
   );
 }
 
-export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
+export function ArchiveMapEmbed({
+  visible = true,
+  accessMode = "auto",
+  periodDays,
+  hideGridTab = false,
+}: {
+  visible?: boolean;
+  accessMode?: ArchiveAccessMode;
+  periodDays?: number;
+  /** Javni embed: skrij Mreža 1 × 1 km. */
+  hideGridTab?: boolean;
+}) {
   const { credits } = useStrelko();
-  const hasSupporter = canAccessMapGrid(credits);
+  const forcePublic = accessMode === "public";
+  const hasSupporter = forcePublic ? false : canAccessMapGrid(credits);
   const prevAccessRef = useRef(hasSupporter);
 
-  if (prevAccessRef.current && !hasSupporter) {
+  if (!forcePublic && prevAccessRef.current && !hasSupporter) {
     markMapGridLockFlash();
   }
   prevAccessRef.current = hasSupporter;
 
   if (hasSupporter) {
-    return <ArchiveMapEmbedSupporter visible={visible} />;
+    return (
+      <ArchiveMapEmbedSupporter
+        visible={visible}
+        periodDays={periodDays ?? 30}
+        hideGrid={hideGridTab}
+      />
+    );
   }
 
-  return <ArchiveMapEmbedGated visible={visible} />;
+  return (
+    <ArchiveMapEmbedGated
+      visible={visible}
+      periodDays={periodDays ?? 7}
+      hideGrid={forcePublic || hideGridTab}
+    />
+  );
 }
 
 export function ArchiveEmbedHost() {

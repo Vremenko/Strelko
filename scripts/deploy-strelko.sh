@@ -40,13 +40,20 @@ fi
 for f in "$STRELE2_PUBLIC/embed.html" "$STRELE2_PUBLIC/map-embed.html" "$STRELE2_PUBLIC/obcina-widget.html"; do
   [[ -f "$f" ]] && _obcine_cp "$f" "/app/web/public/$(basename "$f")" || true
 done
-# Lokalni MapLibre slogi (npr. strelko-dark.json) — potrebni za map-embed podlago
-if [[ -d "$STRELE2_PUBLIC/styles" ]]; then
-  docker exec "$OBCINE_CONTAINER" mkdir -p /app/web/public/styles
-  for f in "$STRELE2_PUBLIC/styles"/*.json; do
-    [[ -f "$f" ]] && _obcine_cp "$f" "/app/web/public/styles/$(basename "$f")" || true
-  done
+# MapLibre slog (strelko-dark.json): kontejner ima bind-mount na strele2.
+# NE uporabljaj docker cp za styles/ — neuspešen cp je že pustil 0-byte datoteko
+# in s tem ugasnil zemljevidno podlogo na /statistika#zemljevid.
+STYLE_DARK="$STRELE2_PUBLIC/styles/strelko-dark.json"
+if [[ ! -s "$STYLE_DARK" ]]; then
+  echo "ERROR: manjka ali je prazna $STYLE_DARK (potrebna za map-embed podlogo)" >&2
+  exit 1
 fi
+# hitro preveri, da ni očitno pokvarjen JSON
+if ! python3 -c "import json,sys; d=json.load(open(sys.argv[1])); assert d.get('sources')" "$STYLE_DARK"; then
+  echo "ERROR: neveljaven MapLibre slog $STYLE_DARK" >&2
+  exit 1
+fi
+echo "Map style OK: $STYLE_DARK ($(wc -c < "$STYLE_DARK") bytes)"
 for f in "$STRELE2_WEB/charts-shared.css" "$STRELE2_WEB/brand.css"; do
   [[ -f "$f" ]] && _obcine_cp "$f" "/app/web/$(basename "$f")" || true
 done

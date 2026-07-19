@@ -50,7 +50,12 @@ export function loadUmamiScript(): void {
 
 /** Poti, ki jih ne pošiljamo v analitiko. */
 export function isUmamiExcludedPath(pathname: string): boolean {
-  return pathname === "/admin" || pathname.startsWith("/admin/");
+  return (
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/admin2" ||
+    pathname.startsWith("/embed/")
+  );
 }
 
 /** Ročni pageview (React Router SPA). */

@@ -374,6 +374,9 @@ export function initArchiveDaysOverlay() {
     } else if (frameId === "archive-map-iframe") {
       min = 560;
       max = 1200;
+    } else if (frameId === "embed-charts-iframe") {
+      min = 400;
+      max = 2400;
     } else {
       min = 320;
       max = 2400;
@@ -438,7 +441,12 @@ export function initArchiveDaysOverlay() {
     }
 
     if (data.type === "strele-embed-resize") {
-      const frame = ["archive-embed", "archive-embed-full", "archive-map-iframe"].find((id) => {
+      const frame = [
+        "archive-embed",
+        "archive-embed-full",
+        "archive-map-iframe",
+        "embed-charts-iframe",
+      ].find((id) => {
         const el = document.getElementById(id);
         return el && el.contentWindow === ev.source;
       });
