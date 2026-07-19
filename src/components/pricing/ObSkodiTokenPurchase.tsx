@@ -12,10 +12,14 @@ import {
   parseObSkodiQuantityInput,
   tokenCountLabel,
 } from "../../lib/ob-skodi-tokens";
+import { guestObSkodiCtaLabel } from "../../lib/pricing-cta";
 import { CENIK_ZETONI_FEATURES } from "../../lib/pricing-offers";
 
 interface ObSkodiTokenPurchaseProps {
   paymentsEnabled: boolean;
+  /** Po uspešnem/neuspešnem nalaganju plans — da »kmalu na voljo« ni fallback med loadingom. */
+  paymentsResolved?: boolean;
+  plansError?: string | null;
   /** Cenik prikaže razširjeno vsebino; privzeto kompaktno (portal). */
   variant?: "default" | "cenik";
   /** Pri prijavi na ceniku omogoči gumb za prijavo (brez checkouta). */
@@ -27,17 +31,21 @@ interface ObSkodiTokenPurchaseProps {
   showAddToBalanceNote?: boolean;
   /** Med ustvarjanjem Stripe Checkout seje (cenik). */
   purchaseBusy?: boolean;
+  onRetryPlans?: () => void;
   onPurchase: (quantity: number) => void;
 }
 
 export function ObSkodiTokenPurchase({
   paymentsEnabled,
+  paymentsResolved = true,
+  plansError = null,
   variant = "default",
   loggedIn = true,
   showBalance = false,
   tokenBalance,
   showAddToBalanceNote = false,
   purchaseBusy = false,
+  onRetryPlans,
   onPurchase,
 }: ObSkodiTokenPurchaseProps) {
   const savedQuantity = variant === "cenik" ? peekCheckoutQuantity() : null;
@@ -49,8 +57,10 @@ export function ObSkodiTokenPurchase({
   );
   const quantityId = useId();
   const purchaseReady = isObSkodiPurchaseAllowed(paymentsEnabled);
-  const authRequired = paymentsEnabled && !loggedIn;
-  const buttonEnabled = purchaseReady || authRequired;
+  /** Gost: vedno omogočen CTA za prijavo (neodvisno od paymentsEnabled). */
+  const authRequired = !loggedIn;
+  const explicitlyUnavailable =
+    loggedIn && paymentsResolved && !paymentsEnabled && !plansError;
   const order = calculateObSkodiOrder(quantity);
   const isCenik = variant === "cenik";
 
@@ -87,23 +97,29 @@ export function ObSkodiTokenPurchase({
   };
 
   const handlePurchase = () => {
-    if (!buttonEnabled || purchaseBusy) return;
+    if (purchaseBusy) return;
+    if (loggedIn && plansError && onRetryPlans) {
+      onRetryPlans();
+      return;
+    }
     onPurchase(order.quantity);
   };
 
   const ctaLabel = (() => {
     if (purchaseBusy) return "Pripravljam plačilo …";
-    if (!paymentsEnabled) return obSkodiPurchaseCtaLabel(quantity, false);
     if (!loggedIn) {
       return isCenik
-        ? "Za nakup žetonov se prijavite."
+        ? guestObSkodiCtaLabel()
         : `Prijava ali registracija — ${tokenCountLabel(order.quantity, "accusative")}`;
     }
+    if (plansError) return "Poskusi znova";
+    if (!paymentsResolved) return "Nalagam …";
+    if (explicitlyUnavailable) return obSkodiPurchaseCtaLabel(quantity, false);
     return obSkodiPurchaseCtaLabel(quantity, purchaseReady);
   })();
 
   const showUnavailableNote =
-    !isCenik && (!paymentsEnabled || (loggedIn && !purchaseReady));
+    !isCenik && loggedIn && (explicitlyUnavailable || Boolean(plansError));
 
   const purchaseContent = (
     <>
@@ -206,8 +222,16 @@ export function ObSkodiTokenPurchase({
       type="button"
       className="btn btn-primary btn-block ob-skodi-purchase__cta"
       onClick={handlePurchase}
-      disabled={!buttonEnabled || purchaseBusy}
-      aria-disabled={!buttonEnabled || purchaseBusy}
+      disabled={
+        purchaseBusy ||
+        (!authRequired && !purchaseReady && !(loggedIn && plansError && onRetryPlans)) ||
+        (loggedIn && !paymentsResolved && !plansError)
+      }
+      aria-disabled={
+        purchaseBusy ||
+        (!authRequired && !purchaseReady && !(loggedIn && plansError && onRetryPlans)) ||
+        (loggedIn && !paymentsResolved && !plansError)
+      }
       aria-busy={purchaseBusy || undefined}
     >
       {ctaLabel}
@@ -219,6 +243,11 @@ export function ObSkodiTokenPurchase({
       {isCenik ? (
         <>
           <div className="ob-skodi-purchase__body">{purchaseContent}</div>
+          {plansError && loggedIn ? (
+            <p className="form-error" role="alert">
+              {plansError}
+            </p>
+          ) : null}
           <div className="pricing-plan-card__footer pricing-plan-card__footer--cta">
             {purchaseButton}
           </div>
@@ -229,7 +258,9 @@ export function ObSkodiTokenPurchase({
           {purchaseButton}
           {showUnavailableNote ? (
             <p className="portal-disabled-note">
-              Nakup žetonov trenutno ni na voljo (plačila niso vklopljena).
+              {plansError
+                ? plansError
+                : "Nakup žetonov trenutno ni na voljo (plačila niso vklopljena)."}
             </p>
           ) : null}
         </>

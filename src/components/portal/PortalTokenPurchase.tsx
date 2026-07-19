@@ -5,7 +5,7 @@ import { ObSkodiTokenPurchase } from "../pricing/ObSkodiTokenPurchase";
 
 /** Nakup žetonov Ob škodi — neodvisna storitev, ne naročnina. */
 export function PortalTokenPurchase() {
-  const { credits, paymentsEnabled, checkout } = useStrelko();
+  const { credits, paymentsEnabled, paymentsResolved, plansError, loadPlans, checkout } = useStrelko();
   const tokenBalance = tokenBalanceLabel(credits);
 
   const handlePurchase = (quantity: number) => {
@@ -21,9 +21,12 @@ export function PortalTokenPurchase() {
       </div>
       <ObSkodiTokenPurchase
         paymentsEnabled={paymentsEnabled}
+        paymentsResolved={paymentsResolved}
+        plansError={plansError}
         showBalance
         showAddToBalanceNote
         tokenBalance={tokenBalance}
+        onRetryPlans={() => void loadPlans()}
         onPurchase={handlePurchase}
       />
     </article>

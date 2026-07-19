@@ -121,6 +121,9 @@ interface StrelkoState {
   plans: Plan[];
   plansMeta: PlansMeta;
   paymentsEnabled: boolean;
+  /** true po uspešnem ali neuspešnem poskusu nalaganja plans (ne »neznano«). */
+  paymentsResolved: boolean;
+  plansError: string | null;
   selectedPlan: string;
   selected: GeocodeResult | null;
   locationQuery: string;
@@ -246,6 +249,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansMeta, setPlansMeta] = useState<PlansMeta>({});
   const [paymentsEnabled, setPaymentsEnabled] = useState(false);
+  const [paymentsResolved, setPaymentsResolved] = useState(false);
+  const [plansError, setPlansError] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlanState] = useState("podpornik");
   const [selected, setSelected] = useState<GeocodeResult | null>(null);
   const [locationQuery, setLocationQueryState] = useState("");
@@ -777,7 +782,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setCredits(null);
         setAlerts(null);
         setSessionLoadWarning(null);
-        setPaymentsEnabled(false);
+        /* Ne resetiraj paymentsEnabled — sicer prepiše uspešen loadPlans (gost vidi »kmalu na voljo«). */
         return;
       }
       try {
@@ -806,7 +811,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           setCredits(null);
           setAlerts(null);
           setSessionLoadWarning(null);
-          setPaymentsEnabled(false);
           return;
         }
 
@@ -814,6 +818,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         if (plan.creditsOk && creditsSettled.status === "fulfilled") {
           setCredits(creditsSettled.value);
           setPaymentsEnabled(!!creditsSettled.value.payments_enabled);
+          setPaymentsResolved(true);
         }
         if (plan.alertsOk && alertsSettled.status === "fulfilled") {
           setAlerts(alertsSettled.value);
@@ -829,7 +834,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
           setCredits(null);
           setAlerts(null);
           setSessionLoadWarning(null);
-          setPaymentsEnabled(false);
         }
         /* 500 / timeout / omrežje: ohrani žeton in morebitno prejšnje stanje */
       }
@@ -846,6 +850,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadPlans = useCallback(async () => {
+    setPlansError(null);
     try {
       const res = await api.plans();
       const loadedPlans = res.plans || [];
@@ -856,12 +861,18 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         in_lightning_season: res.in_lightning_season,
       });
       setPaymentsEnabled(!!res.payments_enabled);
+      setPaymentsResolved(true);
       setSelectedPlanState((prev) => {
         if (loadedPlans.some((p) => p.id === prev)) return prev;
         return defaultSelectedPlanId(loadedPlans);
       });
-    } catch {
+    } catch (e) {
       setPlans([]);
+      setPaymentsResolved(true);
+      setPlansError(
+        (e as Error)?.message?.trim() ||
+          "Ponudbe trenutno ni mogoče naložiti. Poskusite znova."
+      );
     }
   }, []);
 
@@ -1355,6 +1366,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       plans,
       plansMeta,
       paymentsEnabled,
+      paymentsResolved,
+      plansError,
       selectedPlan,
       selected,
       locationQuery,
@@ -1737,6 +1750,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       plans,
       plansMeta,
       paymentsEnabled,
+      paymentsResolved,
+      plansError,
       selectedPlan,
       selected,
       locationQuery,

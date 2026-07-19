@@ -59,6 +59,9 @@ export function CreditsModal() {
     selectedPlan,
     setSelectedPlan,
     paymentsEnabled,
+    paymentsResolved,
+    plansError,
+    loadPlans,
     checkout,
   } = useStrelko();
   if (!modals.credits) return null;
@@ -149,21 +152,37 @@ export function CreditsModal() {
           <span className="pay-badge recommended">Apple Pay</span>
           <span className="pay-badge recommended">Google Pay</span>
         </div>
-        {!paymentsEnabled && (
+        {plansError ? (
+          <p className="form-error">{plansError}</p>
+        ) : paymentsResolved && !paymentsEnabled ? (
           <p className="form-error">Plačila trenutno niso na voljo. Poskusite pozneje.</p>
-        )}
+        ) : null}
         <button
           type="button"
           className="btn btn-primary"
           id="btn-checkout"
           style={{ width: "100%", marginTop: "1rem" }}
-          disabled={!paymentsEnabled || contactOnly || podpornikCheckoutBlocked}
-          onClick={() => void checkout()}
+          disabled={
+            contactOnly ||
+            podpornikCheckoutBlocked ||
+            (!plansError && (!paymentsResolved || !paymentsEnabled))
+          }
+          onClick={() => {
+            if (plansError) {
+              void loadPlans();
+              return;
+            }
+            void checkout();
+          }}
         >
           {contactOnly
             ? "Po dogovoru"
             : podpornikCheckoutBlocked
               ? "Podpornik je že aktiven"
+            : plansError
+              ? "Poskusi znova"
+            : !paymentsResolved
+              ? "Nalagam …"
             : paymentsEnabled
               ? checkoutButtonLabel(selectedPlan, list)
               : "Plačila trenutno niso aktivna"}
