@@ -43,6 +43,7 @@ import {
 import { parseInsufficientTokensDetail } from "../lib/query-billing";
 import { tokenCountLabel } from "../lib/ob-skodi-tokens";
 import { canSubscribePodpornik } from "../lib/portal-account";
+import { markMapGridLockFlash } from "../lib/map-grid-access";
 import { openStripeBillingPortalInNewTab } from "../lib/stripe-billing-portal";
 import {
   errorStatus,
@@ -1547,6 +1548,8 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         await afterAuth();
       },
       logout: () => {
+        markMapGridLockFlash();
+        window.dispatchEvent(new Event("strelko-access-revoked"));
         clearAuthCheckoutIntent();
         setToken(null);
         setUser(null);

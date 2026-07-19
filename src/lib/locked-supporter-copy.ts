@@ -9,3 +9,10 @@ export const LOCKED_SUPPORTER_TEXT =
 export const LOCKED_SUPPORTER_CTA = "Aktiviraj paket Podpornik";
 
 export const LOCKED_SUPPORTER_CTA_HREF = "/cenik";
+
+/** Zaklep prikaza Mreža 1 × 1 km na Statistika → Zemljevid. */
+export const LOCKED_GRID_TITLE =
+  "Ta prikaz je na voljo s paketom Podpornik";
+
+export const LOCKED_GRID_TEXT =
+  "Z mrežo 1 × 1 km lahko podrobneje analizirate prostorsko razporeditev in gostoto udarov strel.";

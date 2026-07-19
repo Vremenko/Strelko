@@ -21,8 +21,11 @@ export function seasonLabelSl(d = new Date()): string {
 }
 
 export const STRELKO_OPEN_ACCESS =
-  import.meta.env.VITE_STRELKO_OPEN_ACCESS === "1" ||
-  import.meta.env.VITE_STRELKO_OPEN_ACCESS === "true";
+  (typeof import.meta !== "undefined" &&
+    import.meta.env != null &&
+    (import.meta.env.VITE_STRELKO_OPEN_ACCESS === "1" ||
+      import.meta.env.VITE_STRELKO_OPEN_ACCESS === "true")) ||
+  false;
 
 export function hasArchiveFullAccess(
   credits?: Credits | null,

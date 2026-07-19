@@ -16,6 +16,7 @@ import {
   setMapLockPortalActive,
 } from "../lib/map-period-access";
 import { isPodpornikActive } from "../lib/portal-account";
+import { canAccessMapGrid, markMapGridLockFlash } from "../lib/map-grid-access";
 import {
   ensureHourlyLockPortal,
   measureHourlyLockBox,
@@ -24,6 +25,8 @@ import {
 import { hasArchiveFullAccess, STRELKO_OPEN_ACCESS } from "../lib/season";
 import { LockedContent } from "./LockedContent";
 import type { StatTab } from "../types";
+
+export const STRELKO_ACCESS_REVOKED_EVENT = "strelko-access-revoked";
 
 const LOCKED_OBCINA_CHARTS = [
   { id: "obcina", title: "Občine z največ strelami" },
@@ -270,6 +273,17 @@ function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
     iframeRef.current?.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
   }, [visible, mounted]);
 
+  useEffect(() => {
+    const onRevoked = () => {
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: "strele-map-set-access", supporter: false },
+        "*"
+      );
+    };
+    window.addEventListener(STRELKO_ACCESS_REVOKED_EVENT, onRevoked);
+    return () => window.removeEventListener(STRELKO_ACCESS_REVOKED_EVENT, onRevoked);
+  }, []);
+
   useLayoutEffect(() => {
     if (visible) {
       deactivateStatDaysOverlay("archive-embed-full-wrap");
@@ -278,6 +292,7 @@ function ArchiveMapEmbedSupporter({ visible = true }: { visible?: boolean }) {
 
   const notifyMapVisible = (iframe: HTMLIFrameElement) => {
     iframe.contentWindow?.postMessage({ type: "strele-map-visible" }, "*");
+    iframe.contentWindow?.postMessage({ type: "strele-map-set-access", supporter: true }, "*");
   };
 
   return (
@@ -433,7 +448,13 @@ function ArchiveMapEmbedGated({ visible = true }: { visible?: boolean }) {
 
 export function ArchiveMapEmbed({ visible = true }: { visible?: boolean }) {
   const { credits } = useStrelko();
-  const hasSupporter = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
+  const hasSupporter = canAccessMapGrid(credits);
+  const prevAccessRef = useRef(hasSupporter);
+
+  if (prevAccessRef.current && !hasSupporter) {
+    markMapGridLockFlash();
+  }
+  prevAccessRef.current = hasSupporter;
 
   if (hasSupporter) {
     return <ArchiveMapEmbedSupporter visible={visible} />;
