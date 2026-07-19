@@ -5,24 +5,12 @@ import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
 import { ResultsView } from "../components/ResultsView";
 import { ZavarovalnicaRecentQueries } from "../components/ZavarovalnicaRecentQueries";
 import { useStrelko } from "../context/StrelkoContext";
+import {
+  deriveZavarovalnicaViewState,
+  type QueryViewState,
+} from "../lib/zavarovalnica-view-transition";
 
 const RESULTS_ID = "zavarovalnica-results";
-
-/**
- * form → (iskanju) loading na obrazcu
- * preview → unlocking → results  (brez vmesnega obrazca)
- */
-type ViewState = "form" | "preview" | "unlocking" | "results";
-
-function deriveViewState(
-  searchResult: unknown,
-  previewScreen: "teaser" | "no-strikes" | null,
-  loading: boolean
-): ViewState {
-  if (searchResult) return "results";
-  if (previewScreen) return loading ? "unlocking" : "preview";
-  return "form";
-}
 
 function scrollElementAfterPaint(elementId: string) {
   requestAnimationFrame(() => {
@@ -44,8 +32,8 @@ export function ZavarovalnicaPage() {
   const { searchResult, previewScreen, loading, savedQueryId, zavarovalnicaSkipFormScrollRef } =
     useStrelko();
 
-  const viewState = deriveViewState(searchResult, previewScreen, loading);
-  const prevViewRef = useRef<ViewState>(viewState);
+  const viewState = deriveZavarovalnicaViewState(searchResult, previewScreen, loading);
+  const prevViewRef = useRef<QueryViewState>(viewState);
   const scrolledForQueryRef = useRef<string | null>(null);
   const previewKind = previewScreen === "no-strikes" ? "no-strikes" : "teaser";
 
@@ -65,7 +53,10 @@ export function ZavarovalnicaPage() {
       }
     }
 
-    if (viewState === "form" && (prev === "results" || prev === "preview" || prev === "unlocking")) {
+    if (
+      (viewState === "form" || viewState === "loading") &&
+      (prev === "results" || prev === "preview" || prev === "unlocking")
+    ) {
       scrolledForQueryRef.current = null;
       if (!zavarovalnicaSkipFormScrollRef.current) {
         scrollWindowTopAfterPaint();
@@ -99,7 +90,7 @@ export function ZavarovalnicaPage() {
     );
   }
 
-  /* form: začetno iskanje; SearchCard sam prikaže indikator med loading. */
+  /* form | loading: začetno iskanje; SearchCard prikaže indikator med loading. */
   return (
     <section className="zavarovalnica-page page--standard">
       <div className="page-header">
@@ -118,7 +109,7 @@ export function ZavarovalnicaPage() {
       <div className="zavarovalnica-main-grid">
         <div className="zavarovalnica-main-grid__form">
           <SearchCard
-            busy={loading}
+            busy={loading || viewState === "loading"}
             inline
             title="Preverite strele v bližini naslova"
             intro="Vnesite naslov ter izberite radij in obdobje pregleda."
