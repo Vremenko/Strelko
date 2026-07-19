@@ -8,6 +8,18 @@ VERSION="${STRELKO_CACHE_VERSION:-$(date +%Y%m%d%H%M)}"
 HTML="$ROOT/dist/index.html"
 ASSETS="$ROOT/dist/assets"
 
+# Bind-mount nginx conf (StormAPI): če manjka/je mapa, docker cp na vsebnik pade.
+NGINX_CONF="${STRELKO_NGINX_CONF:-$(dirname "$ROOT")/StormAPI/docker/strelko-nginx.conf}"
+if [ ! -f "$NGINX_CONF" ]; then
+  echo "Napaka: $NGINX_CONF ne obstaja ali ni običajna datoteka." >&2
+  echo "Deploy je prekinjen, da Docker na manjkajoči poti ne ustvari praznega direktorija." >&2
+  exit 1
+fi
+if [ ! -s "$NGINX_CONF" ]; then
+  echo "Napaka: $NGINX_CONF je prazna datoteka." >&2
+  exit 1
+fi
+
 if [[ ! -f "$HTML" ]]; then
   echo "Missing $HTML — run: npm run build" >&2
   exit 1
