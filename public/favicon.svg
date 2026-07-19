@@ -1,4 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <circle cx="32" cy="32" r="30" fill="#1a2744"/>
-  <path d="M38 8L22 36h12l-6 20 22-32H36l2-16z" fill="#f5c542" stroke="#fff" stroke-width="1.5"/>
+  <!-- Siv ščit + strela; zunaj ščita prosojno (brez črnega/temnega kroga). -->
+  <path
+    d="M10 4h44v28c0 14-9.5 24.5-22 30C19.5 56.5 10 46 10 32V4z"
+    fill="#666666"
+  />
+  <path
+    d="M38 10L23 36h11l-5.5 18 20-28H35.5L38 10z"
+    fill="#f5c542"
+    stroke="#1a2744"
+    stroke-width="1.2"
+    stroke-linejoin="round"
+  />
 </svg>

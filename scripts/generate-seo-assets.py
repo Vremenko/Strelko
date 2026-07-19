@@ -88,14 +88,30 @@ def render_og(slug: str, title: str, subtitle: str, title_font, sub_font, brand_
     print(f"og: {out.relative_to(ROOT)} ({out.stat().st_size} bytes)")
 
 
-def render_pwa_icon(size: int, mark_path: Path, out_path: Path) -> None:
+def render_app_icon(
+    size: int,
+    mark_path: Path,
+    out_path: Path,
+    *,
+    transparent: bool = True,
+    fill: tuple[int, int, int] = BG,
+    scale: float = 0.82,
+) -> None:
+    """Ikona z logotipom; privzeto prosojno ozadje (bolje za Google favicon krog)."""
     mark = Image.open(mark_path).convert("RGBA")
-    canvas = Image.new("RGBA", (size, size), (*BG, 255))
-    mark.thumbnail((int(size * 0.62), int(size * 0.62)), Image.Resampling.LANCZOS)
+    bbox = mark.getbbox()
+    if bbox:
+        mark = mark.crop(bbox)
+    canvas = (
+        Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        if transparent
+        else Image.new("RGBA", (size, size), (*fill, 255))
+    )
+    mark.thumbnail((int(size * scale), int(size * scale)), Image.Resampling.LANCZOS)
     x = (size - mark.width) // 2
     y = (size - mark.height) // 2
     canvas.paste(mark, (x, y), mark)
-    canvas.convert("RGB").save(out_path, format="PNG", optimize=True)
+    canvas.save(out_path, format="PNG", optimize=True)
     print(f"pwa: {out_path.relative_to(ROOT)} ({out_path.stat().st_size} bytes)")
 
 
@@ -109,9 +125,20 @@ def main() -> None:
 
     mark = PUBLIC / "assets" / "strelko-logo-mark.png"
     if mark.exists():
-        render_pwa_icon(180, mark, PWA_DIR / "apple-touch-icon.png")
-        render_pwa_icon(192, mark, PWA_DIR / "icon-192.png")
-        render_pwa_icon(512, mark, PWA_DIR / "icon-512.png")
+        # Favicon + PWA „any“: prosojno (Google SERP ne dobi črnega kroga).
+        render_app_icon(64, mark, PUBLIC / "favicon.png", transparent=True, scale=0.92)
+        render_app_icon(180, mark, PWA_DIR / "apple-touch-icon.png", transparent=True, scale=0.88)
+        render_app_icon(192, mark, PWA_DIR / "icon-192.png", transparent=True, scale=0.86)
+        render_app_icon(512, mark, PWA_DIR / "icon-512.png", transparent=True, scale=0.86)
+        # Maskable (Android): temno ozadje + varen rob.
+        render_app_icon(
+            512,
+            mark,
+            PWA_DIR / "icon-512-maskable.png",
+            transparent=False,
+            fill=BG,
+            scale=0.62,
+        )
     else:
         print(f"pwa: preskočeno, manjka {mark}")
 

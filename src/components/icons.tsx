@@ -1,12 +1,16 @@
 export function StrelkoLogo() {
   return (
     <svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
-      <circle cx="32" cy="32" r="30" fill="#1e293b" stroke="#f5c542" strokeWidth="2" />
       <path
-        d="M38 12L24 38h10l-6 18 20-30H36l2-14z"
+        d="M10 4h44v28c0 14-9.5 24.5-22 30C19.5 56.5 10 46 10 32V4z"
+        fill="#666666"
+      />
+      <path
+        d="M38 10L23 36h11l-5.5 18 20-28H35.5L38 10z"
         fill="#f5c542"
-        stroke="#fff"
-        strokeWidth="0.5"
+        stroke="#1a2744"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
       />
     </svg>
   );
