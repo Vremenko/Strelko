@@ -8,26 +8,24 @@ export function CookieBanner() {
   return (
     <div className="cookie-banner" role="dialog" aria-label="Obvestilo o zasebnosti">
       <div className="cookie-banner-inner">
-        <p>
-          Za delovanje Strelka uporabljamo nujno lokalno shranjevanje. Z vašim dovoljenjem vključimo tudi
-          anonimno statistiko obiska z lastno analitiko Umami.{" "}
-          <Link to="/piskotki">Več o zasebnosti</Link>
-        </p>
+        <div className="cookie-banner-copy">
+          <p className="cookie-banner-title">Vašo zasebnost spoštujemo.</p>
+          <p>
+            Strelko uporablja nujne nastavitve za delovanje strani in anonimno statistiko obiska, ki nam
+            pomaga izboljševati vsebine.
+          </p>
+        </div>
         <div className="cookie-banner-actions">
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setPrivacyConsent("necessary")}
-          >
-            Samo nujno
-          </button>
           <button
             type="button"
             className="btn btn-primary btn-sm"
             onClick={() => setPrivacyConsent("analytics")}
           >
-            Dovoli analitiko
+            Sprejmi
           </button>
+          <Link to="/piskotki" className="btn btn-ghost btn-sm">
+            Več informacij
+          </Link>
         </div>
       </div>
     </div>

@@ -5922,6 +5922,27 @@ html.public-embed-root .hero-bg {
   min-height: 2.25rem;
 }
 
+.cookie-banner-copy {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.cookie-banner-copy p {
+  margin: 0;
+}
+
+.cookie-banner-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem !important;
+}
+
+.cookie-banner-copy p + p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+
 .privacy-consent-settings {
   margin-bottom: 1.75rem;
   padding-bottom: 1.25rem;
