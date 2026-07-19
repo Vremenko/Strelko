@@ -1,6 +1,6 @@
 /**
  * Prehodi pogleda na /pomoc-pri-zavarovalnici.
- * Loči pravi »Nazaj« (URL brez ?query=) od dirke, kjer je rezultat že v stanju,
+ * Loči pravi »Nazaj« (URL izgubi ?query=) od dirke, kjer je rezultat že v stanju,
  * URL pa še nima ?query= (React Router navigate v transition).
  */
 
@@ -13,6 +13,11 @@ export type ZavarovalnicaNoQueryDecision =
 
 export type ZavarovalnicaNoQueryInput = {
   hasQueryParam: boolean;
+  /**
+   * Prejšnji render je imel ?query=, zdaj ga ni — tipično brskalnikov Nazaj/Naprej
+   * iz rezultata nazaj na obrazec.
+   */
+  leftResultsUrl: boolean;
   localSubmitLocked: boolean;
   loading: boolean;
   /** true, dokler lokalni commit/odpiranje čaka na ?query= v URL-ju */
@@ -23,6 +28,8 @@ export type ZavarovalnicaNoQueryInput = {
   skipFormScroll: boolean;
   hasSearchResult: boolean;
   hasSavedQueryId: boolean;
+  /** Po Nazaj: rezultat ostane v spominu za Naprej — ne briši kot »stale«. */
+  hasCachedResultAfterBack: boolean;
 };
 
 /**
@@ -33,22 +40,36 @@ export function decideZavarovalnicaNoQueryAction(
   p: ZavarovalnicaNoQueryInput
 ): ZavarovalnicaNoQueryDecision {
   if (p.hasQueryParam) return "noop";
+
+  /* Pravi Nazaj z rezultata: URL je izgubil ?query= — vedno obnovi obrazec (ne glede na pending). */
+  if (p.leftResultsUrl) {
+    if (p.hasBackSnapshot) return "restore_snapshot";
+    if (p.hasSearchResult || p.hasSavedQueryId) return "restore_snapshot";
+    return "noop";
+  }
+
   if (p.localSubmitLocked || p.loading) return "noop";
   /* Rezultat že nastavljen, navigate še ni zavezal ?query= — NE skoči na obrazec. */
   if (p.pendingResultNavigation) return "noop";
   if (p.hasPreviewScreen) return "noop";
+  if (p.hasCachedResultAfterBack) return "noop";
   if (p.hasBackSnapshot) return "restore_snapshot";
   if (p.hasPendingScrollRestore || p.skipFormScroll) return "noop";
   if (!p.hasSearchResult && !p.hasSavedQueryId) return "noop";
   return "clear_stale_result";
 }
 
+/**
+ * Rezultat se prikaže samo, ko je v URL-ju ?query= — tako Nazaj takoj pokaže obrazec,
+ * Naprej pa isti rezultat iz lokalnega stanja brez nove API-poizvedbe.
+ */
 export function deriveZavarovalnicaViewState(
   searchResult: unknown,
   previewScreen: "teaser" | "no-strikes" | null,
-  loading: boolean
+  loading: boolean,
+  hasQueryParam = true
 ): QueryViewState {
-  if (searchResult) return "results";
+  if (searchResult && hasQueryParam) return "results";
   if (previewScreen) return loading ? "unlocking" : "preview";
   if (loading) return "loading";
   return "form";

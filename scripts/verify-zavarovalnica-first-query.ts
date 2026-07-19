@@ -1,5 +1,5 @@
 /**
- * Regresijski testi: prva poizvedba na /pomoc-pri-zavarovalnici brez vmesnega obrazca.
+ * Regresijski testi: prva poizvedba + Nazaj/Naprej na /pomoc-pri-zavarovalnici.
  * Zagon: npx tsx scripts/verify-zavarovalnica-first-query.ts
  */
 import assert from "node:assert/strict";
@@ -12,6 +12,7 @@ import {
 
 const idleNoQuery: ZavarovalnicaNoQueryInput = {
   hasQueryParam: false,
+  leftResultsUrl: false,
   localSubmitLocked: false,
   loading: false,
   pendingResultNavigation: false,
@@ -21,11 +22,12 @@ const idleNoQuery: ZavarovalnicaNoQueryInput = {
   skipFormScroll: false,
   hasSearchResult: false,
   hasSavedQueryId: false,
+  hasCachedResultAfterBack: false,
 };
 
 function viewsAfterFirstManualQuery(): string[] {
   const views: string[] = ["form"];
-  views.push(deriveZavarovalnicaViewState(null, null, true)); // loading
+  views.push(deriveZavarovalnicaViewState(null, null, true, false)); // loading
   /* Rezultat pride, URL še brez ?query=, pendingNavigation = true */
   const mid: ZavarovalnicaNoQueryInput = {
     ...idleNoQuery,
@@ -36,7 +38,8 @@ function viewsAfterFirstManualQuery(): string[] {
     pendingResultNavigation: true,
   };
   assert.equal(decideZavarovalnicaNoQueryAction(mid), "noop");
-  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false)); // results
+  /* URL še nima query → UI še ni results (gated) */
+  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, false)); // form while pending URL
   /* loading se konča — še vedno pending URL */
   const afterLoad: ZavarovalnicaNoQueryInput = {
     ...mid,
@@ -45,13 +48,13 @@ function viewsAfterFirstManualQuery(): string[] {
     pendingResultNavigation: true,
   };
   assert.equal(decideZavarovalnicaNoQueryAction(afterLoad), "noop");
-  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false));
+  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, true)); // results once URL synced
   return views;
 }
 
 function viewsAfterFirstSavedQuery(): string[] {
   const views: string[] = ["form"];
-  views.push(deriveZavarovalnicaViewState(null, null, true));
+  views.push(deriveZavarovalnicaViewState(null, null, true, false));
   const race: ZavarovalnicaNoQueryInput = {
     ...idleNoQuery,
     hasSearchResult: true,
@@ -66,7 +69,7 @@ function viewsAfterFirstSavedQuery(): string[] {
     "noop",
     "shranjena: ne sme restore_snapshot med čakanjem na ?query="
   );
-  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false));
+  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, true));
   return views;
 }
 
@@ -96,19 +99,23 @@ function simulateViewSequence(decisions: Array<"noop" | "restore_snapshot" | "cl
 
 /* --- tests --- */
 
-assert.equal(deriveZavarovalnicaViewState(null, null, false), "form");
-assert.equal(deriveZavarovalnicaViewState(null, null, true), "loading");
-assert.equal(deriveZavarovalnicaViewState({ a: 1 }, null, false), "results");
-assert.equal(deriveZavarovalnicaViewState(null, "teaser", false), "preview");
-assert.equal(deriveZavarovalnicaViewState(null, "teaser", true), "unlocking");
+assert.equal(deriveZavarovalnicaViewState(null, null, false, false), "form");
+assert.equal(deriveZavarovalnicaViewState(null, null, true, false), "loading");
+assert.equal(deriveZavarovalnicaViewState({ a: 1 }, null, false, true), "results");
+assert.equal(
+  deriveZavarovalnicaViewState({ a: 1 }, null, false, false),
+  "form",
+  "brez ?query= ne kaži rezultata (Nazaj)"
+);
+assert.equal(deriveZavarovalnicaViewState(null, "teaser", false, false), "preview");
+assert.equal(deriveZavarovalnicaViewState(null, "teaser", true, false), "unlocking");
 
 const manualSeq = viewsAfterFirstManualQuery();
-assert.deepEqual(manualSeq, ["form", "loading", "results", "results"]);
-assert.ok(!manualSeq.includes("form") || manualSeq.indexOf("form") === 0);
+assert.deepEqual(manualSeq, ["form", "loading", "form", "results"]);
 assert.equal(
-  manualSeq.filter((v) => v === "form").length,
+  manualSeq.filter((v) => v === "results").length,
   1,
-  "prva ročna: samo en začetni obrazec"
+  "prva ročna: results šele po sync URL"
 );
 
 const savedSeq = viewsAfterFirstSavedQuery();
@@ -118,7 +125,7 @@ assert.ok(savedSeq.includes("results"));
 assert.equal(
   legacyFlickerDecision(),
   "restore_snapshot",
-  "brez pending/lock: Nazaj še vedno obnovi obrazec"
+  "brez pending/lock: snap še vedno obnovi obrazec"
 );
 assert.deepEqual(
   simulateViewSequence(["restore_snapshot"]),
@@ -222,6 +229,33 @@ assert.equal(
     hasSavedQueryId: true,
   }),
   "restore_snapshot"
+);
+
+/* Pravi Nazaj: URL izgubi ?query= — tudi ob stuck pending */
+assert.equal(
+  decideZavarovalnicaNoQueryAction({
+    ...idleNoQuery,
+    leftResultsUrl: true,
+    hasBackSnapshot: true,
+    hasSearchResult: true,
+    hasSavedQueryId: true,
+    pendingResultNavigation: true,
+    localSubmitLocked: true,
+  }),
+  "restore_snapshot",
+  "Nazaj mora obnoviti obrazec tudi če pending ni počiščen"
+);
+
+/* Po Nazaj: cache za Naprej — ne clear_stale */
+assert.equal(
+  decideZavarovalnicaNoQueryAction({
+    ...idleNoQuery,
+    hasSearchResult: true,
+    hasSavedQueryId: true,
+    hasCachedResultAfterBack: true,
+  }),
+  "noop",
+  "cache po Nazaj ne sme biti pobrisan (Naprej brez nove poizvedbe)"
 );
 
 /* Napaka pomožnega nalaganja (brez rezultata, brez snap) → ne clear */

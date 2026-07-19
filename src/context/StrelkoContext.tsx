@@ -404,6 +404,10 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   const localSubmitLockRef = useRef(false);
   /** Posnetek obrazca/predogleda + scrollY pred prehodom na rezultat (ob Nazaj). */
   const zavarovalnicaBackSnapshotRef = useRef<ZavarovalnicaBackSnapshot | null>(null);
+  /** Po Nazaj: rezultat ostane v spominu za Naprej (brez nove API-poizvedbe). */
+  const zavarovalnicaCachedAfterBackRef = useRef(false);
+  /** Ali je prejšnji render imel ?query= (za zaznavo Nazaj). */
+  const zavarovalnicaHadQueryRef = useRef(false);
   /** scrollY za obnovitev po izrisu obnovljenega pogleda (useLayoutEffect). */
   const pendingScrollRestoreRef = useRef<number | null>(null);
   /** ZavarovalnicaPage: ne scrollTo(0) ob prehodu results→form/preview (Nazaj). */
@@ -428,6 +432,7 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     localSubmitLockRef.current = false;
     ignoreHydrationQueryIdRef.current = null;
     zavarovalnicaBackSnapshotRef.current = null;
+    zavarovalnicaCachedAfterBackRef.current = false;
     pendingScrollRestoreRef.current = null;
     zavarovalnicaSkipFormScrollRef.current = false;
     setLoading(false);
@@ -514,10 +519,11 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       }
       const resultsPath = `/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`;
       if (onZavarovalnica) {
+        zavarovalnicaCachedAfterBackRef.current = false;
         /* push (ne replace): Nazaj v brskalniku vrne na obrazec, ne na domačo. */
-        navigate(resultsPath);
+        navigate(resultsPath, { state: { strelkoZavarView: "results", queryId: out.id } });
       } else if (location.pathname !== "/") {
-        navigate(resultsPath);
+        navigate(resultsPath, { state: { strelkoZavarView: "results", queryId: out.id } });
       }
     },
     [
@@ -672,15 +678,23 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
         setPreviewScreen(null);
         setCredits((c) => ({ ...(c || {}), credits_balance: out.token_balance }));
         if (!onZavarovalnica) {
-          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`);
+          zavarovalnicaCachedAfterBackRef.current = false;
+          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`, {
+            state: { strelkoZavarView: "results", queryId: out.id },
+          });
         } else if (existingQueryId) {
           /* Že na rezultatu z drugim ID — zamenjaj vnos, ne podvajaj zgodovine. */
+          zavarovalnicaCachedAfterBackRef.current = false;
           navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`, {
             replace: true,
+            state: { strelkoZavarView: "results", queryId: out.id },
           });
         } else {
           /* Obrazec → rezultat: push (Nazaj = isti pomik na seznamu). */
-          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`);
+          zavarovalnicaCachedAfterBackRef.current = false;
+          navigate(`/pomoc-pri-zavarovalnici?query=${encodeURIComponent(out.id)}`, {
+            state: { strelkoZavarView: "results", queryId: out.id },
+          });
         }
       } catch (e) {
         const err = e as ApiError;
@@ -925,13 +939,26 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
   }, [location.pathname, clearSearchDisplayState]);
 
   /* Običajen prihod / Nazaj (popstate) na /pomoc-pri-zavarovalnici (brez ?query=).
-     Če obstaja posnetek (Nazaj z rezultata), obnovi predogled/obrazec + pomik.
+     Če obstaja posnetek (Nazaj z rezultata), obnovi obrazec + pomik; rezultat ostane v spominu za Naprej.
      Sicer prazen obrazec. Med lokalno oddajo / predogledom / čakanjem na ?query= ne čistimo. */
   useEffect(() => {
-    if (location.pathname !== "/pomoc-pri-zavarovalnici") return;
+    if (location.pathname !== "/pomoc-pri-zavarovalnici") {
+      zavarovalnicaHadQueryRef.current = false;
+      return;
+    }
     const qid = new URLSearchParams(location.search).get("query");
+    const hasQuery = Boolean(qid);
+    const leftResultsUrl = zavarovalnicaHadQueryRef.current && !hasQuery;
+    zavarovalnicaHadQueryRef.current = hasQuery;
+
+    if (hasQuery) {
+      /* Naprej ali svež rezultat — lokalni cache za Nazaj je porabljen. */
+      zavarovalnicaCachedAfterBackRef.current = false;
+    }
+
     const decision = decideZavarovalnicaNoQueryAction({
-      hasQueryParam: Boolean(qid),
+      hasQueryParam: hasQuery,
+      leftResultsUrl,
       localSubmitLocked: localSubmitLockRef.current,
       loading,
       pendingResultNavigation: Boolean(ignoreHydrationQueryIdRef.current),
@@ -941,35 +968,43 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       skipFormScroll: zavarovalnicaSkipFormScrollRef.current,
       hasSearchResult: Boolean(searchResult),
       hasSavedQueryId: Boolean(savedQueryId),
+      hasCachedResultAfterBack: zavarovalnicaCachedAfterBackRef.current,
     });
     if (decision === "noop") return;
 
     suppressQueryHydrationRef.current = false;
     openQueryInFlightRef.current = null;
     ignoreHydrationQueryIdRef.current = null;
+    localSubmitLockRef.current = false;
 
     if (decision === "restore_snapshot") {
       const snap = zavarovalnicaBackSnapshotRef.current;
-      if (!snap) return;
       zavarovalnicaBackSnapshotRef.current = null;
+      /* Obrazec spet, rezultat ostane v React stanju za Naprej (brez nove poizvedbe). */
+      zavarovalnicaCachedAfterBackRef.current = Boolean(searchResult || savedQueryId);
       zavarovalnicaSkipFormScrollRef.current = true;
-      pendingScrollRestoreRef.current = snap.scrollY;
-      applySearchResult(null);
-      setSavedQueryId(null);
-      setActiveQueryPdf(null);
+      if (snap) {
+        pendingScrollRestoreRef.current = snap.scrollY;
+        setSelected(snap.selected);
+        setLocationQueryState(snap.locationQuery);
+        setSearchRadiusKm(snap.searchRadiusKm);
+        setSearchDateFrom(snap.searchDateFrom);
+        setSearchDateTo(snap.searchDateTo);
+        setPreview(snap.preview);
+        setPreviewScreen(snap.previewScreen);
+        setPreviewTokenNotice(snap.previewTokenNotice);
+        setPreviewActionError(snap.previewActionError);
+      } else {
+        setPreview(null);
+        setPreviewScreen(null);
+        setPreviewTokenNotice(null);
+        setPreviewActionError(null);
+      }
       setPdfDownloadError(null);
-      setSelected(snap.selected);
-      setLocationQueryState(snap.locationQuery);
-      setSearchRadiusKm(snap.searchRadiusKm);
-      setSearchDateFrom(snap.searchDateFrom);
-      setSearchDateTo(snap.searchDateTo);
-      setPreview(snap.preview);
-      setPreviewScreen(snap.previewScreen);
-      setPreviewTokenNotice(snap.previewTokenNotice);
-      setPreviewActionError(snap.previewActionError);
       return;
     }
 
+    zavarovalnicaCachedAfterBackRef.current = false;
     clearSearchState();
   }, [
     location.pathname,
@@ -977,8 +1012,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
     clearSearchState,
     loading,
     previewScreen,
-    applySearchResult,
-    setSavedQueryId,
     searchResult,
     savedQueryId,
   ]);

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { SearchCard } from "../components/SearchCard";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { PreviewNoStrikes, PreviewTeaser } from "../components/PreviewScreens";
@@ -31,8 +32,15 @@ function scrollWindowTopAfterPaint() {
 export function ZavarovalnicaPage() {
   const { searchResult, previewScreen, loading, savedQueryId, zavarovalnicaSkipFormScrollRef } =
     useStrelko();
+  const location = useLocation();
+  const hasQueryParam = Boolean(new URLSearchParams(location.search).get("query"));
 
-  const viewState = deriveZavarovalnicaViewState(searchResult, previewScreen, loading);
+  const viewState = deriveZavarovalnicaViewState(
+    searchResult,
+    previewScreen,
+    loading,
+    hasQueryParam
+  );
   const prevViewRef = useRef<QueryViewState>(viewState);
   const scrolledForQueryRef = useRef<string | null>(null);
   const previewKind = previewScreen === "no-strikes" ? "no-strikes" : "teaser";
