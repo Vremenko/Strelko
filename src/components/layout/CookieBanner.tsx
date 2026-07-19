@@ -16,6 +16,9 @@ export function CookieBanner() {
           </p>
         </div>
         <div className="cookie-banner-actions">
+          <Link to="/piskotki" className="btn btn-ghost btn-sm">
+            Več informacij
+          </Link>
           <button
             type="button"
             className="btn btn-primary btn-sm"
@@ -23,9 +26,6 @@ export function CookieBanner() {
           >
             Sprejmi
           </button>
-          <Link to="/piskotki" className="btn btn-ghost btn-sm">
-            Več informacij
-          </Link>
         </div>
       </div>
     </div>
