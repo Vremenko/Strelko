@@ -180,20 +180,90 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
 
+/** Sporočilo starša → predogledni iframe: nova nastavitev brez ponovnega nalaganja lupine. */
+export const OBCINA_PREVIEW_UPDATE_TYPE = "strele-obcina-preview-update" as const;
+
+export type ObcinaPreviewUpdateMessage = {
+  type: typeof OBCINA_PREVIEW_UPDATE_TYPE;
+  token: string;
+};
+
+export function isObcinaPreviewUpdateMessage(data: unknown): data is ObcinaPreviewUpdateMessage {
+  if (!data || typeof data !== "object") return false;
+  const row = data as Record<string, unknown>;
+  return row.type === OBCINA_PREVIEW_UPDATE_TYPE && typeof row.token === "string" && row.token.length > 0;
+}
+
+export function widgetPreviewTokenKey(body: {
+  ob_mid?: number;
+  scope?: string;
+  theme?: string;
+  size?: string;
+}): string {
+  return [body.scope ?? "", body.ob_mid ?? "", body.theme ?? "", body.size ?? ""].join("|");
+}
+
 /**
  * Zaporedni klici preview-token API-ja.
  * Vzporedni odgovori bi sicer prepisali piškotek seje, medtem ko iframe še uporablja
  * starejši žeton → 403 »Predogledna seja ni veljavna« in prazen predogled.
+ * Enaki vzporedni zahtevki (isti ključ) delijo isti Promise — npr. StrictMode v dev.
  */
 let previewTokenChain: Promise<void> = Promise.resolve();
+const previewTokenInflight = new Map<string, Promise<ObcinaWidgetPreviewToken>>();
 
 export function fetchObcinaWidgetPreviewTokenSerialized(
-  request: () => Promise<ObcinaWidgetPreviewToken>
+  request: () => Promise<ObcinaWidgetPreviewToken>,
+  key?: string
 ): Promise<ObcinaWidgetPreviewToken> {
+  if (key) {
+    const existing = previewTokenInflight.get(key);
+    if (existing) return existing;
+  }
+
   const next = previewTokenChain.then(request, request);
   previewTokenChain = next.then(
     () => undefined,
     () => undefined
   );
+
+  if (key) {
+    previewTokenInflight.set(key, next);
+    void next.finally(() => {
+      if (previewTokenInflight.get(key) === next) previewTokenInflight.delete(key);
+    });
+  }
+
   return next;
+}
+
+const PREVIEW_CDN_PRELOADS: { href: string; as: "script" | "style"; crossOrigin?: string }[] = [
+  { href: "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js", as: "script", crossOrigin: "" },
+  { href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", as: "script", crossOrigin: "" },
+  { href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css", as: "style", crossOrigin: "" },
+  { href: "https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.umd.min.js", as: "script" },
+  { href: "https://cdn.maptiler.com/maptiler-sdk-js/v3.10.2/maptiler-sdk.css", as: "style" },
+  { href: "https://cdn.maptiler.com/leaflet-maptilersdk/v4.1.0/leaflet-maptilersdk.umd.min.js", as: "script" },
+];
+
+/** Prednalaganje statičnih CDN datotek predogleda — hitrejši prvi iframe. */
+export function ensureObcinaPreviewAssetPreloads(): () => void {
+  if (typeof document === "undefined") return () => undefined;
+  const created: HTMLLinkElement[] = [];
+  for (const asset of PREVIEW_CDN_PRELOADS) {
+    const exists = document.head.querySelector(
+      `link[rel="preload"][href="${asset.href}"]`
+    );
+    if (exists) continue;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = asset.as;
+    link.href = asset.href;
+    if (asset.crossOrigin !== undefined) link.crossOrigin = asset.crossOrigin;
+    document.head.appendChild(link);
+    created.push(link);
+  }
+  return () => {
+    for (const link of created) link.remove();
+  };
 }

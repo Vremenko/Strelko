@@ -6,14 +6,17 @@ import { isPodpornikActive } from "../lib/portal-account";
 import { STRELKO_OPEN_ACCESS } from "../lib/season";
 import {
   copyTextToClipboard,
+  ensureObcinaPreviewAssetPreloads,
   ensureWidgetResizeListener,
   fetchObcinaWidgetPreviewTokenSerialized,
   findMatchingObcinaWidget,
   NATIONAL_WIDGET_SCOPE,
+  OBCINA_PREVIEW_UPDATE_TYPE,
   resolveVerifiedEmbedForWidget,
   type ObcinaWidgetPublic,
   widgetEmbedConfigKey,
   widgetPreviewBody,
+  widgetPreviewTokenKey,
 } from "../lib/widget-obcine";
 
 const DEFAULT_OB_MID = 11026516;
@@ -38,6 +41,8 @@ export function WidgetObcinePage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previewRequestRef = useRef(0);
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const previewShellReadyRef = useRef(false);
 
   useEffect(() => {
     void loadWidgetObcine();
@@ -56,6 +61,11 @@ export function WidgetObcinePage() {
 
   const size = widget.publicWidgetPreviewSize;
   const isFull = size === "full";
+
+  useEffect(() => {
+    if (size !== "full") return;
+    return ensureObcinaPreviewAssetPreloads();
+  }, [size]);
   const selected =
     widget.publicWidgetScope === NATIONAL_WIDGET_SCOPE
       ? NATIONAL_WIDGET_SCOPE
@@ -94,6 +104,7 @@ export function WidgetObcinePage() {
 
   useEffect(() => {
     if (!ready) {
+      previewShellReadyRef.current = false;
       setPreviewSrc("about:blank");
       setPreviewError(null);
       setPreviewLoading(false);
@@ -102,18 +113,37 @@ export function WidgetObcinePage() {
 
     const requestId = ++previewRequestRef.current;
     let cancelled = false;
+    const tokenKey = widgetPreviewTokenKey(previewBody);
 
     const run = async () => {
       setPreviewLoading(true);
       setPreviewError(null);
       try {
-        const tokenOut = await fetchObcinaWidgetPreviewTokenSerialized(() =>
-          api.obcinaWidgetPreviewToken(previewBody)
+        const tokenOut = await fetchObcinaWidgetPreviewTokenSerialized(
+          () => api.obcinaWidgetPreviewToken(previewBody),
+          tokenKey
         );
         if (cancelled || previewRequestRef.current !== requestId) return;
-        setPreviewSrc(tokenOut.preview_path);
+
+        const frame = previewIframeRef.current;
+        const canUpdateInPlace =
+          previewShellReadyRef.current &&
+          !!frame?.contentWindow &&
+          typeof frame.src === "string" &&
+          frame.src.includes("obcina-preview.html");
+
+        if (canUpdateInPlace) {
+          frame.contentWindow.postMessage(
+            { type: OBCINA_PREVIEW_UPDATE_TYPE, token: tokenOut.token },
+            window.location.origin
+          );
+        } else {
+          previewShellReadyRef.current = false;
+          setPreviewSrc(tokenOut.preview_path);
+        }
       } catch {
         if (cancelled || previewRequestRef.current !== requestId) return;
+        previewShellReadyRef.current = false;
         setPreviewSrc("about:blank");
         setPreviewError("Predogleda trenutno ni mogoče naložiti. Poskusite znova.");
       } finally {
@@ -275,12 +305,16 @@ export function WidgetObcinePage() {
             className={`widget-preview-frame${isFull ? " widget-preview-frame--full" : " widget-preview-frame--compact"}`}
           >
             <iframe
-              key={previewSrc}
+              ref={previewIframeRef}
               id="public-widget-iframe"
               className={`widget-obcine-iframe${isFull ? " widget-obcine-iframe--full" : " widget-obcine-iframe--compact"}`}
               src={previewSrc}
               title="Predogled widgeta"
               aria-busy={previewLoading}
+              onLoad={() => {
+                const src = previewIframeRef.current?.src || "";
+                previewShellReadyRef.current = src.includes("obcina-preview.html");
+              }}
             />
           </div>
           {previewError ? (
