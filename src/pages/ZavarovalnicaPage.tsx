@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { SearchCard } from "../components/SearchCard";
 import { ErrorBoundary } from "../components/ErrorBoundary";
@@ -10,16 +10,6 @@ import {
   deriveZavarovalnicaViewState,
   type QueryViewState,
 } from "../lib/zavarovalnica-view-transition";
-
-const RESULTS_ID = "zavarovalnica-results";
-
-function scrollElementAfterPaint(elementId: string) {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.getElementById(elementId)?.scrollIntoView({ behavior: "auto", block: "start" });
-    });
-  });
-}
 
 function scrollWindowTopAfterPaint() {
   requestAnimationFrame(() => {
@@ -45,15 +35,17 @@ export function ZavarovalnicaPage() {
   const scrolledForQueryRef = useRef<string | null>(null);
   const previewKind = previewScreen === "no-strikes" ? "no-strikes" : "teaser";
 
+  /* Enkrat ob prehodu na rezultate: takoj scrollY=0 (pred paint), da sta vidna logotip in meni.
+   * Ne ponavljaj ob map/ResizeObserver/re-renderjih iste poizvedbe. */
+  useLayoutEffect(() => {
+    if (viewState !== "results" || !searchResult || !savedQueryId) return;
+    if (scrolledForQueryRef.current === savedQueryId) return;
+    scrolledForQueryRef.current = savedQueryId;
+    window.scrollTo(0, 0);
+  }, [viewState, searchResult, savedQueryId]);
+
   useEffect(() => {
     const prev = prevViewRef.current;
-
-    if (viewState === "results" && searchResult && savedQueryId) {
-      if (!(prev === "results" && scrolledForQueryRef.current === savedQueryId)) {
-        scrolledForQueryRef.current = savedQueryId;
-        scrollElementAfterPaint(RESULTS_ID);
-      }
-    }
 
     if (viewState === "preview" && prev !== "preview" && prev !== "unlocking") {
       if (!zavarovalnicaSkipFormScrollRef.current) {
@@ -72,11 +64,11 @@ export function ZavarovalnicaPage() {
     }
 
     prevViewRef.current = viewState;
-  }, [viewState, searchResult, savedQueryId, zavarovalnicaSkipFormScrollRef]);
+  }, [viewState, zavarovalnicaSkipFormScrollRef]);
 
   if (viewState === "results" && searchResult) {
     return (
-      <section id={RESULTS_ID} className="zavarovalnica-page page--standard">
+      <section className="zavarovalnica-page page--standard">
         <ErrorBoundary
           fallback={
             <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
