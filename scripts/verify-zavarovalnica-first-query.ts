@@ -28,7 +28,7 @@ const idleNoQuery: ZavarovalnicaNoQueryInput = {
 function viewsAfterFirstManualQuery(): string[] {
   const views: string[] = ["form"];
   views.push(deriveZavarovalnicaViewState(null, null, true, false)); // loading
-  /* Rezultat pride, URL še brez ?query=, pendingNavigation = true */
+  /* Rezultat pride, URL še brez ?query=, pendingNavigation = true → ostane loading */
   const mid: ZavarovalnicaNoQueryInput = {
     ...idleNoQuery,
     hasSearchResult: true,
@@ -38,8 +38,7 @@ function viewsAfterFirstManualQuery(): string[] {
     pendingResultNavigation: true,
   };
   assert.equal(decideZavarovalnicaNoQueryAction(mid), "noop");
-  /* URL še nima query → UI še ni results (gated) */
-  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, false)); // form while pending URL
+  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, false, true)); // loading while pending URL
   /* loading se konča — še vedno pending URL */
   const afterLoad: ZavarovalnicaNoQueryInput = {
     ...mid,
@@ -69,7 +68,8 @@ function viewsAfterFirstSavedQuery(): string[] {
     "noop",
     "shranjena: ne sme restore_snapshot med čakanjem na ?query="
   );
-  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, true));
+  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, false, true)); // loading, ne form
+  views.push(deriveZavarovalnicaViewState({ ok: true }, null, false, true)); // results
   return views;
 }
 
@@ -107,18 +107,29 @@ assert.equal(
   "form",
   "brez ?query= ne kaži rezultata (Nazaj)"
 );
+assert.equal(
+  deriveZavarovalnicaViewState({ a: 1 }, null, false, false, true),
+  "loading",
+  "med čakanjem na ?query= ostane loading (brez trzaja na obrazec)"
+);
 assert.equal(deriveZavarovalnicaViewState(null, "teaser", false, false), "preview");
 assert.equal(deriveZavarovalnicaViewState(null, "teaser", true, false), "unlocking");
 
 const manualSeq = viewsAfterFirstManualQuery();
-assert.deepEqual(manualSeq, ["form", "loading", "form", "results"]);
+assert.deepEqual(manualSeq, ["form", "loading", "loading", "results"]);
 assert.equal(
   manualSeq.filter((v) => v === "results").length,
   1,
   "prva ročna: results šele po sync URL"
 );
+assert.equal(
+  manualSeq.filter((v) => v === "form").length,
+  1,
+  "prva ročna: samo začetni obrazec, brez vmesnega"
+);
 
 const savedSeq = viewsAfterFirstSavedQuery();
+assert.deepEqual(savedSeq, ["form", "loading", "loading", "results"]);
 assert.equal(savedSeq.filter((v) => v === "form").length, 1);
 assert.ok(savedSeq.includes("results"));
 
