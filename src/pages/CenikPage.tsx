@@ -150,7 +150,7 @@ export function CenikPage() {
       <section className="pricing-plans" aria-label="Ponudbi">
         <div className="plan-grid plan-grid--2 pricing-plan-grid">
           <article className="plan-card pricing-plan-card pricing-surface-card">
-            <span className="pricing-plan-card__badge">Enkratni nakup</span>
+            <span className="pricing-plan-card__badge">Posamezni nakup</span>
             <h3 className="pricing-plan-card__title">Ob škodi</h3>
             <p className="pricing-plan-card__desc">{CENIK_ZETONI_DESCRIPTION}</p>
             <ObSkodiTokenPurchase
@@ -166,7 +166,7 @@ export function CenikPage() {
           </article>
 
           <PricingPlanCard
-            offer={PRICING_PODPORNIST}
+            offer={{ ...PRICING_PODPORNIST, name: "Paket Podpornik" }}
             badge="Mesečna naročnina"
             description={CENIK_PODPORNIST_DESCRIPTION}
             features={CENIK_PODPORNIST_FEATURES}

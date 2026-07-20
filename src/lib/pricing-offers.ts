@@ -70,30 +70,31 @@ export const PRICING_PODPORNIST: PricingOffer = {
 };
 
 export const CENIK_PODPORNIST_DESCRIPTION =
-  "S paketom Podpornik aktivirate mesečno spletno naročnino in pridobite dostop do dodatnih prikazov, hkrati pa podprete ekipo Meteoinfo pri razvoju novih aplikacij in meteoroloških produktov.";
+  "S paketom Podpornik odklenete dodatne statistične prikaze in možnosti v Strelku, hkrati pa neposredno podprete delo ekipe Meteoinfo ter nadaljnji razvoj naših vsebin in storitev.";
 
 /** Obvestilo neposredno nad gumbom na kartici Podpornik (cenik). */
 export const CENIK_PODPORNIST_RENEWAL_NOTE =
-  "Naročnina se samodejno mesečno podaljšuje do preklica.";
+  "Naročnina se samodejno obnavlja vsak mesec do preklica.";
 
 export const CENIK_PODPORNIST_FEATURES = [
-  "Celoten arhiv strel po dnevih, urah, statističnih regijah in občinah",
+  "Celoten arhiv udarov strel",
   "Napredni statistični prikazi",
-  "Widget za spletno stran",
+  "Daljša obdobja na zemljevidu",
+  "Widget za vgradnjo na spletno stran",
 ] as const;
 
 export const CENIK_PODPORNIST_DISCLAIMER =
-  "Žetoni za preverjanje udarov strel ob škodnem dogodku in izdelavo PDF-poročila niso vključeni v naročnino Podpornik, zato jih je treba kupiti posebej.";
+  "Žetoni za pregled udarov strel pri posameznem škodnem dogodku in izdelavo PDF-poročil niso vključeni v paket Podpornik.";
 
 export const CENIK_ZETONI_DESCRIPTION =
-  "Za preverjanje udarov strel pri škodnem dogodku in izdelavo PDF-poročila kot pomoč pri uveljavljanju škode pri zavarovalnici.";
+  "Preverite udare strel v bližini izbrane lokacije ter izdelajte PDF-poročilo, ki vam je lahko v pomoč pri komunikaciji z zavarovalnico.";
 
 export const CENIK_ZETONI_FEATURES = [
-  "Prikaz udarov strel v okolici izbrane lokacije",
-  "Izbira obdobja in radija iskanja",
-  "Interaktivni zemljevid zaznanih udarov",
-  "Datum, čas in oddaljenost posameznega udara",
-  "Izdelava PDF-poročila",
+  "Pregled udarov strel v izbranem radiju",
+  "Izbira obdobja do 30 dni",
+  "Interaktivni zemljevid lokacij zaznanih udarov strel",
+  "Podatki o ocenjenem času posameznega udara in njegovi oddaljenosti od izbrane lokacije",
+  "Možnost izdelave PDF-poročila",
 ] as const;
 
 export const PRICING_OFFERS: PricingOffer[] = [PRICING_OB_SKODI, PRICING_PODPORNIST];
