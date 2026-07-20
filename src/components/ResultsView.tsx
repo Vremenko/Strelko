@@ -8,7 +8,7 @@ import { StrikeMap } from "./StrikeMap";
 import { PdfDownloadPanel } from "./PdfDownloadPanel";
 import { useStrelko } from "../context/StrelkoContext";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
-import { formatSlDate, formatSlDecimal, formatSlTime } from "../lib/dates";
+import { formatSlDate, formatSlDecimal, formatEstimatedStrikeTime, ESTIMATED_STRIKE_TIME_LABEL, ESTIMATED_STRIKE_TIME_NOTE } from "../lib/dates";
 import { resultLocationTitle } from "../lib/pick-location-map";
 import type { DailyStrike, HourlyChartData, StrikePoint } from "../types";
 
@@ -209,7 +209,7 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
               <th>Datum</th>
               <th>Št. strel</th>
               <th>Najbližja</th>
-              <th>Čas najbližje</th>
+              <th>{ESTIMATED_STRIKE_TIME_LABEL}</th>
               <th>Profil</th>
             </tr>
           </thead>
@@ -248,7 +248,9 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
                         : "—"}
                     </td>
                     <td>
-                      {d.cas_najblizje_strele ? formatSlTime(d.cas_najblizje_strele) : "—"}
+                      {d.cas_najblizje_strele
+                        ? formatEstimatedStrikeTime(d.cas_najblizje_strele)
+                        : "—"}
                     </td>
                     <td className="daily-row-hourly" onClick={(e) => e.stopPropagation()}>
                       {showHourly ? (
@@ -277,6 +279,11 @@ export function ResultsView({ zavarovalnica = false }: { zavarovalnica?: boolean
           </tbody>
         </table>
       </div>
+      {daily.length ? (
+        <p className="estimated-strike-time-note" role="note">
+          {ESTIMATED_STRIKE_TIME_NOTE}
+        </p>
+      ) : null}
       <div id="hourly-chart-slot" ref={hourlyPanelRef}>
         {hourlyChartDay && (
           <HourlyChartPanel

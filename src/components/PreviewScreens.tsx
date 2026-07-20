@@ -11,6 +11,7 @@ import { resultLocationTitle } from "../lib/pick-location-map";
 import { formatPlaceName, getToken } from "../lib/utils";
 import type { InsufficientTokensDetail, QueryQuoteOut } from "../types";
 import { ResultsPeriod, ResultsStats, formatResultsPeriodLabel } from "./ResultsSummary";
+import { ESTIMATED_STRIKE_TIME_LABEL } from "../lib/dates";
 
 function LockedStatValue() {
   return (
@@ -66,7 +67,7 @@ function PreviewUnlockBackdrop() {
             <th>Datum</th>
             <th>Št. strel</th>
             <th>Najbližje</th>
-            <th>Čas</th>
+            <th>{ESTIMATED_STRIKE_TIME_LABEL}</th>
           </tr>
         </thead>
         <tbody>{FAKE_ROWS}</tbody>

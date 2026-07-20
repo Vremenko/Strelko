@@ -5,7 +5,7 @@ import {
   isMaptilerSdkLayer,
   removeInjectedMapControls,
 } from "./strike-map-labels";
-import { formatSlDecimal, formatStrikeDateTime } from "./dates";
+import { formatSlDecimal, formatStrikeDateTime, ESTIMATED_STRIKE_TIME_LABEL } from "./dates";
 import type { StrikePoint } from "../types";
 
 const MI_CYAN = "#05a5ce";
@@ -37,7 +37,7 @@ const STRIKE_POPUP_CLASS = "strele-strike-popup-shell";
 const strikePopupOptions: L.PopupOptions = { className: STRIKE_POPUP_CLASS };
 
 function strikePopupHtml(strike: StrikePoint): string {
-  return `<div class="strele-strike-tooltip"><strong>Strela</strong> ~${formatSlDecimal(strike.distance_km)} km<br>${formatStrikeDateTime(strike.ts_utc)}</div>`;
+  return `<div class="strele-strike-tooltip"><strong>Strela</strong> ~${formatSlDecimal(strike.distance_km)} km<br><span class="strele-strike-tooltip__time-label">${ESTIMATED_STRIKE_TIME_LABEL}</span><br>${formatStrikeDateTime(strike.ts_utc)}</div>`;
 }
 
 function homePopupHtml(): string {

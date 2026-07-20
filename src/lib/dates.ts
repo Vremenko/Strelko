@@ -73,9 +73,11 @@ export function formatSlTime(iso: string | null | undefined): string {
   return `${h}.${m}`;
 }
 
-export function formatStrikeDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = parseIsoDate(iso);
-  if (!d) return String(iso);
-  return `${formatSlDate(iso)}, ${formatSlTime(iso)}`;
-}
+/** @deprecated Uporabi formatEstimatedStrikeDateTime — ohranjeno kot alias za strele. */
+export {
+  formatEstimatedStrikeDateTime as formatStrikeDateTime,
+  formatEstimatedStrikeTime,
+  formatEstimatedStrikeDateTime,
+  ESTIMATED_STRIKE_TIME_LABEL,
+  ESTIMATED_STRIKE_TIME_NOTE,
+} from "./estimated-strike-time";
