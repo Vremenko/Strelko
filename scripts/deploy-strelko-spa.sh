@@ -30,6 +30,14 @@ if [[ ! -d "$ASSETS" ]]; then
   exit 1
 fi
 
+# Zaščita: produkcijski bundle ne sme klicati localhost API (telefoni / drugi računalniki).
+if grep -R -q 'localhost:3000/api/v1' "$ASSETS"/index-*.js 2>/dev/null; then
+  echo "Napaka: dist vsebuje VITE_API_BASE_URL=http://localhost:3000/api/v1." >&2
+  echo "Za produkcijo zgradi z: VITE_API_BASE_URL=/api/v1 npm run build" >&2
+  echo "(ne uporabljaj source .env.example pred buildom)." >&2
+  exit 1
+fi
+
 python3 - "$HTML" "$VERSION" <<'PY'
 import re, sys
 path, ver = sys.argv[1], sys.argv[2]
