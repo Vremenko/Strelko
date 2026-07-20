@@ -47,7 +47,7 @@ export function WidgetObcinePage() {
   const previewShellReadyRef = useRef(false);
   const previewCachedKeysRef = useRef(new Set<string>());
   const previewDataKeyRef = useRef("");
-  const skipNextDisplaySyncRef = useRef(false);
+  const lastPostedDisplayRef = useRef<{ theme: string; size: string }>({ theme: "", size: "" });
   const widgetRef = useRef(widget);
   const sizeRef = useRef(widget.publicWidgetPreviewSize);
   widgetRef.current = widget;
@@ -166,13 +166,15 @@ export function WidgetObcinePage() {
       setPreviewError(null);
       try {
         if (previewCachedKeysRef.current.has(dataKey)) {
-          skipNextDisplaySyncRef.current = true;
           const ok = postPreviewUpdate({
             dataKey,
             theme: themeNow,
             size: sizeNow,
           });
-          if (ok) return;
+          if (ok) {
+            lastPostedDisplayRef.current = { theme: themeNow, size: sizeNow };
+            return;
+          }
         }
 
         const tokenOut = await fetchObcinaWidgetPreviewTokenSerialized(
@@ -183,13 +185,13 @@ export function WidgetObcinePage() {
 
         // Optimistično: po uspešnem žetonu so podatki za ta dataKey na poti v iframe cache.
         previewCachedKeysRef.current.add(dataKey);
-        skipNextDisplaySyncRef.current = true;
         const updated = postPreviewUpdate({
           token: tokenOut.token,
           dataKey,
           theme: themeNow,
           size: sizeNow,
         });
+        lastPostedDisplayRef.current = { theme: themeNow, size: sizeNow };
         if (!updated) {
           previewShellReadyRef.current = false;
           setPreviewSrc(tokenOut.preview_path);
@@ -215,13 +217,14 @@ export function WidgetObcinePage() {
   /** Tema / velikost: samo lokalni prikaz, brez token/data API. */
   useEffect(() => {
     if (!ready || !previewShellReadyRef.current) return;
-    if (skipNextDisplaySyncRef.current) {
-      skipNextDisplaySyncRef.current = false;
-      return;
-    }
-    // Po uspešnem token/dataKey naložilu je dataKey v množici (optimistično ali prek ack).
     if (!previewCachedKeysRef.current.has(previewDataKeyRef.current)) return;
-    postPreviewUpdate({ theme: previewTheme, size });
+    const prev = lastPostedDisplayRef.current;
+    if (prev.theme === previewTheme && prev.size === size) return;
+    if (
+      postPreviewUpdate({ theme: previewTheme, size })
+    ) {
+      lastPostedDisplayRef.current = { theme: previewTheme, size };
+    }
   }, [ready, previewTheme, size, postPreviewUpdate]);
 
   const handleCopyEmbedCode = useCallback(async () => {
@@ -378,7 +381,17 @@ export function WidgetObcinePage() {
               aria-busy={previewLoading}
               onLoad={() => {
                 const src = previewIframeRef.current?.src || "";
-                previewShellReadyRef.current = src.includes("obcina-preview.html");
+                const shellReady = src.includes("obcina-preview.html");
+                previewShellReadyRef.current = shellReady;
+                if (!shellReady) return;
+                if (!previewCachedKeysRef.current.has(previewDataKeyRef.current)) return;
+                const themeNow = (widgetRef.current.publicWidgetTheme || "dark") as "dark" | "light";
+                const sizeNow = sizeRef.current;
+                const prev = lastPostedDisplayRef.current;
+                if (prev.theme === themeNow && prev.size === sizeNow) return;
+                if (postPreviewUpdate({ theme: themeNow, size: sizeNow })) {
+                  lastPostedDisplayRef.current = { theme: themeNow, size: sizeNow };
+                }
               }}
             />
           </div>
