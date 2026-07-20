@@ -10,12 +10,14 @@ import {
   ensureWidgetResizeListener,
   fetchObcinaWidgetPreviewTokenSerialized,
   findMatchingObcinaWidget,
+  isObcinaPreviewCachedMessage,
   NATIONAL_WIDGET_SCOPE,
   OBCINA_PREVIEW_UPDATE_TYPE,
   resolveVerifiedEmbedForWidget,
   type ObcinaWidgetPublic,
   widgetEmbedConfigKey,
   widgetPreviewBody,
+  widgetPreviewDataKey,
   widgetPreviewTokenKey,
 } from "../lib/widget-obcine";
 
@@ -43,6 +45,12 @@ export function WidgetObcinePage() {
   const previewRequestRef = useRef(0);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewShellReadyRef = useRef(false);
+  const previewCachedKeysRef = useRef(new Set<string>());
+  const previewDataKeyRef = useRef("");
+  const skipNextDisplaySyncRef = useRef(false);
+  const widgetRef = useRef(widget);
+  const sizeRef = useRef(widget.publicWidgetPreviewSize);
+  widgetRef.current = widget;
 
   useEffect(() => {
     void loadWidgetObcine();
@@ -61,6 +69,7 @@ export function WidgetObcinePage() {
 
   const size = widget.publicWidgetPreviewSize;
   const isFull = size === "full";
+  sizeRef.current = size;
 
   useEffect(() => {
     if (size !== "full") return;
@@ -75,18 +84,49 @@ export function WidgetObcinePage() {
   const canEmbed = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
 
   const embedConfigKey = widgetEmbedConfigKey(widget, size);
-  const previewBody = useMemo(
-    () => widgetPreviewBody(widget, size),
-    [
-      size,
-      widget.publicWidgetScope,
-      widget.publicWidgetObMid,
-      widget.publicWidgetTheme,
-    ]
+  const previewTheme = widget.publicWidgetTheme || "dark";
+  const previewDataKey = useMemo(() => widgetPreviewDataKey(widget), [
+    widget.publicWidgetScope,
+    widget.publicWidgetObMid,
+  ]);
+  previewDataKeyRef.current = previewDataKey;
+
+  const postPreviewUpdate = useCallback(
+    (message: {
+      token?: string;
+      dataKey?: string;
+      theme?: "dark" | "light";
+      size?: "compact" | "full";
+    }) => {
+      const frame = previewIframeRef.current;
+      if (
+        !previewShellReadyRef.current ||
+        !frame?.contentWindow ||
+        !frame.src.includes("obcina-preview.html")
+      ) {
+        return false;
+      }
+      frame.contentWindow.postMessage(
+        { type: OBCINA_PREVIEW_UPDATE_TYPE, ...message },
+        window.location.origin
+      );
+      return true;
+    },
+    []
   );
 
   const embedDisplayedForCurrentConfig =
     !!verifiedEmbed && verifiedEmbed.configKey === embedConfigKey;
+
+  useEffect(() => {
+    const onMessage = (ev: MessageEvent) => {
+      if (ev.origin !== window.location.origin) return;
+      if (!isObcinaPreviewCachedMessage(ev.data)) return;
+      previewCachedKeysRef.current.add(ev.data.dataKey);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   useEffect(() => {
     if (!canEmbed) {
@@ -102,9 +142,11 @@ export function WidgetObcinePage() {
     setCopyConfirmed(false);
   }, [canEmbed, embedConfigKey]);
 
+  /** Podatki: nova občina / SI — en API klic; ponovna ista → predpomnilnik. */
   useEffect(() => {
     if (!ready) {
       previewShellReadyRef.current = false;
+      previewCachedKeysRef.current.clear();
       setPreviewSrc("about:blank");
       setPreviewError(null);
       setPreviewLoading(false);
@@ -113,31 +155,40 @@ export function WidgetObcinePage() {
 
     const requestId = ++previewRequestRef.current;
     let cancelled = false;
-    const tokenKey = widgetPreviewTokenKey(previewBody);
+    const dataKey = previewDataKey;
+    const themeNow = (widgetRef.current.publicWidgetTheme || "dark") as "dark" | "light";
+    const sizeNow = sizeRef.current;
+    const body = widgetPreviewBody(widgetRef.current, sizeNow);
+    const tokenKey = widgetPreviewTokenKey(body);
 
     const run = async () => {
       setPreviewLoading(true);
       setPreviewError(null);
       try {
+        if (previewCachedKeysRef.current.has(dataKey)) {
+          skipNextDisplaySyncRef.current = true;
+          const ok = postPreviewUpdate({
+            dataKey,
+            theme: themeNow,
+            size: sizeNow,
+          });
+          if (ok) return;
+        }
+
         const tokenOut = await fetchObcinaWidgetPreviewTokenSerialized(
-          () => api.obcinaWidgetPreviewToken(previewBody),
+          () => api.obcinaWidgetPreviewToken(body),
           tokenKey
         );
         if (cancelled || previewRequestRef.current !== requestId) return;
 
-        const frame = previewIframeRef.current;
-        const canUpdateInPlace =
-          previewShellReadyRef.current &&
-          !!frame?.contentWindow &&
-          typeof frame.src === "string" &&
-          frame.src.includes("obcina-preview.html");
-
-        if (canUpdateInPlace) {
-          frame.contentWindow.postMessage(
-            { type: OBCINA_PREVIEW_UPDATE_TYPE, token: tokenOut.token },
-            window.location.origin
-          );
-        } else {
+        skipNextDisplaySyncRef.current = true;
+        const updated = postPreviewUpdate({
+          token: tokenOut.token,
+          dataKey,
+          theme: themeNow,
+          size: sizeNow,
+        });
+        if (!updated) {
           previewShellReadyRef.current = false;
           setPreviewSrc(tokenOut.preview_path);
         }
@@ -157,7 +208,18 @@ export function WidgetObcinePage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, previewBody]);
+  }, [ready, previewDataKey, postPreviewUpdate]);
+
+  /** Tema / velikost: samo lokalni prikaz, brez token/data API. */
+  useEffect(() => {
+    if (!ready || !previewShellReadyRef.current) return;
+    if (skipNextDisplaySyncRef.current) {
+      skipNextDisplaySyncRef.current = false;
+      return;
+    }
+    if (!previewCachedKeysRef.current.has(previewDataKeyRef.current)) return;
+    postPreviewUpdate({ theme: previewTheme, size });
+  }, [ready, previewTheme, size, postPreviewUpdate]);
 
   const handleCopyEmbedCode = useCallback(async () => {
     if (!ready || !canEmbed || embedPreparing) return;

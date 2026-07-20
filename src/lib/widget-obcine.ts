@@ -180,18 +180,56 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
 
-/** Sporočilo starša → predogledni iframe: nova nastavitev brez ponovnega nalaganja lupine. */
+/** Sporočilo starša → predogledni iframe: posodobitev brez ponovnega nalaganja lupine. */
 export const OBCINA_PREVIEW_UPDATE_TYPE = "strele-obcina-preview-update" as const;
+
+/** Iframe → starš: podatki za ta dataKey so v predpomnilniku predogleda. */
+export const OBCINA_PREVIEW_CACHED_TYPE = "strele-obcina-preview-cached" as const;
 
 export type ObcinaPreviewUpdateMessage = {
   type: typeof OBCINA_PREVIEW_UPDATE_TYPE;
-  token: string;
+  /** Nov žeton — nalaganje / osvežitev podatkov (samo ob novi občini). */
+  token?: string;
+  /** Ključ predpomnilnika (občina / Slovenija), brez teme in velikosti. */
+  dataKey?: string;
+  theme?: "dark" | "light";
+  size?: WidgetPreviewSize;
+};
+
+export type ObcinaPreviewCachedMessage = {
+  type: typeof OBCINA_PREVIEW_CACHED_TYPE;
+  dataKey: string;
 };
 
 export function isObcinaPreviewUpdateMessage(data: unknown): data is ObcinaPreviewUpdateMessage {
   if (!data || typeof data !== "object") return false;
   const row = data as Record<string, unknown>;
-  return row.type === OBCINA_PREVIEW_UPDATE_TYPE && typeof row.token === "string" && row.token.length > 0;
+  if (row.type !== OBCINA_PREVIEW_UPDATE_TYPE) return false;
+  const hasToken = typeof row.token === "string" && row.token.length > 0;
+  const hasDataKey = typeof row.dataKey === "string" && row.dataKey.length > 0;
+  const hasDisplay =
+    row.theme === "dark" ||
+    row.theme === "light" ||
+    row.size === "compact" ||
+    row.size === "full";
+  return hasToken || hasDataKey || hasDisplay;
+}
+
+export function isObcinaPreviewCachedMessage(data: unknown): data is ObcinaPreviewCachedMessage {
+  if (!data || typeof data !== "object") return false;
+  const row = data as Record<string, unknown>;
+  return (
+    row.type === OBCINA_PREVIEW_CACHED_TYPE &&
+    typeof row.dataKey === "string" &&
+    row.dataKey.length > 0
+  );
+}
+
+/** Ključ podatkov predogleda — občina ali Slovenija (brez teme/velikosti). */
+export function widgetPreviewDataKey(widget: WidgetState): string {
+  if (widget.publicWidgetScope === NATIONAL_WIDGET_SCOPE) return NATIONAL_WIDGET_SCOPE;
+  const mid = widget.publicWidgetObMid;
+  return mid ? `ob:${Number(mid)}` : "ob:";
 }
 
 export function widgetPreviewTokenKey(body: {
@@ -200,7 +238,9 @@ export function widgetPreviewTokenKey(body: {
   theme?: string;
   size?: string;
 }): string {
-  return [body.scope ?? "", body.ob_mid ?? "", body.theme ?? "", body.size ?? ""].join("|");
+  // Za združevanje žetonov šteje samo cilj podatkov (ne tema/velikost).
+  if (body.scope === NATIONAL_WIDGET_SCOPE) return NATIONAL_WIDGET_SCOPE;
+  return `ob:${body.ob_mid ?? ""}`;
 }
 
 /**
