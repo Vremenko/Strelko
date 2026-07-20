@@ -48,11 +48,17 @@ assert.ok(
     (mapHtml.includes("background: var(--bg)") || mapHtml.includes("background:var(--bg)"))
 );
 
-/* Javni zoom / fitBounds */
-assert.ok(mapHtml.includes("PUBLIC_DESKTOP_ZOOM = 9"));
+/* Javni zoom / fitBounds po širini vsebnika (meteoinfo + /admin2) */
+assert.ok(!mapHtml.includes("PUBLIC_DESKTOP_ZOOM"));
 assert.ok(mapHtml.includes("STATISTIKA_DESKTOP_ZOOM = 8"));
 assert.ok(mapHtml.includes("desktopInitialZoom"));
 assert.ok(mapHtml.includes("isPublicMapEmbed"));
+assert.ok(mapHtml.includes("publicFitZoomBoost"));
+assert.ok(mapHtml.includes("PUBLIC_ZOOM_BOOST_WIDE = 0.5"));
+assert.ok(mapHtml.includes("PUBLIC_ZOOM_BOOST_MEDIUM = 0.25"));
+assert.ok(mapHtml.includes("fitPublicMapToSlovenia"));
+assert.ok(mapHtml.includes("zoomSnap: 0.5"));
+assert.ok(mapHtml.includes("zoomDelta: 0.5"));
 assert.ok(mapHtml.includes("PUBLIC_MOB_FIT_MAX_ZOOM = 11"));
 assert.ok(mapHtml.includes("STATISTIKA_MOB_FIT_MAX_ZOOM = 10"));
 assert.ok(mapHtml.includes("resizeMaplibreBasemap"));
@@ -111,7 +117,7 @@ const archiveEmbed = readFileSync(
 );
 assert.ok(archiveEmbed.includes('params.set("grid", "0")'));
 assert.ok(archiveEmbed.includes("hideGrid"));
-assert.ok(archiveEmbed.includes('v: "17"'));
+assert.ok(archiveEmbed.includes('v: "18"'));
 
 assert.equal(parsePublicPeriodParam("map", "30d"), "7d");
 assert.equal(parsePublicPeriodParam("map", "90d"), "7d");
@@ -122,4 +128,4 @@ assert.equal(parsePublicPeriodParam("map", "7d"), "7d");
 
 console.log("verify-map-basemap: OK");
 console.log(`strelko-dark.json: ${styleSize} bytes, layers=${style.layers.length}`);
-console.log("public desktop zoom: 9 (statistika: 8); free periods: Danes, 7 dni; wheel/2-finger gestures");
+console.log("public fitBounds boost: wide +0.5 / mid +0.25 / narrow 0; statistika desktop zoom 8; free periods: Danes, 7 dni");
