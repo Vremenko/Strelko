@@ -14,6 +14,13 @@ import {
   type PublicEmbedKind,
   type PublicMapPeriodId,
 } from "../lib/public-embed";
+import {
+  assertSiWidgetEmbedHtml,
+  buildSiWidgetEmbedHtml,
+  buildSiWidgetEmbedSrc,
+  parseSiWidgetTheme,
+  type SiWidgetTheme,
+} from "../lib/si-widget-embed";
 
 const COPY_MS = 2500;
 
@@ -177,6 +184,138 @@ function EmbedGeneratorCard({
   );
 }
 
+/** Ločena kartica: SI widget (samo statistične kartice, brez zemljevida in grafa). */
+function SiWidgetEmbedCard() {
+  const [theme, setTheme] = useState<SiWidgetTheme>("dark");
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewRef = useRef<HTMLIFrameElement>(null);
+
+  const html = useMemo(
+    () => buildSiWidgetEmbedHtml(theme, { frameId: "admin2-preview-si-widget" }),
+    [theme]
+  );
+  const previewSrc = useMemo(() => buildSiWidgetEmbedSrc(theme), [theme]);
+  const publicPath = previewSrc.replace(/^https?:\/\/[^/]+/, "");
+
+  useEffect(() => {
+    try {
+      assertSiWidgetEmbedHtml(html);
+      setCopyError(null);
+    } catch (err) {
+      setCopyError(err instanceof Error ? err.message : "Koda ni veljavna.");
+    }
+  }, [html]);
+
+  useEffect(() => {
+    const onMessage = (ev: MessageEvent) => {
+      if (!ev.data || ev.data.type !== "strele-embed-resize") return;
+      const frame = previewRef.current;
+      if (!frame || ev.source !== frame.contentWindow) return;
+      const h = Math.max(240, Math.min(1200, +ev.data.height || 0));
+      if (h > 0) frame.style.height = `${h}px`;
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+    };
+  }, []);
+
+  const onCopy = async () => {
+    setCopyError(null);
+    try {
+      assertSiWidgetEmbedHtml(html);
+      await copyTextToClipboard(html);
+      setCopied(true);
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+      copyResetRef.current = setTimeout(() => setCopied(false), COPY_MS);
+    } catch (err) {
+      setCopied(false);
+      setCopyError(err instanceof Error ? err.message : "Kopiranje ni uspelo.");
+    }
+  };
+
+  return (
+    <article className="admin2-card legal-card">
+      <header className="admin2-card__head">
+        <h2>Widget Slovenija (brez grafa)</h2>
+        <p>
+          Razširjeni pregled za celotno Slovenijo: statistične kartice (24 ur, 30 dni, zadnja
+          strela). Brez zemljevida in brez dnevnega grafa — primerno za ozek vložek na
+          meteoinfo.si.
+        </p>
+      </header>
+
+      <label className="admin2-field field-labeled">
+        <span>Tema</span>
+        <select
+          value={theme}
+          onChange={(e) => setTheme(parseSiWidgetTheme(e.target.value))}
+          aria-label="Tema widgeta Slovenija"
+        >
+          <option value="dark">Temna</option>
+          <option value="light">Svetla</option>
+        </select>
+      </label>
+
+      <div className="admin2-preview">
+        <p className="admin2-label">Predogled v živo</p>
+        <p className="admin2-preview-note">
+          Predogled in kopirljiva koda kažeta na <code>{publicPath}</code> (vgradnja z
+          meteoinfo.si). Če spremeniš temo, znova kopiraj in prilepi celotno kodo.
+        </p>
+        <iframe
+          ref={previewRef}
+          key={previewSrc}
+          className="admin2-preview__iframe"
+          src={previewSrc}
+          title="Predogled: Widget Slovenija"
+          width="100%"
+          loading="lazy"
+          style={{
+            width: "100%",
+            border: 0,
+            display: "block",
+            minHeight: 280,
+            background: theme === "dark" ? "#333333" : "#f7f7f8",
+          }}
+        />
+      </div>
+
+      <div className="admin2-code">
+        <p className="admin2-label">Iframe koda</p>
+        <textarea
+          className="admin2-code__ta widget-obcine-embed-code"
+          readOnly
+          value={html}
+          rows={10}
+          aria-label="Koda za widget Slovenija"
+        />
+        <div className="admin2-code__actions">
+          <button type="button" className="btn btn-primary" onClick={() => void onCopy()}>
+            Kopiraj kodo
+          </button>
+          {copied ? (
+            <span className="admin2-copy-ok" role="status">
+              Koda je kopirana
+            </span>
+          ) : null}
+          {copyError ? (
+            <span className="admin2-copy-err" role="alert">
+              {copyError}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function Admin2Inner() {
   const [chartPeriod, setChartPeriod] = useState<PublicChartPeriodId>("7d");
   const [mapPeriod, setMapPeriod] = useState<PublicMapPeriodId>("7d");
@@ -186,10 +325,10 @@ function Admin2Inner() {
       <header className="page-header">
         <h1>Vgradne kode</h1>
         <p className="pricing-lead">
-          Ustvarite iframe-kode za vgradnjo javnih grafov in občinskega zemljevida na meteoinfo.si.
-          Prikazi uporabljajo iste komponente kot stran Statistika — brez navigacije in noge.
-          Obdobje izbereš tukaj, nato kodo kopiraš in prilepiš na WordPress — sprememba obdobja
-          na tej strani ne posodobi že vgrajene kode na meteoinfo.si.
+          Ustvarite iframe-kode za vgradnjo javnih grafov, občinskega zemljevida in widgeta
+          Slovenije na meteoinfo.si. Prikazi uporabljajo iste podatke kot Strelko — brez
+          navigacije in noge. Nastavitve izbereš tukaj, nato kodo kopiraš in prilepiš na
+          WordPress — sprememba na tej strani ne posodobi že vgrajene kode na meteoinfo.si.
         </p>
         <p>
           <Link to="/admin" className="btn btn-ghost">
@@ -215,6 +354,7 @@ function Admin2Inner() {
           period={mapPeriod}
           onPeriod={(id) => setMapPeriod(id as PublicMapPeriodId)}
         />
+        <SiWidgetEmbedCard />
       </div>
     </section>
   );
