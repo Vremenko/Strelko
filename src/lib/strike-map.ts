@@ -375,10 +375,10 @@ export function createStrikeMap(
   let lastFitHeight = 0;
   let initialFitDone = false;
 
-  const markUserAdjusted = (ev: L.LeafletEvent) => {
+  const markUserAdjusted = () => {
+    /* Leaflet scrollWheelZoom sproži zoomstart brez originalEvent — ne zahtevaj ga. */
     if (mapHost._programmaticFit) return;
-    const original = (ev as L.LeafletEvent & { originalEvent?: Event } | undefined)?.originalEvent;
-    if (original) mapHost._userAdjustedView = true;
+    mapHost._userAdjustedView = true;
   };
   map.on("movestart", markUserAdjusted);
   map.on("zoomstart", markUserAdjusted);
@@ -392,7 +392,8 @@ export function createStrikeMap(
     const size = map.getSize();
     if (size.x < MIN_MAP_AXIS_PX || size.y < MIN_MAP_AXIS_PX) return false;
 
-    if (!opts.force && !opts.fromResize && mapHost._userAdjustedView) return true;
+    /* Po uporabniškem zoomanju/premiku ne ponastavi pogleda — tudi ne ob resize (popup). */
+    if (!opts.force && mapHost._userAdjustedView) return true;
     if (!opts.force && initialFitDone && !mapSizeChanged(size.x, size.y)) return true;
 
     if (!fitSearchRadius(map, lat, lon, radiusKm)) return false;
@@ -400,9 +401,6 @@ export function createStrikeMap(
     lastFitWidth = size.x;
     lastFitHeight = size.y;
     initialFitDone = true;
-    if (opts.fromResize) {
-      mapHost._userAdjustedView = false;
-    }
     return true;
   };
 

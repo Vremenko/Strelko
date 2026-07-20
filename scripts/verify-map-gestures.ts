@@ -51,12 +51,13 @@ assert.ok(gestures.includes("prefersDesktopMapPointer"));
 assert.ok(gestures.includes("prefersMobileMapPointer"));
 assert.ok(gestures.includes("bindStreleMapZoomGestures"));
 
-/* ——— Namizje: wheel brez Ctrl, brez Ctrl namiga ——— */
+/* ——— Namizje: Leaflet scrollWheelZoom (brez lastnega wheel handlerja / Ctrl) ——— */
 assert.ok(!gestures.includes("ctrlKey"));
 assert.ok(!gestures.includes("Ctrl +"));
 assert.ok(!gestures.includes("Za povečavo"));
-assert.ok(gestures.includes("addEventListener(\"wheel\""));
-assert.ok(gestures.includes("ev.preventDefault()"));
+assert.ok(!gestures.includes("addEventListener(\"wheel\""));
+assert.ok(!gestures.includes("setZoomAround"));
+assert.ok(gestures.includes("map.scrollWheelZoom.enable()"));
 assert.ok(gestures.includes("map.dragging.enable()"));
 
 for (const [label, src] of [
@@ -66,11 +67,22 @@ for (const [label, src] of [
   assert.ok(!src.includes("Ctrl + kolesce"), `${label}: brez Ctrl namiga`);
   assert.ok(!src.includes("Za povečavo zemljevida"), `${label}: brez Ctrl povečave`);
   assert.ok(src.includes("prefersDesktopMapPointer") || src.includes("shouldBindDesktopMapGestures"));
-  assert.ok(src.includes("__streleDesktopGestures") || src.includes("bindMapZoomGestures"));
-  /* wheel handler ne sme zahtevati ctrlKey pred zoomom */
+  assert.ok(src.includes("scrollWheelZoom.enable()"), `${label}: Leaflet wheel`);
+  assert.ok(src.includes("deskUserViewportLocked"), `${label}: zaklep pogleda po zoomanju`);
+  assert.ok(src.includes("lockDesktopUserViewport"), `${label}: lockDesktopUserViewport`);
   assert.ok(
     !/function\s+ctrlZoom|if\s*\(\s*ctrlZoom\(/.test(src),
     `${label}: brez ctrlZoom gate`
+  );
+  /* Desktop veja sme imeti le passive capture wheel za zaklep pogleda — ne lastnega zoom handlerja. */
+  assert.ok(
+    !/__streleDesktopGestures[\s\S]{0,1200}setZoomAround/.test(src),
+    `${label}: brez custom setZoomAround wheel zooma`
+  );
+  assert.ok(
+    src.includes('lockDesktopUserViewport') &&
+      /addEventListener\(\s*["']wheel["'][\s\S]{0,120}lockDesktopUserViewport/.test(src),
+    `${label}: wheel capture zaklene pogled`
   );
 }
 

@@ -4,8 +4,6 @@ const MOBILE_HINT = "Premaknite zemljevid z dvema prstoma.";
 const HINT_HIDE_MS = 1600;
 const MOB_DRAG_HINT_PX = 3;
 const PINCH_DIST_CHANGE = 0.02;
-const WHEEL_PX_PER_ZOOM = 120;
-const MAX_WHEEL_DELTA_PER_FRAME = 80;
 const MOBILE_HINT_STORAGE_KEY = "strele-map-two-finger-hint-shown";
 
 /** Miška / sledilna ploščica — tudi na prenosniku z zaslonom na dotik. */
@@ -70,6 +68,11 @@ function createHintController(container: HTMLElement, message: string) {
 function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void {
   try {
     map.dragging.disable();
+  } catch {
+    /* ignore */
+  }
+  try {
+    map.scrollWheelZoom.disable();
   } catch {
     /* ignore */
   }
@@ -190,9 +193,15 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
   };
 }
 
+/** Namizje: Leafletov vgrajeni scrollWheelZoom (brez lastnega wheel handlerja). */
 function bindDesktopGestures(map: LeafletMap, _container: HTMLElement): () => void {
   try {
     map.dragging.enable();
+  } catch {
+    /* ignore */
+  }
+  try {
+    map.scrollWheelZoom.enable();
   } catch {
     /* ignore */
   }
@@ -202,81 +211,17 @@ function bindDesktopGestures(map: LeafletMap, _container: HTMLElement): () => vo
     /* ignore */
   }
 
-  const mapContainer = map.getContainer();
-  let pendingWheelDelta = 0;
-  let zoomWheelRaf = 0;
-  let lastWheelLatLng: { lat: number; lng: number } | null = null;
-
-  const normalizeWheelDeltaY = (ev: WheelEvent) => {
-    let dy = ev.deltaY;
-    if (ev.deltaMode === WheelEvent.DOM_DELTA_LINE) dy *= 16;
-    else if (ev.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
-      dy *= mapContainer.clientHeight || 800;
-    }
-    return dy;
-  };
-
-  const flushWheelZoomFrame = () => {
-    zoomWheelRaf = 0;
-    if (!pendingWheelDelta) return;
-    let consume = pendingWheelDelta;
-    if (Math.abs(consume) > MAX_WHEEL_DELTA_PER_FRAME) {
-      consume = Math.sign(consume) * MAX_WHEEL_DELTA_PER_FRAME;
-    }
-    pendingWheelDelta -= consume;
-    const zoomChange = -consume / WHEEL_PX_PER_ZOOM;
-    if (zoomChange) {
-      const minZ = map.getMinZoom();
-      const maxZ = map.getMaxZoom();
-      const current = map.getZoom();
-      let next = current + zoomChange;
-      if (next > maxZ) next = maxZ;
-      if (next < minZ) next = minZ;
-      if (next !== current) {
-        if (lastWheelLatLng) {
-          map.setZoomAround(lastWheelLatLng, next, { animate: false });
-        } else {
-          map.setZoom(next, { animate: false });
-        }
-      } else if (
-        (current >= maxZ && pendingWheelDelta > 0) ||
-        (current <= minZ && pendingWheelDelta < 0)
-      ) {
-        pendingWheelDelta = 0;
-      }
-    }
-    if (pendingWheelDelta) {
-      zoomWheelRaf = requestAnimationFrame(flushWheelZoomFrame);
-    }
-  };
-
-  const onWheel = (ev: WheelEvent) => {
-    ev.preventDefault();
-    ev.stopPropagation();
-    try {
-      const pt = map.mouseEventToContainerPoint(ev);
-      lastWheelLatLng = map.containerPointToLatLng(pt);
-    } catch {
-      lastWheelLatLng = null;
-    }
-    pendingWheelDelta += normalizeWheelDeltaY(ev);
-    if (!zoomWheelRaf) {
-      zoomWheelRaf = requestAnimationFrame(flushWheelZoomFrame);
-    }
-  };
-
-  mapContainer.addEventListener("wheel", onWheel, { passive: false, capture: true });
-
   return () => {
-    if (zoomWheelRaf) cancelAnimationFrame(zoomWheelRaf);
-    zoomWheelRaf = 0;
-    pendingWheelDelta = 0;
-    mapContainer.removeEventListener("wheel", onWheel, true);
+    try {
+      map.scrollWheelZoom.disable();
+    } catch {
+      /* ignore */
+    }
   };
 }
 
 /**
- * Namizje (fine pointer): kolešček/ploščica povečuje neposredno, vlečenje premika.
+ * Namizje (fine pointer): kolešček/ploščica prek Leaflet scrollWheelZoom, vlečenje premika.
  * Telefon (coarse): en prst = stran, dva prsta = zemljevid; namig največ enkrat.
  */
 export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElement): () => void {
