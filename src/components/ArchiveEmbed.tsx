@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useStrelko } from "../context/StrelkoContext";
 import { setAuthReturn } from "../lib/auth-intent";
 import { archiveEmbedUrl, archiveMapEmbedUrl } from "../lib/archive-embed";
@@ -600,9 +600,9 @@ export function LandingArchivePreview() {
         scope="preview"
       />
       <div className="archive-charts-actions">
-        <a href="/statistika" className="btn btn-primary archive-charts-more">
+        <Link to="/statistika" className="btn btn-primary archive-charts-more">
           Več grafov
-        </a>
+        </Link>
       </div>
     </section>
   );
