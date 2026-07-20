@@ -12,12 +12,26 @@ export function formatPlaceName(label?: string | null): string {
 export const TOKEN_KEY = "strelko_token";
 
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    /* zasebno brskanje / blokirana shramba */
+    return null;
+  }
 }
 
 export function setToken(t: string | null): void {
-  if (t) localStorage.setItem(TOKEN_KEY, t);
-  else localStorage.removeItem(TOKEN_KEY);
+  try {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* Zavrzi — klicatelj naj napako prijave obravnava prek whoami / UI. */
+    if (t) {
+      throw new Error(
+        "Brskalnik ne dovoli shranjevanja prijave. Poskusite v običajnem (ne zasebnem) načinu."
+      );
+    }
+  }
 }
 
 export const SEARCH_RADIUS_KM = 20;

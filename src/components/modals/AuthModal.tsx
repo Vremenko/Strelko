@@ -19,6 +19,7 @@ export function AuthModal() {
   const loginGoogleRef = useRef(loginGoogle);
   const [loginError, setLoginError] = useState<LoginErrorView | null>(null);
   const [loginEmail, setLoginEmail] = useState("");
+  const [loginSubmitting, setLoginSubmitting] = useState(false);
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [resendMessage, setResendMessage] = useState("");
   const [registerView, setRegisterView] = useState<"form" | "success">("form");
@@ -39,13 +40,16 @@ export function AuthModal() {
     }
     if (!mode || mode !== "login") {
       setLoginError(null);
+      setLoginSubmitting(false);
       setResendStatus("idle");
       setResendMessage("");
     }
   }, [mode]);
 
   useEffect(() => {
-    if (!mode || !googleRef.current) return;
+    if (!mode || (mode === "register" && registerView === "success") || !googleRef.current) {
+      return;
+    }
     const container = googleRef.current;
 
     let cancelled = false;
@@ -54,22 +58,18 @@ export function AuthModal() {
 
     firstRaf = requestAnimationFrame(() => {
       secondRaf = requestAnimationFrame(() => {
-        if (cancelled) return;
+        if (cancelled || !googleRef.current) return;
 
-        void renderGoogleButton(container, async (credential) => {
+        void renderGoogleButton(googleRef.current, async (credential) => {
           try {
             setLoginError(null);
             await loginGoogleRef.current(credential);
           } catch (e) {
-            setLoginError({
-              message: (e as Error).message || "Google prijava ni uspela.",
-            });
+            setLoginError(mapLoginApiError(e as Error));
           }
         }).catch((e) => {
           if (!cancelled) {
-            setLoginError({
-              message: (e as Error).message || "Google prijava ni na voljo.",
-            });
+            setLoginError(mapLoginApiError(e as Error));
           }
         });
       });
@@ -79,6 +79,8 @@ export function AuthModal() {
       cancelled = true;
       cancelAnimationFrame(firstRaf);
       cancelAnimationFrame(secondRaf);
+      container.replaceChildren();
+      delete container.dataset.gsiRendered;
     };
   }, [mode, registerView]);
 
@@ -88,17 +90,30 @@ export function AuthModal() {
 
   const onLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") || "").trim();
-    const password = String(fd.get("password") || "");
+    const form = e.currentTarget;
+    /* iOS Safari: beremo neposredno iz polj (zanesljiveje od FormData ob samodejnem izpolnjevanju). */
+    const emailInput = form.elements.namedItem("email") as HTMLInputElement | null;
+    const passwordInput = form.elements.namedItem("password") as HTMLInputElement | null;
+    const email = String(emailInput?.value || "").trim();
+    const password = String(passwordInput?.value || "");
     setLoginEmail(email);
+    if (!email || !password) {
+      setLoginError({
+        message: "Vnesite e-pošto in geslo.",
+        suggestForgotPassword: true,
+      });
+      return;
+    }
     try {
+      setLoginSubmitting(true);
       setLoginError(null);
       setResendStatus("idle");
       setResendMessage("");
       await login(email, password);
     } catch (err) {
       setLoginError(mapLoginApiError(err as ApiError));
+    } finally {
+      setLoginSubmitting(false);
     }
   };
 
@@ -210,14 +225,19 @@ export function AuthModal() {
                   placeholder="E-pošta"
                   required
                   autoComplete="email"
-                  value={isLogin ? loginEmail : undefined}
-                  defaultValue={!isLogin ? registerEmail || undefined : undefined}
-                  onChange={
+                  inputMode="email"
+                  enterKeyHint="next"
+                  defaultValue={isLogin ? loginEmail || undefined : registerEmail || undefined}
+                  onInput={
                     isLogin
-                      ? (e) => setLoginEmail(e.target.value)
+                      ? (e) => setLoginEmail((e.target as HTMLInputElement).value)
                       : undefined
                   }
-                  key={!isLogin ? `register-email-${registerEmail}` : "login-email"}
+                  key={
+                    isLogin
+                      ? "login-email"
+                      : `register-email-${registerEmail}`
+                  }
                   aria-invalid={registerFieldErrors.email ? true : undefined}
                   aria-describedby={registerFieldErrors.email ? "register-email-error" : undefined}
                 />
@@ -369,9 +389,15 @@ export function AuthModal() {
               <button
                 type="submit"
                 className="btn btn-primary btn-block"
-                disabled={!isLogin && registerSubmitting}
+                disabled={(!isLogin && registerSubmitting) || (isLogin && loginSubmitting)}
               >
-                {isLogin ? "Prijava" : registerSubmitting ? "Ustvarjam račun …" : "Ustvari račun"}
+                {isLogin
+                  ? loginSubmitting
+                    ? "Prijavljam …"
+                    : "Prijava"
+                  : registerSubmitting
+                    ? "Ustvarjam račun …"
+                    : "Ustvari račun"}
               </button>
             </form>
 

@@ -1504,6 +1504,10 @@ label.field-labeled > span {
 
 .auth-modal {
   position: relative;
+  /* iPhone tipkovnica: omogoči pomik do gumba Prijava */
+  max-height: min(85vh, 100dvh);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .auth-modal h3 {
@@ -5922,6 +5926,12 @@ html.public-embed-root .hero-bg {
 
 
 /* ——— Privolitev zasebnosti (banner + nastavitve na /piskotki) ——— */
+/* Prijavno okno (z-index 100) mora biti NAD pasico zasebnosti (200),
+   sicer na telefonih pasica pokrije gumbe za prijavo. */
+.modal-overlay {
+  z-index: 300;
+}
+
 .cookie-banner-actions {
   display: flex;
   flex-wrap: wrap;

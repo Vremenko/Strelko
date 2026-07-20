@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { useStrelko } from "../../context/StrelkoContext";
 
 export function CookieBanner() {
-  const { privacyConsent, setPrivacyConsent } = useStrelko();
+  const { privacyConsent, setPrivacyConsent, modals } = useStrelko();
   if (privacyConsent !== null) return null;
+  /* Med prijavo/registracijo pasica ne sme prekrivati obrazca (zlasti na telefonu). */
+  if (modals.auth || modals.forgotPassword) return null;
 
   return (
     <div className="cookie-banner" role="dialog" aria-label="Obvestilo o zasebnosti">
