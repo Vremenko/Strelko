@@ -53,9 +53,9 @@ assert.ok(!mapHtml.includes("PUBLIC_DESKTOP_ZOOM"));
 assert.ok(mapHtml.includes("STATISTIKA_DESKTOP_ZOOM = 8"));
 assert.ok(mapHtml.includes("desktopInitialZoom"));
 assert.ok(mapHtml.includes("isPublicMapEmbed"));
-assert.ok(mapHtml.includes("publicFitZoomBoost"));
-assert.ok(mapHtml.includes("PUBLIC_ZOOM_BOOST_WIDE = 0.5"));
-assert.ok(mapHtml.includes("PUBLIC_ZOOM_BOOST_MEDIUM = 0.25"));
+assert.ok(mapHtml.includes("publicInitialZoomForWidth"));
+assert.ok(mapHtml.includes("PUBLIC_MIN_ZOOM = 6.5"));
+assert.ok(mapHtml.includes("PUBLIC_ZOOM_BY_WIDTH"));
 assert.ok(mapHtml.includes("fitPublicMapToSlovenia"));
 assert.ok(mapHtml.includes("zoomSnap: 0.5"));
 assert.ok(mapHtml.includes("zoomDelta: 0.5"));
@@ -128,4 +128,4 @@ assert.equal(parsePublicPeriodParam("map", "7d"), "7d");
 
 console.log("verify-map-basemap: OK");
 console.log(`strelko-dark.json: ${styleSize} bytes, layers=${style.layers.length}`);
-console.log("public fitBounds boost: wide +0.5 / mid +0.25 / narrow 0; statistika desktop zoom 8; free periods: Danes, 7 dni");
+console.log("public zoom by width: 350→6.5 / 400→7 / 700→7.5 / 1100→8.25; statistika desktop zoom 8; free periods: Danes, 7 dni");
