@@ -208,11 +208,6 @@ interface StrelkoContextValue extends StrelkoState {
   clearSearch: () => void;
   /** Ob Nazaj z ?query= — ZavarovalnicaPage naj ne skoči na vrh. */
   zavarovalnicaSkipFormScrollRef: MutableRefObject<boolean>;
-  /**
-   * ID poizvedbe, dokler React Router še ni zavezal ?query= (prva poizvedba / Odpri).
-   * ZavarovalnicaPage: med tem kaži loading, ne vmesnega obrazca.
-   */
-  zavarovalnicaPendingQueryNavRef: MutableRefObject<string | null>;
   setWidget: (patch: Partial<StrelkoState["widget"]>) => void;
   loadWidgetObcine: () => Promise<void>;
   loadWidgetSelection: (value: string | number) => Promise<void>;
@@ -1714,7 +1709,6 @@ export function StrelkoProvider({ children }: { children: ReactNode }) {
       },
       clearSearch,
       zavarovalnicaSkipFormScrollRef,
-      zavarovalnicaPendingQueryNavRef: ignoreHydrationQueryIdRef,
       setWidget: (patch) => setWidgetState((w) => ({ ...w, ...patch })),
       loadWidgetObcine,
       loadWidgetSelection,

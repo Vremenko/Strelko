@@ -30,24 +30,16 @@ function scrollWindowTopAfterPaint() {
 }
 
 export function ZavarovalnicaPage() {
-  const {
-    searchResult,
-    previewScreen,
-    loading,
-    savedQueryId,
-    zavarovalnicaSkipFormScrollRef,
-    zavarovalnicaPendingQueryNavRef,
-  } = useStrelko();
+  const { searchResult, previewScreen, loading, savedQueryId, zavarovalnicaSkipFormScrollRef } =
+    useStrelko();
   const location = useLocation();
   const hasQueryParam = Boolean(new URLSearchParams(location.search).get("query"));
-  const pendingResultNavigation = Boolean(zavarovalnicaPendingQueryNavRef.current);
 
   const viewState = deriveZavarovalnicaViewState(
     searchResult,
     previewScreen,
     loading,
-    hasQueryParam,
-    pendingResultNavigation
+    hasQueryParam
   );
   const prevViewRef = useRef<QueryViewState>(viewState);
   const scrolledForQueryRef = useRef<string | null>(null);

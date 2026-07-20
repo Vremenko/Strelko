@@ -62,21 +62,16 @@ export function decideZavarovalnicaNoQueryAction(
 /**
  * Rezultat se prikaže samo, ko je v URL-ju ?query= — tako Nazaj takoj pokaže obrazec,
  * Naprej pa isti rezultat iz lokalnega stanja brez nove API-poizvedbe.
- *
- * Med prvo poizvedbo (rezultat že v stanju, navigate še ni zavezal ?query=) ostane
- * »loading« — ne vmesni obrazec (trzaj).
  */
 export function deriveZavarovalnicaViewState(
   searchResult: unknown,
   previewScreen: "teaser" | "no-strikes" | null,
   loading: boolean,
-  hasQueryParam = true,
-  pendingResultNavigation = false
+  hasQueryParam = true
 ): QueryViewState {
   if (searchResult && hasQueryParam) return "results";
   if (previewScreen) return loading ? "unlocking" : "preview";
   if (loading) return "loading";
-  if (searchResult && !hasQueryParam && pendingResultNavigation) return "loading";
   return "form";
 }
 
