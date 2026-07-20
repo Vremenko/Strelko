@@ -43,17 +43,19 @@ export function LandingPage() {
         <Link to="/pomoc-pri-zavarovalnici" className="feature feature--link">
           <IconInsurance />
           <h4>Pomoč pri zavarovalnici</h4>
-          <p>Pridobite podatke o udarih strel v bližini škodnega dogodka in ustvarite PDF poročilo.</p>
+          <p>Preverite udare strel v bližini izbrane lokacije in ustvarite PDF-poročilo.</p>
         </Link>
         <Link to="/statistika#zemljevid" className="feature feature--link">
           <IconMap />
           <h4>Zemljevid strel</h4>
-          <p>Na interaktivnem zemljevidu raziščite, kje in kdaj so bile po Sloveniji zaznane strele.</p>
+          <p>Na interaktivnem zemljevidu preverite, kje in kdaj so bile v Sloveniji zaznane strele.</p>
         </Link>
         <Link to="/statistika" className="feature feature--link">
           <IconShield />
           <h4>Statistika strel</h4>
-          <p>Pregled števila strel po dnevih, urah, statističnih regijah in občinah.</p>
+          <p>
+            Oglejte si število udarov strel po dnevih in urah ter primerjavo po regijah in občinah.
+          </p>
         </Link>
       </section>
       <LandingArchivePreview />

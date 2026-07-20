@@ -54,8 +54,8 @@ export function Footer() {
 
 export function Disclaimer() {
   return (
-    <aside className="disclaimer" role="note" aria-label="Opozorilo">
-      <strong>Opozorilo:</strong> {DISCLAIMER_TEXT}
+    <aside className="disclaimer" role="note" aria-label="Informativno obvestilo">
+      {DISCLAIMER_TEXT}
     </aside>
   );
 }

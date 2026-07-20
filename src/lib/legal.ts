@@ -18,7 +18,7 @@ export const COMPANY = {
 };
 
 export const DISCLAIMER_TEXT =
-  "Prikazani podatki so izključno informativne narave in se lahko razlikujejo od uradnih evidenc. Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve zavarovalnic ali točnost podatkov v posameznem primeru. Za uradne postopke in dokazovanje škode se obrnite na zavarovalnico oziroma pristojne institucije.";
+  "Prikazani podatki so namenjeni informativnemu spremljanju udarov strel in boljšemu vpogledu v nevihtno dogajanje. Lahko so v pomoč pri komunikaciji z zavarovalnicami, vendar ne nadomeščajo uradnih potrdil. Zaradi načina zaznavanja in obdelave podatkov lahko prihaja do odstopanj. Meteoinfo d.o.o. ne prevzema odgovornosti za odločitve zavarovalnic ali drugih pristojnih institucij.";
 
 export const LEGAL_PAGES = {
   impressum: {
