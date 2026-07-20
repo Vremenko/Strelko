@@ -57,7 +57,7 @@ assert.ok(mapHtml.includes("PUBLIC_MOB_FIT_MAX_ZOOM = 11"));
 assert.ok(mapHtml.includes("STATISTIKA_MOB_FIT_MAX_ZOOM = 10"));
 assert.ok(mapHtml.includes("resizeMaplibreBasemap"));
 
-/* Javni: geste (fine pointer = wheel zoom; mobilno = 2 prsta + namig 1×); datum; brez gumba Občine */
+/* Javni: geste (fine pointer = wheel zoom; mobilno = 2 prsta + namig ob vsaki enoprstni gesti); datum; brez gumba Občine */
 assert.ok(!mapHtml.includes("publicMapInteractive"));
 assert.ok(mapHtml.includes("prefersDesktopMapPointer") || mapHtml.includes("hasFinePointer"));
 assert.ok(mapHtml.includes("shouldBindDesktopMapGestures"));
@@ -65,7 +65,8 @@ assert.ok(mapHtml.includes("(any-pointer: fine)"));
 assert.ok(!mapHtml.includes("Ctrl + kolesce ali vlečenje miške"));
 assert.ok(!mapHtml.includes("Za povečavo zemljevida"));
 assert.ok(mapHtml.includes("Premaknite zemljevid z dvema prstoma."));
-assert.ok(mapHtml.includes("strele-map-two-finger-hint-shown"));
+assert.ok(!mapHtml.includes("strele-map-two-finger-hint-shown"));
+assert.ok(mapHtml.includes("hintArmedForGesture"));
 assert.ok(mapHtml.includes("strele-map-wheel-hint"));
 assert.ok(!mapHtml.includes("if (window.innerWidth < 900) return;"));
 assert.ok(mapHtml.includes('viewTabs.remove()') || mapHtml.includes('getElementById("mapViewTabs")'));

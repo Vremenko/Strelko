@@ -86,21 +86,31 @@ for (const [label, src] of [
   );
 }
 
-/* ——— Telefon: namig 1×, dva prsta, pointer-events none ——— */
+/* ——— Telefon: namig ob vsaki novi enoprstni gesti, dva prsta, pointer-events none ——— */
 assert.ok(gestures.includes("Premaknite zemljevid z dvema prstoma."));
-assert.ok(gestures.includes("strele-map-two-finger-hint-shown"));
-assert.ok(gestures.includes("scheduleHintOnce"));
+assert.ok(!gestures.includes("strele-map-two-finger-hint-shown"), "brez sessionStorage enkratne omejitve");
+assert.ok(!gestures.includes("sessionStorage"), "gestures: brez sessionStorage za namig");
+assert.ok(gestures.includes("HINT_HIDE_AFTER_TOUCH_MS = 500"));
+assert.ok(gestures.includes("showHint"));
+assert.ok(gestures.includes("scheduleHintHide"));
+assert.ok(gestures.includes("hintArmedForGesture"));
 assert.ok(gestures.includes("map.dragging.disable()"));
 assert.ok(gestures.includes("touchstart"));
 assert.ok(gestures.includes("e.touches.length >= 2"));
+assert.ok(!gestures.includes("1600"), "gestures: brez starega 1600 ms skrivanja");
 
 for (const [label, src] of [
   ["map-embed", embed],
   ["map.html", mapHtml],
 ] as const) {
   assert.ok(src.includes("Premaknite zemljevid z dvema prstoma."), `${label}: 2-prsta namig`);
-  assert.ok(src.includes("strele-map-two-finger-hint-shown"), `${label}: sessionStorage ključ`);
-  assert.ok(src.includes("mobileMapHintAlreadyShown") || src.includes("markMobileMapHintShown"));
+  assert.ok(!src.includes("strele-map-two-finger-hint-shown"), `${label}: brez sessionStorage enkratne omejitve`);
+  assert.ok(!src.includes("mobileMapHintAlreadyShown") && !src.includes("markMobileMapHintShown"), `${label}: brez shown zastavic`);
+  assert.ok(src.includes("hintArmedForGesture"), `${label}: namig ob začetku geste`);
+  assert.ok(src.includes("HINT_HIDE_AFTER_TOUCH_MS = 500"), `${label}: skrij ~500 ms po touchend`);
+  assert.ok(src.includes("showWheelHint"), `${label}: showWheelHint`);
+  assert.ok(src.includes("scheduleWheelHintHide"), `${label}: scheduleWheelHintHide`);
+  assert.ok(!src.includes("1600"), `${label}: brez starega 1600 ms skrivanja`);
 }
 
 const hintCss = css.slice(css.indexOf(".strele-map-wheel-hint"));
@@ -137,5 +147,5 @@ assert.equal(
 
 console.log("verify-map-gestures: OK");
 console.log("namizje: wheel zoom brez Ctrl, brez Ctrl namiga");
-console.log("telefon: 1 prst=stran, 2 prsta=zemljevid, namig 1×, hint pointer-events:none");
+console.log("telefon: 1 prst=stran, 2 prsta=zemljevid, namig ob gesti, skrij ~500 ms po touchend");
 console.log("pointer: any-pointer:fine → desktop (tudi touch laptop)");

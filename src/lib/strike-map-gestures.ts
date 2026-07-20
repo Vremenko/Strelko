@@ -1,10 +1,10 @@
 import type { Map as LeafletMap } from "leaflet";
 
 const MOBILE_HINT = "Premaknite zemljevid z dvema prstoma.";
-const HINT_HIDE_MS = 1600;
+/** Skrivanje po koncu enoprstnega dotika (touchend / touchcancel). */
+const HINT_HIDE_AFTER_TOUCH_MS = 500;
 const MOB_DRAG_HINT_PX = 3;
 const PINCH_DIST_CHANGE = 0.02;
-const MOBILE_HINT_STORAGE_KEY = "strele-map-two-finger-hint-shown";
 
 /** Miška / sledilna ploščica — tudi na prenosniku z zaslonom na dotik. */
 export function prefersDesktopMapPointer(): boolean {
@@ -16,41 +16,29 @@ export function prefersMobileMapPointer(): boolean {
   return !prefersDesktopMapPointer();
 }
 
-function mobileHintAlreadyShown(): boolean {
-  try {
-    return sessionStorage.getItem(MOBILE_HINT_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function markMobileHintShown(): void {
-  try {
-    sessionStorage.setItem(MOBILE_HINT_STORAGE_KEY, "1");
-  } catch {
-    /* ignore */
-  }
-}
-
 function createHintController(container: HTMLElement, message: string) {
   let hintTimer: ReturnType<typeof setTimeout> | null = null;
   let hintEl: HTMLDivElement | null = null;
 
-  const hideHint = () => {
+  const cancelHideTimer = () => {
     if (hintTimer) {
       clearTimeout(hintTimer);
       hintTimer = null;
     }
+  };
+
+  const hideHint = () => {
+    cancelHideTimer();
     if (hintEl?.parentNode) {
       hintEl.parentNode.removeChild(hintEl);
     }
     hintEl = null;
   };
 
-  const scheduleHintOnce = () => {
+  /** Pokaži isti element; prekliči morebitni timer skrivanja. Med gesto ne skrij. */
+  const showHint = () => {
     if (!container.isConnected) return;
-    if (mobileHintAlreadyShown()) return;
-    markMobileHintShown();
+    cancelHideTimer();
     if (!hintEl) {
       hintEl = document.createElement("div");
       hintEl.className = "strele-map-wheel-hint";
@@ -58,11 +46,16 @@ function createHintController(container: HTMLElement, message: string) {
       hintEl.textContent = message;
       container.appendChild(hintEl);
     }
-    if (hintTimer) clearTimeout(hintTimer);
-    hintTimer = setTimeout(hideHint, HINT_HIDE_MS);
   };
 
-  return { hideHint, scheduleHintOnce };
+  /** Skrij ~500 ms po koncu dotika. */
+  const scheduleHintHide = () => {
+    cancelHideTimer();
+    if (!hintEl) return;
+    hintTimer = setTimeout(hideHint, HINT_HIDE_AFTER_TOUCH_MS);
+  };
+
+  return { hideHint, showHint, scheduleHintHide, cancelHideTimer };
 }
 
 function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void {
@@ -82,12 +75,16 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
     /* ignore */
   }
 
-  const { hideHint, scheduleHintOnce } = createHintController(container, MOBILE_HINT);
+  const { hideHint, showHint, scheduleHintHide, cancelHideTimer } = createHintController(
+    container,
+    MOBILE_HINT
+  );
   const mapContainer = map.getContainer();
 
   let singleActive = false;
   let startX = 0;
   let startY = 0;
+  let hintArmedForGesture = false;
   let multiActive = false;
   let midX = 0;
   let midY = 0;
@@ -106,6 +103,7 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
     hideHint();
     multiActive = true;
     singleActive = false;
+    hintArmedForGesture = false;
     multiPinching = false;
     const mid = touchMid(e.touches);
     midX = mid.x;
@@ -119,7 +117,9 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
       return;
     }
     if (e.touches.length === 1 && !multiActive) {
+      cancelHideTimer();
       singleActive = true;
+      hintArmedForGesture = true;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     }
@@ -151,8 +151,9 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
     if (!singleActive || e.touches.length !== 1) return;
     const x = e.touches[0].clientX;
     const y = e.touches[0].clientY;
-    if (Math.hypot(x - startX, y - startY) > MOB_DRAG_HINT_PX) {
-      scheduleHintOnce();
+    if (hintArmedForGesture && Math.hypot(x - startX, y - startY) > MOB_DRAG_HINT_PX) {
+      hintArmedForGesture = false;
+      showHint();
     }
   };
 
@@ -165,13 +166,16 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
       multiActive = false;
       multiPinching = false;
       singleActive = true;
+      hintArmedForGesture = true;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       return;
     }
     singleActive = false;
+    hintArmedForGesture = false;
     multiActive = false;
     multiPinching = false;
+    scheduleHintHide();
   };
 
   map.on("movestart", hideHint);
@@ -222,7 +226,7 @@ function bindDesktopGestures(map: LeafletMap, _container: HTMLElement): () => vo
 
 /**
  * Namizje (fine pointer): kolešček/ploščica prek Leaflet scrollWheelZoom, vlečenje premika.
- * Telefon (coarse): en prst = stran, dva prsta = zemljevid; namig največ enkrat.
+ * Telefon (coarse): en prst = stran, dva prsta = zemljevid; namig ob vsaki novi enoprstni gesti.
  */
 export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElement): () => void {
   if (prefersMobileMapPointer()) {
