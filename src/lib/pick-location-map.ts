@@ -11,6 +11,7 @@ import {
   removeInjectedMapControls,
   syncStrikeMapAttribution,
 } from "./strike-map-labels";
+import { bindStreleMapZoomGestures, prefersMobileMapPointer } from "./strike-map-gestures";
 
 const MI_CYAN = "#05a5ce";
 const PICK_LOCATION_ZOOM = 17;
@@ -103,13 +104,18 @@ export function createPickLocationMap(
   initialMarker: { lat: number; lon: number } | null,
   onPick: (lat: number, lon: number) => void
 ): PickLocationMapHandle {
+  const mobile = prefersMobileMapPointer();
   const map = L.map(container, {
     zoomControl: false,
-    scrollWheelZoom: true,
+    scrollWheelZoom: false,
+    dragging: false,
+    touchZoom: mobile,
+    doubleClickZoom: true,
     attributionControl: true,
   }).setView([center.lat, center.lon], zoom);
 
   ensureStrikeMapPanes(map);
+  const unbindGestures = bindStreleMapZoomGestures(map, container);
 
   const baseLayer = maptilerLayer({
     apiKey: MAPTILER_KEY,
@@ -188,6 +194,7 @@ export function createPickLocationMap(
     setMarker,
     flyTo,
     destroy() {
+      unbindGestures();
       map.off();
       map.remove();
       stripPickerMapControls(container);

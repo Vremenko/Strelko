@@ -1,13 +1,37 @@
 import type { Map as LeafletMap } from "leaflet";
 
-const DESKTOP_HINT = "Ctrl + kolesce ali vlečenje miške";
 const MOBILE_HINT = "Premaknite zemljevid z dvema prstoma.";
-const HINT_HIDE_MS = 700;
+const HINT_HIDE_MS = 1600;
 const MOB_DRAG_HINT_PX = 3;
 const PINCH_DIST_CHANGE = 0.02;
+const WHEEL_PX_PER_ZOOM = 120;
+const MAX_WHEEL_DELTA_PER_FRAME = 80;
+const MOBILE_HINT_STORAGE_KEY = "strele-map-two-finger-hint-shown";
 
-function isMobileView(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(max-width:899px)").matches;
+/** Miška / sledilna ploščica — tudi na prenosniku z zaslonom na dotik. */
+export function prefersDesktopMapPointer(): boolean {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia("(any-pointer: fine)").matches;
+}
+
+export function prefersMobileMapPointer(): boolean {
+  return !prefersDesktopMapPointer();
+}
+
+function mobileHintAlreadyShown(): boolean {
+  try {
+    return sessionStorage.getItem(MOBILE_HINT_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markMobileHintShown(): void {
+  try {
+    sessionStorage.setItem(MOBILE_HINT_STORAGE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
 }
 
 function createHintController(container: HTMLElement, message: string) {
@@ -25,11 +49,14 @@ function createHintController(container: HTMLElement, message: string) {
     hintEl = null;
   };
 
-  const scheduleHint = () => {
+  const scheduleHintOnce = () => {
     if (!container.isConnected) return;
+    if (mobileHintAlreadyShown()) return;
+    markMobileHintShown();
     if (!hintEl) {
       hintEl = document.createElement("div");
       hintEl.className = "strele-map-wheel-hint";
+      hintEl.setAttribute("aria-live", "polite");
       hintEl.textContent = message;
       container.appendChild(hintEl);
     }
@@ -37,7 +64,7 @@ function createHintController(container: HTMLElement, message: string) {
     hintTimer = setTimeout(hideHint, HINT_HIDE_MS);
   };
 
-  return { hideHint, scheduleHint };
+  return { hideHint, scheduleHintOnce };
 }
 
 function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void {
@@ -52,7 +79,7 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
     /* ignore */
   }
 
-  const { hideHint, scheduleHint } = createHintController(container, MOBILE_HINT);
+  const { hideHint, scheduleHintOnce } = createHintController(container, MOBILE_HINT);
   const mapContainer = map.getContainer();
 
   let singleActive = false;
@@ -122,7 +149,7 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
     const x = e.touches[0].clientX;
     const y = e.touches[0].clientY;
     if (Math.hypot(x - startX, y - startY) > MOB_DRAG_HINT_PX) {
-      scheduleHint();
+      scheduleHintOnce();
     }
   };
 
@@ -163,103 +190,97 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
   };
 }
 
-function bindDesktopGestures(map: LeafletMap, container: HTMLElement): () => void {
-  const { hideHint, scheduleHint } = createHintController(container, DESKTOP_HINT);
+function bindDesktopGestures(map: LeafletMap, _container: HTMLElement): () => void {
+  try {
+    map.dragging.enable();
+  } catch {
+    /* ignore */
+  }
+  try {
+    map.touchZoom.disable();
+  } catch {
+    /* ignore */
+  }
 
   const mapContainer = map.getContainer();
-  let panning = false;
-  let lastX = 0;
-  let lastY = 0;
-  let ctrlDown = false;
+  let pendingWheelDelta = 0;
+  let zoomWheelRaf = 0;
+  let lastWheelLatLng: { lat: number; lng: number } | null = null;
 
-  const ctrlZoom = (ev: MouseEvent | WheelEvent) =>
-    ctrlDown || !!(ev.ctrlKey || ev.metaKey || ev.getModifierState?.("Control"));
-
-  const wheelZoomStep = (ev: WheelEvent) => {
+  const normalizeWheelDeltaY = (ev: WheelEvent) => {
     let dy = ev.deltaY;
-    if (ev.deltaMode === WheelEvent.DOM_DELTA_LINE) dy *= 20;
-    else if (ev.deltaMode === WheelEvent.DOM_DELTA_PAGE) dy *= 1200;
-    else if (Math.abs(dy) < 4) dy *= 20;
-    return -dy / 120;
+    if (ev.deltaMode === WheelEvent.DOM_DELTA_LINE) dy *= 16;
+    else if (ev.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+      dy *= mapContainer.clientHeight || 800;
+    }
+    return dy;
   };
 
-  const endPan = () => {
-    panning = false;
-  };
-
-  const onKeyDown = (ev: KeyboardEvent) => {
-    if (ev.key === "Control") ctrlDown = true;
-  };
-  const onKeyUp = (ev: KeyboardEvent) => {
-    if (ev.key === "Control") ctrlDown = false;
-  };
-  const onBlur = () => {
-    ctrlDown = false;
-    hideHint();
-  };
-  const onMouseDown = (ev: MouseEvent) => {
-    if (ev.button !== 0) return;
-    hideHint();
-    if (ctrlZoom(ev)) {
-      panning = true;
-      lastX = ev.clientX;
-      lastY = ev.clientY;
-      ev.preventDefault();
+  const flushWheelZoomFrame = () => {
+    zoomWheelRaf = 0;
+    if (!pendingWheelDelta) return;
+    let consume = pendingWheelDelta;
+    if (Math.abs(consume) > MAX_WHEEL_DELTA_PER_FRAME) {
+      consume = Math.sign(consume) * MAX_WHEEL_DELTA_PER_FRAME;
+    }
+    pendingWheelDelta -= consume;
+    const zoomChange = -consume / WHEEL_PX_PER_ZOOM;
+    if (zoomChange) {
+      const minZ = map.getMinZoom();
+      const maxZ = map.getMaxZoom();
+      const current = map.getZoom();
+      let next = current + zoomChange;
+      if (next > maxZ) next = maxZ;
+      if (next < minZ) next = minZ;
+      if (next !== current) {
+        if (lastWheelLatLng) {
+          map.setZoomAround(lastWheelLatLng, next, { animate: false });
+        } else {
+          map.setZoom(next, { animate: false });
+        }
+      } else if (
+        (current >= maxZ && pendingWheelDelta > 0) ||
+        (current <= minZ && pendingWheelDelta < 0)
+      ) {
+        pendingWheelDelta = 0;
+      }
+    }
+    if (pendingWheelDelta) {
+      zoomWheelRaf = requestAnimationFrame(flushWheelZoomFrame);
     }
   };
-  const onMouseMove = (ev: MouseEvent) => {
-    if (!panning) return;
-    const dx = ev.clientX - lastX;
-    const dy = ev.clientY - lastY;
-    lastX = ev.clientX;
-    lastY = ev.clientY;
-    map.panBy([-dx, -dy], { animate: false });
-  };
+
   const onWheel = (ev: WheelEvent) => {
-    if (ctrlZoom(ev)) {
-      hideHint();
-      ev.preventDefault();
-      ev.stopPropagation();
-      const step = wheelZoomStep(ev);
-      if (!step) return;
-      const next = map.getZoom() + step;
-      map.setZoom(
-        Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), next)),
-        { animate: false }
-      );
-    } else {
-      scheduleHint();
+    ev.preventDefault();
+    ev.stopPropagation();
+    try {
+      const pt = map.mouseEventToContainerPoint(ev);
+      lastWheelLatLng = map.containerPointToLatLng(pt);
+    } catch {
+      lastWheelLatLng = null;
+    }
+    pendingWheelDelta += normalizeWheelDeltaY(ev);
+    if (!zoomWheelRaf) {
+      zoomWheelRaf = requestAnimationFrame(flushWheelZoomFrame);
     }
   };
 
-  map.on("movestart", hideHint);
-  map.on("zoomstart", hideHint);
-  window.addEventListener("keydown", onKeyDown, true);
-  window.addEventListener("keyup", onKeyUp, true);
-  window.addEventListener("blur", onBlur);
-  mapContainer.addEventListener("mousedown", onMouseDown);
-  mapContainer.addEventListener("mouseleave", hideHint);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", endPan);
   mapContainer.addEventListener("wheel", onWheel, { passive: false, capture: true });
 
   return () => {
-    hideHint();
-    map.off("movestart", hideHint);
-    map.off("zoomstart", hideHint);
-    window.removeEventListener("keydown", onKeyDown, true);
-    window.removeEventListener("keyup", onKeyUp, true);
-    window.removeEventListener("blur", onBlur);
-    mapContainer.removeEventListener("mousedown", onMouseDown);
-    mapContainer.removeEventListener("mouseleave", hideHint);
-    window.removeEventListener("mousemove", onMouseMove);
-    window.removeEventListener("mouseup", endPan);
+    if (zoomWheelRaf) cancelAnimationFrame(zoomWheelRaf);
+    zoomWheelRaf = 0;
+    pendingWheelDelta = 0;
     mapContainer.removeEventListener("wheel", onWheel, true);
   };
 }
 
+/**
+ * Namizje (fine pointer): kolešček/ploščica povečuje neposredno, vlečenje premika.
+ * Telefon (coarse): en prst = stran, dva prsta = zemljevid; namig največ enkrat.
+ */
 export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElement): () => void {
-  if (isMobileView()) {
+  if (prefersMobileMapPointer()) {
     return bindMobileGestures(map, container);
   }
   return bindDesktopGestures(map, container);

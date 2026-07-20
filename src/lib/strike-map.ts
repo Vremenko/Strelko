@@ -307,7 +307,8 @@ export function createStrikeMap(
   existing?.remove();
 
   const mobile =
-    typeof window !== "undefined" && window.matchMedia("(max-width:899px)").matches;
+    typeof window !== "undefined" &&
+    !window.matchMedia("(any-pointer: fine)").matches;
 
   const map = L.map(el, {
     zoomControl: false,
