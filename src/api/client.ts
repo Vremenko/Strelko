@@ -1,36 +1,60 @@
+import { getToken } from "../lib/utils";
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem("strelko_token");
+  const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function networkApiError(cause: unknown): import("../types").ApiError {
+  const err = new Error(
+    "Povezava s strežnikom ni uspela. Preverite internetno povezavo in poskusite znova."
+  ) as import("../types").ApiError;
+  err.status = undefined;
+  err.data = { cause: cause instanceof Error ? cause.message : String(cause) };
+  return err;
+}
+
+function messageFromErrorBody(data: unknown, fallback: string): string {
+  const body = (data || {}) as { detail?: unknown; error?: unknown; message?: unknown };
+  const detail = body.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    const structured = detail as { message?: string };
+    if (typeof structured.message === "string" && structured.message.trim()) {
+      return structured.message;
+    }
+  }
+  if (Array.isArray(detail) && detail.length) {
+    const joined = detail
+      .map((item) => (typeof item?.msg === "string" ? item.msg : ""))
+      .filter(Boolean)
+      .join(" ");
+    if (joined) return joined;
+  }
+  if (typeof body.error === "string" && body.error.trim()) return body.error;
+  if (typeof body.message === "string" && body.message.trim()) return body.message;
+  return fallback;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      ...(options.headers as Record<string, string>),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+        ...(options.headers as Record<string, string>),
+      },
+    });
+  } catch (cause) {
+    throw networkApiError(cause);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const detail = (data as { detail?: unknown }).detail;
-    let message = res.statusText;
-    if (typeof detail === "string") {
-      message = detail;
-    } else if (detail && typeof detail === "object" && !Array.isArray(detail)) {
-      const structured = detail as { message?: string };
-      if (typeof structured.message === "string") {
-        message = structured.message;
-      }
-    } else if (Array.isArray(detail) && detail.length) {
-      message = detail
-        .map((item) => (typeof item?.msg === "string" ? item.msg : ""))
-        .filter(Boolean)
-        .join(" ");
-    }
+    const message = messageFromErrorBody(data, res.statusText);
     const err = new Error(message) as import("../types").ApiError;
     err.status = res.status;
     err.data = data;
@@ -40,32 +64,23 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 async function requestWithCredentials<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      ...(options.headers as Record<string, string>),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+        ...(options.headers as Record<string, string>),
+      },
+    });
+  } catch (cause) {
+    throw networkApiError(cause);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const detail = (data as { detail?: unknown }).detail;
-    let message = res.statusText;
-    if (typeof detail === "string") {
-      message = detail;
-    } else if (detail && typeof detail === "object" && !Array.isArray(detail)) {
-      const structured = detail as { message?: string };
-      if (typeof structured.message === "string") {
-        message = structured.message;
-      }
-    } else if (Array.isArray(detail) && detail.length) {
-      message = detail
-        .map((item) => (typeof item?.msg === "string" ? item.msg : ""))
-        .filter(Boolean)
-        .join(" ");
-    }
+    const message = messageFromErrorBody(data, res.statusText);
     const err = new Error(message) as import("../types").ApiError;
     err.status = res.status;
     err.data = data;
@@ -150,37 +165,37 @@ export const api = {
   updateAlerts: (body: object) =>
     request("/strelko/alerts", { method: "PUT", body: JSON.stringify(body) }),
   login: (email: string, password: string) =>
-    request<{ access_token: string }>("/auth/login", {
+    request<{ access_token: string }>("/strelko/session", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, client_app: "strelko" }),
     }),
   register: (email: string, password: string) =>
-    request("/auth/register", {
+    request("/strelko/session/register", {
       method: "POST",
       body: JSON.stringify({ email, password, client_app: "strelko" }),
     }),
   verifyEmail: (token: string) =>
-    request<{ message?: string }>("/auth/verify-email", {
+    request<{ message?: string }>("/strelko/session/verify-email", {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
   forgotPassword: (email: string) =>
-    request<{ message?: string }>("/auth/forgot-password", {
+    request<{ message?: string }>("/strelko/session/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email, client_app: "strelko" }),
     }),
   resendVerification: (email: string) =>
-    request<{ message?: string }>("/auth/resend-verification", {
+    request<{ message?: string }>("/strelko/session/resend-verification", {
       method: "POST",
       body: JSON.stringify({ email, client_app: "strelko" }),
     }),
   resetPassword: (token: string, password: string) =>
-    request<{ message?: string }>("/auth/reset-password", {
+    request<{ message?: string }>("/strelko/session/reset-password", {
       method: "POST",
       body: JSON.stringify({ token, password }),
     }),
-  whoami: () => request<import("../types").User>("/auth/whoami"),
-  logout: () => request<{ ok?: boolean }>("/auth/logout", { method: "POST" }),
+  whoami: () => request<import("../types").User>("/strelko/session/me"),
+  logout: () => request<{ ok?: boolean }>("/strelko/session/end", { method: "POST" }),
   checkout: (body: { plan: string; quantity?: number }) =>
     request<{ checkout_url: string; session_id: string }>("/strelko/checkout", {
       method: "POST",
@@ -250,7 +265,7 @@ export const api = {
       body: JSON.stringify({ session_id: sessionId }),
     }),
   loginGoogle: (credential: string) =>
-    request<{ access_token: string }>("/auth/oauth/google", {
+    request<{ access_token: string }>("/strelko/session/google", {
       method: "POST",
       body: JSON.stringify({ id_token: credential, client_app: "strelko" }),
     }),

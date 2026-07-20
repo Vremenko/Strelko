@@ -45,10 +45,20 @@ async function ensureGsiInitialized(): Promise<void> {
     },
     auto_select: false,
     locale: "sl",
-    use_fedcm_for_prompt: true,
+    /* One Tap prompt na mobilnih pogosto pade — gumba to ne zadeva. */
+    use_fedcm_for_prompt: false,
+    /*
+     * FedCM za gumb: na Safari/iOS (in Chrome z blokiranimi 3P piškotki)
+     * se gumb sicer sploh ne prikaže.
+     */
     use_fedcm_for_button: true,
   });
   gsiInitialized = true;
+}
+
+function measureButtonWidth(container: HTMLElement): number {
+  const measuredWidth = Math.floor(container.getBoundingClientRect().width);
+  return Math.min(400, Math.max(200, measuredWidth || 320));
 }
 
 export async function renderGoogleButton(
@@ -57,11 +67,13 @@ export async function renderGoogleButton(
 ): Promise<void> {
   if (!STRELKO_GOOGLE_CLIENT_ID) return;
   gsiOnCredential = onCredential;
-  if (container.dataset.gsiRendered === "1") return;
   await ensureGsiInitialized();
-  if (container.dataset.gsiRendered === "1") return;
-  const measuredWidth = Math.floor(container.getBoundingClientRect().width);
-  const width = Math.min(400, Math.max(200, measuredWidth || 320));
+
+  /* Vedno znova nariši — po zaprtju/odprtju modala / React remountu. */
+  container.replaceChildren();
+  delete container.dataset.gsiRendered;
+
+  const width = measureButtonWidth(container);
   window.google!.accounts.id.renderButton(container, {
     type: "standard",
     theme: "filled_black",
@@ -72,4 +84,21 @@ export async function renderGoogleButton(
     locale: "sl",
   });
   container.dataset.gsiRendered = "1";
+
+  /* Če je bil modal še brez širine, po layoutu ponovno nariši. */
+  if (!container.querySelector("iframe, div[role='button']")) {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+    container.replaceChildren();
+    window.google!.accounts.id.renderButton(container, {
+      type: "standard",
+      theme: "filled_black",
+      size: "large",
+      text: "signin_with",
+      shape: "pill",
+      width: measureButtonWidth(container),
+      locale: "sl",
+    });
+  }
 }
