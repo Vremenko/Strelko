@@ -46,16 +46,15 @@ export function buildSiWidgetEmbedHtml(
   const t = parseSiWidgetTheme(theme);
   const frameId = (opts?.frameId || "strelko-si-widget").replace(/[^a-zA-Z0-9_-]/g, "");
   const src = buildSiWidgetEmbedSrc(t);
-  const bg = t === "dark" ? "#333333" : "#f7f7f8";
   const title = "Udari strel — Slovenija (Strelko)";
   return (
-    `<div style="width:100%;max-width:960px;margin:0 auto">` +
-    `<iframe id="${frameId}" src="${src}" title="${title}" ` +
-    `style="width:100%;max-width:960px;height:320px;border:none;border-radius:14px;display:block;margin:0 auto;background:${bg}"></iframe>` +
+    `<div style="width:100%;max-width:960px;margin:0;padding:0;background:transparent">` +
+    `<iframe id="${frameId}" src="${src}" title="${title}" scrolling="no" ` +
+    `style="width:100%;max-width:960px;height:0;border:none;border-radius:14px;display:block;margin:0 auto;padding:0;background:transparent;overflow:hidden;min-height:0"></iframe>` +
     `<script>(function(){var f=document.getElementById("${frameId}");if(!f)return;` +
     `window.addEventListener("message",function(ev){` +
     `if(!ev.data||ev.data.type!=="${SI_WIDGET_EMBED_RESIZE_TYPE}"||ev.source!==f.contentWindow)return;` +
-    `var h=Math.max(240,Math.min(1200,+ev.data.height||0));if(h>0)f.style.height=h+"px";` +
+    `var h=+ev.data.height||0;if(h>0){f.style.height=h+"px";f.style.overflow="hidden";}` +
     `});})();<\/script></div>`
   );
 }

@@ -213,8 +213,12 @@ function SiWidgetEmbedCard() {
       if (!ev.data || ev.data.type !== "strele-embed-resize") return;
       const frame = previewRef.current;
       if (!frame || ev.source !== frame.contentWindow) return;
-      const h = Math.max(240, Math.min(1200, +ev.data.height || 0));
-      if (h > 0) frame.style.height = `${h}px`;
+      const h = +ev.data.height || 0;
+      if (h > 0) {
+        frame.style.height = `${h}px`;
+        frame.style.minHeight = "0";
+        frame.style.overflow = "hidden";
+      }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -277,12 +281,17 @@ function SiWidgetEmbedCard() {
           title="Predogled: Widget Slovenija"
           width="100%"
           loading="lazy"
+          scrolling="no"
           style={{
             width: "100%",
             border: 0,
             display: "block",
-            minHeight: 280,
-            background: theme === "dark" ? "#333333" : "#f7f7f8",
+            height: 0,
+            minHeight: 0,
+            margin: 0,
+            padding: 0,
+            overflow: "hidden",
+            background: "transparent",
           }}
         />
       </div>
