@@ -179,3 +179,21 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   }
   await navigator.clipboard.writeText(text);
 }
+
+/**
+ * Zaporedni klici preview-token API-ja.
+ * Vzporedni odgovori bi sicer prepisali piškotek seje, medtem ko iframe še uporablja
+ * starejši žeton → 403 »Predogledna seja ni veljavna« in prazen predogled.
+ */
+let previewTokenChain: Promise<void> = Promise.resolve();
+
+export function fetchObcinaWidgetPreviewTokenSerialized(
+  request: () => Promise<ObcinaWidgetPreviewToken>
+): Promise<ObcinaWidgetPreviewToken> {
+  const next = previewTokenChain.then(request, request);
+  previewTokenChain = next.then(
+    () => undefined,
+    () => undefined
+  );
+  return next;
+}

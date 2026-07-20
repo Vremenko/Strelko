@@ -7,6 +7,7 @@ import { STRELKO_OPEN_ACCESS } from "../lib/season";
 import {
   copyTextToClipboard,
   ensureWidgetResizeListener,
+  fetchObcinaWidgetPreviewTokenSerialized,
   findMatchingObcinaWidget,
   NATIONAL_WIDGET_SCOPE,
   resolveVerifiedEmbedForWidget,
@@ -31,6 +32,7 @@ export function WidgetObcinePage() {
   const [copyError, setCopyError] = useState<string | null>(null);
   const [embedError, setEmbedError] = useState<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState("about:blank");
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [verifiedEmbed, setVerifiedEmbed] = useState<VerifiedEmbedState | null>(null);
   const [embedPreparing, setEmbedPreparing] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -63,6 +65,15 @@ export function WidgetObcinePage() {
   const canEmbed = STRELKO_OPEN_ACCESS || isPodpornikActive(credits);
 
   const embedConfigKey = widgetEmbedConfigKey(widget, size);
+  const previewBody = useMemo(
+    () => widgetPreviewBody(widget, size),
+    [
+      size,
+      widget.publicWidgetScope,
+      widget.publicWidgetObMid,
+      widget.publicWidgetTheme,
+    ]
+  );
 
   const embedDisplayedForCurrentConfig =
     !!verifiedEmbed && verifiedEmbed.configKey === embedConfigKey;
@@ -84,30 +95,39 @@ export function WidgetObcinePage() {
   useEffect(() => {
     if (!ready) {
       setPreviewSrc("about:blank");
+      setPreviewError(null);
+      setPreviewLoading(false);
       return;
     }
 
     const requestId = ++previewRequestRef.current;
-    const body = widgetPreviewBody(widget, size);
+    let cancelled = false;
 
     const run = async () => {
       setPreviewLoading(true);
+      setPreviewError(null);
       try {
-        const tokenOut = await api.obcinaWidgetPreviewToken(body);
-        if (previewRequestRef.current !== requestId) return;
+        const tokenOut = await fetchObcinaWidgetPreviewTokenSerialized(() =>
+          api.obcinaWidgetPreviewToken(previewBody)
+        );
+        if (cancelled || previewRequestRef.current !== requestId) return;
         setPreviewSrc(tokenOut.preview_path);
       } catch {
-        if (previewRequestRef.current !== requestId) return;
+        if (cancelled || previewRequestRef.current !== requestId) return;
         setPreviewSrc("about:blank");
+        setPreviewError("Predogleda trenutno ni mogoče naložiti. Poskusite znova.");
       } finally {
-        if (previewRequestRef.current === requestId) {
+        if (!cancelled && previewRequestRef.current === requestId) {
           setPreviewLoading(false);
         }
       }
     };
 
     void run();
-  }, [ready, embedConfigKey, widget, size]);
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, previewBody]);
 
   const handleCopyEmbedCode = useCallback(async () => {
     if (!ready || !canEmbed || embedPreparing) return;
@@ -258,10 +278,16 @@ export function WidgetObcinePage() {
               key={previewSrc}
               id="public-widget-iframe"
               className={`widget-obcine-iframe${isFull ? " widget-obcine-iframe--full" : " widget-obcine-iframe--compact"}`}
-              src={previewLoading ? "about:blank" : previewSrc}
+              src={previewSrc}
               title="Predogled widgeta"
+              aria-busy={previewLoading}
             />
           </div>
+          {previewError ? (
+            <p className="widget-obcine-embed-error" role="alert">
+              {previewError}
+            </p>
+          ) : null}
           <label className="widget-code-label" htmlFor={canEmbed ? "public-widget-embed-code" : undefined}>
             Embed koda
           </label>
