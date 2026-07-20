@@ -181,6 +181,8 @@ export function WidgetObcinePage() {
         );
         if (cancelled || previewRequestRef.current !== requestId) return;
 
+        // Optimistično: po uspešnem žetonu so podatki za ta dataKey na poti v iframe cache.
+        previewCachedKeysRef.current.add(dataKey);
         skipNextDisplaySyncRef.current = true;
         const updated = postPreviewUpdate({
           token: tokenOut.token,
@@ -217,6 +219,7 @@ export function WidgetObcinePage() {
       skipNextDisplaySyncRef.current = false;
       return;
     }
+    // Po uspešnem token/dataKey naložilu je dataKey v množici (optimistično ali prek ack).
     if (!previewCachedKeysRef.current.has(previewDataKeyRef.current)) return;
     postPreviewUpdate({ theme: previewTheme, size });
   }, [ready, previewTheme, size, postPreviewUpdate]);
