@@ -1,7 +1,9 @@
 /**
  * Prehodi pogleda na /pomoc-pri-zavarovalnici.
- * Loči pravi »Nazaj« (URL izgubi ?query=) od dirke, kjer je rezultat že v stanju,
- * URL pa še nima ?query= (React Router navigate v transition).
+ *
+ * Začetni marketing obrazec (“Vam je strela…”) sme biti samo v stanju "form".
+ * Med aktivno poizvedbo (loading / pending / hold / ?query=) nikoli ne vrnemo "form",
+ * sicer uporabnik vidi isti naslov kot blisk med results → … → results.
  */
 
 export type QueryViewState = "form" | "loading" | "preview" | "unlocking" | "results";
@@ -14,8 +16,8 @@ export type ZavarovalnicaNoQueryDecision =
 export type ZavarovalnicaNoQueryInput = {
   hasQueryParam: boolean;
   /**
-   * Prejšnji render je imel ?query=, zdaj ga ni — tipično brskalnikov Nazaj/Naprej
-   * iz rezultata nazaj na obrazec.
+   * Prejšnji render je imel ?query=, zdaj ga ni — in to zaradi brskalnikovega Nazaj/Naprej
+   * (popstate), ne zaradi vmesne Router dirke.
    */
   leftResultsUrl: boolean;
   localSubmitLocked: boolean;
@@ -33,45 +35,49 @@ export type ZavarovalnicaNoQueryInput = {
 };
 
 /**
- * Odločitev efekta »URL brez ?query=«: kdaj obnoviti obrazec (Nazaj) in kdaj ne posegati
- * (prva poizvedba še čaka na sync URL-ja).
+ * Odločitev efekta »URL brez ?query=«.
+ * Obnova obrazca samo ob pravem Nazaj (popstate).
  */
 export function decideZavarovalnicaNoQueryAction(
   p: ZavarovalnicaNoQueryInput
 ): ZavarovalnicaNoQueryDecision {
   if (p.hasQueryParam) return "noop";
 
-  /* Pravi Nazaj z rezultata: URL je izgubil ?query= — vedno obnovi obrazec (ne glede na pending). */
   if (p.leftResultsUrl) {
     if (p.hasBackSnapshot) return "restore_snapshot";
     if (p.hasSearchResult || p.hasSavedQueryId) return "restore_snapshot";
     return "noop";
   }
 
-  if (p.localSubmitLocked || p.loading) return "noop";
-  /* Rezultat že nastavljen, navigate še ni zavezal ?query= — NE skoči na obrazec. */
-  if (p.pendingResultNavigation) return "noop";
-  if (p.hasPreviewScreen) return "noop";
-  if (p.hasCachedResultAfterBack) return "noop";
-  if (p.hasBackSnapshot) return "restore_snapshot";
-  if (p.hasPendingScrollRestore || p.skipFormScroll) return "noop";
-  if (!p.hasSearchResult && !p.hasSavedQueryId) return "noop";
-  return "clear_stale_result";
+  return "noop";
 }
 
 /**
- * Rezultat se prikaže samo, ko je v URL-ju ?query= — tako Nazaj takoj pokaže obrazec,
- * Naprej pa isti rezultat iz lokalnega stanja brez nove API-poizvedbe.
+ * - results: imamo rezultat in nismo po Nazaj
+ * - loading: aktivna poizvedba / sync URL — BREZ marketing obrazca
+ * - form: samo prazen začetek ali pravi Nazaj (preferFormAfterBack)
  */
 export function deriveZavarovalnicaViewState(
   searchResult: unknown,
   previewScreen: "teaser" | "no-strikes" | null,
   loading: boolean,
-  hasQueryParam = true
+  hasQueryParam = true,
+  pendingResultNavigation = false,
+  holdResultsQueryId: string | null = null,
+  savedQueryId: string | null = null,
+  preferFormAfterBack = false
 ): QueryViewState {
-  if (searchResult && hasQueryParam) return "results";
+  if (searchResult && !preferFormAfterBack) return "results";
   if (previewScreen) return loading ? "unlocking" : "preview";
-  if (loading) return "loading";
+
+  const activeFlow =
+    loading ||
+    pendingResultNavigation ||
+    Boolean(holdResultsQueryId) ||
+    Boolean(savedQueryId && !preferFormAfterBack) ||
+    (hasQueryParam && !preferFormAfterBack);
+
+  if (activeFlow) return "loading";
   return "form";
 }
 

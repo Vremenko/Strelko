@@ -23,7 +23,9 @@ import { LEGAL_PAGES, type LegalPageId } from "./lib/legal";
 
 export function App() {
   return (
-    <BrowserRouter>
+    /* useTransitions=false: URL in React location se uskladita v istem koraku
+       (brez vmesnega bliska obrazca pri prvi poizvedbi). */
+    <BrowserRouter useTransitions={false}>
       <ScrollToTop />
       <PageMeta />
       <StrelkoProvider>
