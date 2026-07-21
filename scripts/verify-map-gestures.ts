@@ -1,6 +1,9 @@
 /**
  * Regresija: upravljanje interaktivnih zemljevidov (pointer, wheel, 2-prsta).
  * Zagon: npx tsx scripts/verify-map-gestures.ts
+ *
+ * Mobilno: Leaflet touchZoom za pinch + lastni pan le ko ni pincha (brez dvojne obdelave).
+ * Zaznava: hover+fine = namizje (Android ne sme napačno dobiti desktop veje).
  */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -27,17 +30,34 @@ const css = readFileSync(PAGES_CSS, "utf8");
 const embed = readFileSync(MAP_EMBED, "utf8");
 const mapHtml = readFileSync(MAP_HTML, "utf8");
 
-/* ——— Pointer zaznavanje (ne širina / UA) ——— */
+function mobileBindSlice(src: string, startMarker: string, endMarker: string): string {
+  const a = src.indexOf(startMarker);
+  const b = src.indexOf(endMarker, a + 1);
+  assert.ok(a >= 0 && b > a, `slice ${startMarker}`);
+  return src.slice(a, b);
+}
+
+/* ——— Pointer zaznavanje: hover+fine (Android-safe) ——— */
 for (const [label, src] of [
   ["strike-map-gestures", gestures],
-  ["strike-map", strikeMap],
   ["map-embed", embed],
   ["map.html", mapHtml],
 ] as const) {
-  assert.ok(src.includes("(any-pointer: fine)"), `${label}: any-pointer: fine`);
+  assert.ok(
+    src.includes("(hover: hover) and (pointer: fine)"),
+    `${label}: hover+pointer fine`
+  );
+  assert.ok(
+    src.includes("(any-hover: hover) and (any-pointer: fine)"),
+    `${label}: any-hover+any-pointer fine`
+  );
 }
 
-/* Geste ne smejo biti vezane samo na širino zaslona */
+assert.ok(strikeMap.includes("prefersMobileMapPointer"));
+assert.ok(pickMap.includes("prefersMobileMapPointer"));
+assert.ok(!strikeMap.includes('matchMedia("(any-pointer: fine)")'));
+assert.ok(!pickMap.includes('matchMedia("(any-pointer: fine)")'));
+
 assert.ok(
   !/function\s+bindMapZoomGestures[\s\S]{0,200}isMobileView\(\)/.test(embed),
   "map-embed: bindMapZoomGestures ne sme uporabljati isMobileView"
@@ -51,14 +71,17 @@ assert.ok(gestures.includes("prefersDesktopMapPointer"));
 assert.ok(gestures.includes("prefersMobileMapPointer"));
 assert.ok(gestures.includes("bindStreleMapZoomGestures"));
 
-/* ——— Namizje: Leaflet scrollWheelZoom (brez lastnega wheel handlerja / Ctrl) ——— */
+/* ——— Namizje ——— */
 assert.ok(!gestures.includes("ctrlKey"));
 assert.ok(!gestures.includes("Ctrl +"));
 assert.ok(!gestures.includes("Za povečavo"));
-assert.ok(!gestures.includes("addEventListener(\"wheel\""));
-assert.ok(!gestures.includes("setZoomAround"));
+assert.ok(!gestures.includes('addEventListener("wheel"'));
 assert.ok(gestures.includes("map.scrollWheelZoom.enable()"));
 assert.ok(gestures.includes("map.dragging.enable()"));
+assert.ok(
+  !/function bindDesktopGestures[\s\S]*?setZoomAround/.test(gestures),
+  "desktop veja: brez setZoomAround"
+);
 
 for (const [label, src] of [
   ["map-embed", embed],
@@ -68,63 +91,62 @@ for (const [label, src] of [
   assert.ok(!src.includes("Za povečavo zemljevida"), `${label}: brez Ctrl povečave`);
   assert.ok(src.includes("prefersDesktopMapPointer") || src.includes("shouldBindDesktopMapGestures"));
   assert.ok(src.includes("scrollWheelZoom.enable()"), `${label}: Leaflet wheel`);
-  assert.ok(src.includes("deskUserViewportLocked"), `${label}: zaklep pogleda po zoomanju`);
+  assert.ok(src.includes("deskUserViewportLocked"), `${label}: zaklep pogleda`);
   assert.ok(src.includes("lockDesktopUserViewport"), `${label}: lockDesktopUserViewport`);
-  assert.ok(
-    !/function\s+ctrlZoom|if\s*\(\s*ctrlZoom\(/.test(src),
-    `${label}: brez ctrlZoom gate`
-  );
-  /* Desktop veja sme imeti le passive capture wheel za zaklep pogleda — ne lastnega zoom handlerja. */
   assert.ok(
     !/__streleDesktopGestures[\s\S]{0,1200}setZoomAround/.test(src),
     `${label}: brez custom setZoomAround wheel zooma`
   );
-  assert.ok(
-    src.includes('lockDesktopUserViewport') &&
-      /addEventListener\(\s*["']wheel["'][\s\S]{0,120}lockDesktopUserViewport/.test(src),
-    `${label}: wheel capture zaklene pogled`
-  );
 }
 
-/* ——— Telefon: namig ob vsaki novi enoprstni gesti, dva prsta, pointer-events none ——— */
+/* ——— Telefon: Leaflet touchZoom + lastni pan samo ko ni pincha ——— */
 assert.ok(gestures.includes("Premaknite zemljevid z dvema prstoma."));
-assert.ok(!gestures.includes("strele-map-two-finger-hint-shown"), "brez sessionStorage enkratne omejitve");
-assert.ok(!gestures.includes("sessionStorage"), "gestures: brez sessionStorage za namig");
+assert.ok(!gestures.includes("strele-map-two-finger-hint-shown"));
+assert.ok(!gestures.includes("sessionStorage"));
 assert.ok(gestures.includes("HINT_HIDE_AFTER_TOUCH_MS = 500"));
-assert.ok(gestures.includes("showHint"));
-assert.ok(gestures.includes("scheduleHintHide"));
 assert.ok(gestures.includes("hintArmedForGesture"));
 assert.ok(gestures.includes("map.dragging.disable()"));
-assert.ok(gestures.includes("touchstart"));
+assert.ok(gestures.includes("map.touchZoom.enable()"));
+assert.ok(!gestures.includes("setZoomAround"), "brez lastnega pinch setZoomAround (regresija iPhone)");
+assert.ok(!gestures.includes("Math.log2"), "brez lastnega pinch scale");
+assert.ok(gestures.includes("multiPinching"));
 assert.ok(gestures.includes("e.touches.length >= 2"));
-assert.ok(!gestures.includes("1600"), "gestures: brez starega 1600 ms skrivanja");
+assert.ok(!gestures.includes("1600"));
+
+const gestMobile = mobileBindSlice(gestures, "function bindMobileGestures", "function bindDesktopGestures");
+assert.ok(gestMobile.includes("touchZoom.enable()"), "mobilno: Leaflet touchZoom ON");
+assert.ok(!gestMobile.includes("touchZoom.disable()"), "mobilno: ne disable touchZoom");
+assert.ok(gestMobile.includes("panBy"), "mobilno: lastni pan");
+assert.ok(
+  /multiPinching\s*=\s*true;\s*\n\s*(?:\/\*[\s\S]*?\*\/\s*)?return;/.test(gestMobile),
+  "mobilno: ob pinch return (prepusti Leafletu, ne pan)"
+);
 
 for (const [label, src] of [
   ["map-embed", embed],
   ["map.html", mapHtml],
 ] as const) {
-  assert.ok(src.includes("Premaknite zemljevid z dvema prstoma."), `${label}: 2-prsta namig`);
-  assert.ok(!src.includes("strele-map-two-finger-hint-shown"), `${label}: brez sessionStorage enkratne omejitve`);
-  assert.ok(!src.includes("mobileMapHintAlreadyShown") && !src.includes("markMobileMapHintShown"), `${label}: brez shown zastavic`);
-  assert.ok(src.includes("hintArmedForGesture"), `${label}: namig ob začetku geste`);
-  assert.ok(src.includes("HINT_HIDE_AFTER_TOUCH_MS = 500"), `${label}: skrij ~500 ms po touchend`);
-  assert.ok(src.includes("showWheelHint"), `${label}: showWheelHint`);
-  assert.ok(src.includes("scheduleWheelHintHide"), `${label}: scheduleWheelHintHide`);
-  assert.ok(!src.includes("1600"), `${label}: brez starega 1600 ms skrivanja`);
+  assert.ok(src.includes("Premaknite zemljevid z dvema prstoma."), `${label}: namig`);
+  assert.ok(src.includes("hintArmedForGesture"), `${label}: namig`);
+  assert.ok(src.includes("HINT_HIDE_AFTER_TOUCH_MS = 500"), `${label}: timer`);
+  const slice = mobileBindSlice(src, "function bindMobileMapGestures", "function bindMapZoomGestures");
+  assert.ok(slice.includes("touchZoom.enable()"), `${label}: Leaflet touchZoom`);
+  assert.ok(!slice.includes("setZoomAround"), `${label}: brez setZoomAround`);
+  assert.ok(!slice.includes("Math.log2"), `${label}: brez log2 pinch`);
+  assert.ok(/touch-action:\s*pan-y\s+pinch-zoom/.test(src), `${label}: pan-y pinch-zoom`);
 }
 
 const hintCss = css.slice(css.indexOf(".strele-map-wheel-hint"));
-assert.ok(hintCss.includes("pointer-events: none"), "CSS hint ne sme loviti klikov");
-assert.ok(embed.includes(".strele-map-wheel-hint") && /strele-map-wheel-hint[\s\S]{0,400}pointer-events:\s*none/.test(embed));
-assert.ok(mapHtml.includes(".strele-map-wheel-hint") && /strele-map-wheel-hint[\s\S]{0,400}pointer-events:\s*none/.test(mapHtml));
+assert.ok(hintCss.includes("pointer-events: none"));
+assert.ok(/touch-action:\s*pan-y\s+pinch-zoom/.test(css), "strike-map CSS: pan-y pinch-zoom");
 
-/* ——— Vezava na Strelko zemljevide ——— */
 assert.ok(strikeMap.includes("bindStreleMapZoomGestures"));
 assert.ok(pickMap.includes("bindStreleMapZoomGestures"));
-assert.ok(strikeMap.includes('scrollWheelZoom: false'));
-assert.ok(pickMap.includes('scrollWheelZoom: false'));
+assert.ok(strikeMap.includes("scrollWheelZoom: false"));
+assert.ok(pickMap.includes("scrollWheelZoom: false"));
+assert.ok(/touchZoom:\s*mobile/.test(strikeMap), "strike-map: touchZoom: mobile");
+assert.ok(/touchZoom:\s*mobile/.test(pickMap), "pick-map: touchZoom: mobile");
 
-/* ——— Widgeti občin ostanejo neinteraktivni (ni sprememb gest) ——— */
 for (const name of ["obcina-embed.html", "obcina-preview.html", "obcina-widget.html"]) {
   const w = readFileSync(resolve(STRELE2, "web/public", name), "utf8");
   assert.ok(w.includes("scrollWheelZoom: false"), `${name}: fiksiran zoom`);
@@ -132,20 +154,9 @@ for (const name of ["obcina-embed.html", "obcina-preview.html", "obcina-widget.h
   assert.ok(!w.includes("bindMapZoomGestures"), `${name}: ni gest binderja`);
 }
 
-/* ——— Brez podvojenega Ctrl namiga v aktivni kodi ——— */
-assert.ok(!gestures.includes("Ctrl + kolesce ali vlečenje miške"));
-assert.equal(
-  (embed.match(/Premaknite zemljevid z dvema prstoma\./g) || []).length,
-  1,
-  "map-embed: en string namiga"
-);
-assert.equal(
-  (mapHtml.match(/Premaknite zemljevid z dvema prstoma\./g) || []).length,
-  1,
-  "map.html: en string namiga"
-);
+assert.equal((embed.match(/Premaknite zemljevid z dvema prstoma\./g) || []).length, 1);
+assert.equal((mapHtml.match(/Premaknite zemljevid z dvema prstoma\./g) || []).length, 1);
 
 console.log("verify-map-gestures: OK");
-console.log("namizje: wheel zoom brez Ctrl, brez Ctrl namiga");
-console.log("telefon: 1 prst=stran, 2 prsta=zemljevid, namig ob gesti, skrij ~500 ms po touchend");
-console.log("pointer: any-pointer:fine → desktop (tudi touch laptop)");
+console.log("namizje: wheel + drag");
+console.log("mobilno: Leaflet pinch XOR lastni pan; detection=hover+fine");

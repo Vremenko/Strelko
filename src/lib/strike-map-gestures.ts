@@ -6,10 +6,18 @@ const HINT_HIDE_AFTER_TOUCH_MS = 500;
 const MOB_DRAG_HINT_PX = 3;
 const PINCH_DIST_CHANGE = 0.02;
 
-/** Miška / sledilna ploščica — tudi na prenosniku z zaslonom na dotik. */
+/**
+ * Namizje samo ob pravem miškinem načinu (hover + fine).
+ * Android/Samsung pogosto lažno poroča any-pointer:fine pri hover:none —
+ * tiste naprave ostanejo v mobilni veji.
+ * Dvoprstna logika (pan + Leaflet touchZoom) ostaja enaka kot pred Android popravkom.
+ */
 export function prefersDesktopMapPointer(): boolean {
   if (typeof window === "undefined") return true;
-  return window.matchMedia("(any-pointer: fine)").matches;
+  return (
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches ||
+    window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches
+  );
 }
 
 export function prefersMobileMapPointer(): boolean {
@@ -58,6 +66,10 @@ function createHintController(container: HTMLElement, message: string) {
   return { hideHint, showHint, scheduleHintHide, cancelHideTimer };
 }
 
+/**
+ * Mobilno: en prst = stran (+ namig); dva prsta = lastni pan ALI Leaflet touchZoom (pinch).
+ * Med pinchom ne panamo — ena gesta, ena obdelava (pinch prek Leaflet touchZoom).
+ */
 function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void {
   try {
     map.dragging.disable();
@@ -133,6 +145,7 @@ function bindMobileGestures(map: LeafletMap, container: HTMLElement): () => void
         multiStartDist > 0 ? Math.abs(dist - multiStartDist) / multiStartDist : 0;
       if (distChange > PINCH_DIST_CHANGE) {
         multiPinching = true;
+        /* Pinch: prepusti Leaflet touchZoom — ne panBy / ne preventDefault. */
         return;
       }
       if (!multiPinching) {
@@ -225,8 +238,8 @@ function bindDesktopGestures(map: LeafletMap, _container: HTMLElement): () => vo
 }
 
 /**
- * Namizje (fine pointer): kolešček/ploščica prek Leaflet scrollWheelZoom, vlečenje premika.
- * Telefon (coarse): en prst = stran, dva prsta = zemljevid; namig ob vsaki novi enoprstni gesti.
+ * Namizje (hover + fine): kolešček/ploščica prek Leaflet scrollWheelZoom, vlečenje premika.
+ * Telefon / Android: en prst = stran, dva prsta = zemljevid; namig ob vsaki novi enoprstni gesti.
  */
 export function bindStreleMapZoomGestures(map: LeafletMap, container: HTMLElement): () => void {
   if (prefersMobileMapPointer()) {

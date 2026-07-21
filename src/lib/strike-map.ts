@@ -1,5 +1,5 @@
 import L from "leaflet";
-import { bindStreleMapZoomGestures } from "./strike-map-gestures";
+import { bindStreleMapZoomGestures, prefersMobileMapPointer } from "./strike-map-gestures";
 import {
   ensureStrikeMapPanes,
   isMaptilerSdkLayer,
@@ -306,9 +306,7 @@ export function createStrikeMap(
   const existing = (el as HTMLElement & { _leafletMap?: L.Map })._leafletMap;
   existing?.remove();
 
-  const mobile =
-    typeof window !== "undefined" &&
-    !window.matchMedia("(any-pointer: fine)").matches;
+  const mobile = prefersMobileMapPointer();
 
   const map = L.map(el, {
     zoomControl: false,
