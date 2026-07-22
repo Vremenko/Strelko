@@ -563,6 +563,49 @@ export function ArchiveEmbedHost() {
     return () => window.removeEventListener("message", onMessage);
   }, [location.hash, location.pathname, location.search, openAuth]);
 
+  /* iPhone: map-embed ne more v pravi fullscreen — razširi iframe čez cel zaslon. */
+  useEffect(() => {
+    const setMapFs = (active: boolean) => {
+      const wrap = document.getElementById("archive-map-wrap");
+      const iframe = document.getElementById(
+        "archive-map-iframe"
+      ) as HTMLIFrameElement | null;
+      if (!wrap) return;
+      wrap.classList.toggle("archive-map-wrap--fs", active);
+      document.documentElement.classList.toggle("archive-map-fs-active", active);
+      document.body.classList.toggle("archive-map-fs-active", active);
+      try {
+        iframe?.contentWindow?.postMessage(
+          { type: "strele-map-fullscreen-state", active },
+          "*"
+        );
+      } catch {
+        /* ignore */
+      }
+    };
+
+    const onMessage = (ev: MessageEvent) => {
+      const data = ev.data;
+      if (!data || typeof data !== "object") return;
+      if (data.type !== "strele-map-fullscreen") return;
+      setMapFs(!!data.active);
+    };
+
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key !== "Escape") return;
+      if (!document.documentElement.classList.contains("archive-map-fs-active")) return;
+      setMapFs(false);
+    };
+
+    window.addEventListener("message", onMessage);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.removeEventListener("keydown", onKey);
+      setMapFs(false);
+    };
+  }, []);
+
   return null;
 }
 

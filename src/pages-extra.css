@@ -1280,6 +1280,43 @@ label.field-labeled > span {
   position: relative;
 }
 
+/* iPhone / mobilni: cel zaslon prek starševske strani (iframe → fixed 100dvh) */
+html.archive-map-fs-active,
+html.archive-map-fs-active body {
+  overflow: hidden !important;
+  height: 100% !important;
+  overscroll-behavior: none;
+}
+
+.archive-map-wrap.archive-map-wrap--fs {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100000 !important;
+  width: 100% !important;
+  height: 100% !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  background: #1a1a1a !important;
+  box-sizing: border-box;
+}
+
+.archive-map-wrap.archive-map-wrap--fs .archive-map-iframe {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  border: none !important;
+}
+
+@media (max-width: 899px) {
+  .archive-map-wrap.archive-map-wrap--fs .archive-map-iframe {
+    min-height: 100% !important;
+  }
+}
+
 .archive-locked-charts.charts-layout {
   display: grid;
   gap: 2.25rem;
